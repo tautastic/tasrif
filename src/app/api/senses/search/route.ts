@@ -12,6 +12,7 @@ import { languageOptions } from "~/server/db/schema";
 const parseIdList = (value: string): number[] => {
   const ids = value
     .split(",")
+    .slice(0, SENSE_SEARCH_MAX_LIMIT)
     .map((id) => Number(id.trim()))
     .filter((id) => Number.isInteger(id) && id > 0);
   return [...new Set(ids)];

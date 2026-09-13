@@ -1,34 +1,38 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import PaginatedEntryList from "~/components/entry/PaginatedEntryList";
 import { formatRoot } from "~/lib/formatting";
+import { ENTRY_LIST_PAGE_SIZE, notFoundIfEmpty, parsePageParam } from "~/lib/pagination";
 import { decodeSlugOrNotFound } from "~/lib/validation/params";
 import { getLexicalEntriesByRoot } from "~/server/db/repository/lexical-entry";
 
 export const revalidate = 3600;
 
-export default async function RootPage({ params }: { params: Promise<{ slug: string }> }) {
-  const root = await decodeSlugOrNotFound(params);
-  const entries = await getLexicalEntriesByRoot(root);
+export default async function RootPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const [root, { page: pageParam }] = await Promise.all([decodeSlugOrNotFound(params), searchParams]);
 
-  if (entries.length === 0) {
-    notFound();
-  }
+  const page = parsePageParam(pageParam);
+  const { items, total } = await getLexicalEntriesByRoot({ root, page, limit: ENTRY_LIST_PAGE_SIZE });
+  notFoundIfEmpty(total);
 
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-4">
-        Root: <span lang="ar">{formatRoot(root)}</span>
-      </h1>
-      <p className="text-gray-700 mb-2">Entries with this root:</p>
-      <ul className="list-disc pl-5 space-y-1">
-        {entries.map((entry) => (
-          <li key={entry.id}>
-            <Link href={`/entry/${entry.normalizedText}`} className="text-blue-600 hover:underline">
-              <span lang="ar">{entry.text}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </>
+    <PaginatedEntryList
+      heading={
+        <>
+          Root: <span lang="ar">{formatRoot(root)}</span>
+        </>
+      }
+      description={`The following ${items.length} entries share this root, out of ${total} total:`}
+      entries={items}
+      language="ar"
+      page={page}
+      total={total}
+      pageSize={ENTRY_LIST_PAGE_SIZE}
+      basePath={`/root/${root}`}
+    />
   );
 }

@@ -43,8 +43,7 @@ const EntryEditForm = (props: EntryEditFormProps) => {
           : await createLexicalEntryAction(values);
       router.push(`/entry/${saved.normalizedText}`);
     } catch (error) {
-      console.error(error);
-      setServerError("Failed to save entry. Please check the form and try again.");
+      setServerError(error instanceof Error ? error.message : "Failed to save entry.");
     }
   };
 

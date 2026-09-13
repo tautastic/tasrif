@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import EntryTable from "~/components/entry/EntryTable";
-import Pagination from "~/components/Pagination";
+import PaginatedEntryList from "~/components/entry/PaginatedEntryList";
 import { formatLanguageName } from "~/lib/formatting";
+import { ENTRY_LIST_PAGE_SIZE, notFoundIfEmpty, parsePageParam } from "~/lib/pagination";
 import { getLexicalEntriesByLanguage } from "~/server/db/repository/lexical-entry";
 import { isLanguageType, languageOptions } from "~/server/db/schema";
 
-const PAGE_SIZE = 10;
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return languageOptions.map((lang) => ({ lang }));
@@ -24,21 +24,20 @@ export default async function LangPage({
     notFound();
   }
 
-  const page = Math.max(1, Number(pageParam) || 1);
-  const { items, total } = await getLexicalEntriesByLanguage({ language: lang, page, limit: PAGE_SIZE });
+  const page = parsePageParam(pageParam);
+  const { items, total } = await getLexicalEntriesByLanguage({ language: lang, page, limit: ENTRY_LIST_PAGE_SIZE });
+  notFoundIfEmpty(total);
 
   return (
-    <div className="max-w-4xl mx-auto py-6 space-y-6">
-      <h1 className="text-xl sm:text-2xl font-bold">Recent {formatLanguageName(lang)} Entries</h1>
-
-      {items.length === 0 ? (
-        <p className="text-gray-500">No entries found for this language.</p>
-      ) : (
-        <>
-          <EntryTable entries={items} showRoot={lang === "ar"} />
-          <Pagination currentPage={page} totalPages={Math.ceil(total / PAGE_SIZE)} basePath={`/lang/${lang}`} />
-        </>
-      )}
-    </div>
+    <PaginatedEntryList
+      heading={`${formatLanguageName(lang)} Entries`}
+      description={`The following ${items.length} entries are in this language, out of ${total} total:`}
+      entries={items}
+      language={lang}
+      page={page}
+      total={total}
+      pageSize={ENTRY_LIST_PAGE_SIZE}
+      basePath={`/lang/${lang}`}
+    />
   );
 }

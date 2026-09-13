@@ -2,10 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { useDebouncedFetch } from "~/hooks/useDebouncedFetch";
 import type { EntrySearchResponse, EntrySearchResult } from "~/lib/api/entry-search";
 
-const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 1;
+
+const fetchEntries = async (query: string, signal: AbortSignal): Promise<EntrySearchResult[]> => {
+  const response = await fetch(`/api/entries/search?query=${encodeURIComponent(query)}`, { signal });
+  if (!response.ok) {
+    throw new Error(`Entry search failed with status ${response.status}`);
+  }
+  const data = (await response.json()) as EntrySearchResponse;
+  return data.items;
+};
 
 const EntrySearchForm = () => {
   const router = useRouter();
@@ -14,54 +23,27 @@ const EntrySearchForm = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<EntrySearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
   const trimmedQuery = query.trim();
   const showDropdown = isOpen && trimmedQuery.length >= MIN_QUERY_LENGTH;
 
-  useEffect(() => {
-    if (trimmedQuery.length < MIN_QUERY_LENGTH) {
-      setResults([]);
-      setIsLoading(false);
+  const isLoading = useDebouncedFetch({
+    query,
+    minQueryLength: MIN_QUERY_LENGTH,
+    fetcher: fetchEntries,
+    onSuccess: (items) => {
+      setResults(items);
       setActiveIndex(-1);
-      return;
-    }
-
-    const controller = new AbortController();
-    setIsLoading(true);
-
-    const timer = setTimeout(() => {
-      fetch(`/api/entries/search?query=${encodeURIComponent(trimmedQuery)}`, { signal: controller.signal })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Entry search failed with status ${response.status}`);
-          }
-          return response.json() as Promise<EntrySearchResponse>;
-        })
-        .then((data) => {
-          setResults(data.items);
-          setActiveIndex(-1);
-        })
-        .catch((error: unknown) => {
-          if (error instanceof Error && error.name === "AbortError") {
-            return;
-          }
-          console.error(error);
-          setResults([]);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) {
-            setIsLoading(false);
-          }
-        });
-    }, DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [trimmedQuery]);
+    },
+    onError: () => {
+      setResults([]);
+    },
+    onIdle: () => {
+      setResults([]);
+      setActiveIndex(-1);
+    },
+  });
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {

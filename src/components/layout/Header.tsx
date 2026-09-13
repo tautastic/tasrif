@@ -31,7 +31,7 @@ const Header = ({ isAdmin }: HeaderProps) => {
                 Add Entry
               </Link>
               <form action="/api/auth/logout" method="POST">
-                <button type="submit" className="text-blue-600 hover:underline">
+                <button type="submit" className="text-blue-600 hover:underline hover:cursor-pointer">
                   Logout
                 </button>
               </form>

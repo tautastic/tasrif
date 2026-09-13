@@ -32,5 +32,7 @@ export const updateLexicalEntry = (input: EntryFormValues & { id: number }) => {
 };
 
 export const deleteLexicalEntryById = async (entryId: number) => {
-  await db.delete(lexicalEntry).where(eq(lexicalEntry.id, entryId));
+  const [deleted] = await db.delete(lexicalEntry).where(eq(lexicalEntry.id, entryId)).returning();
+
+  return deleted;
 };

@@ -4,12 +4,19 @@ import { type LanguageType, lexicalEntry, morphPattern } from "~/server/db/schem
 
 const DEFAULT_LIMIT = 10;
 
-export const getLexicalEntriesByRoot = (root: string) => {
-  return db.query.lexicalEntry.findMany({
-    where: { root },
-    columns: { id: true, normalizedText: true, text: true },
-    orderBy: (entry) => [asc(entry.id)],
-  });
+export const getLexicalEntriesByRoot = async ({ root, page, limit }: { root: string; page: number; limit: number }) => {
+  const [items, total] = await Promise.all([
+    db.query.lexicalEntry.findMany({
+      where: { root },
+      columns: { id: true, normalizedText: true, text: true },
+      orderBy: (entry) => [asc(entry.id)],
+      limit,
+      offset: (page - 1) * limit,
+    }),
+    db.$count(lexicalEntry, eq(lexicalEntry.root, root)),
+  ]);
+
+  return { items, total };
 };
 
 export const getRandomLexicalEntries = async (limit: number = DEFAULT_LIMIT) => {
@@ -83,7 +90,7 @@ export const getLexicalEntriesByFormNumber = async ({
       lexicalEntry,
       sql`${lexicalEntry.morphPatternId} IN (
         SELECT ${morphPattern.id} FROM ${morphPattern} WHERE ${morphPattern.formNumber} = ${formNumber}
-      )`,
+        )`,
     ),
   ]);
 

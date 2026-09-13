@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDebouncedFetch } from "~/hooks/useDebouncedFetch";
 import {
   SENSE_SEARCH_DEFAULT_LIMIT,
   SENSE_SEARCH_MIN_QUERY_LENGTH,
@@ -6,8 +7,6 @@ import {
   type SenseSearchResponse,
 } from "~/lib/api/sense-search";
 import type { LanguageType } from "~/server/db/schema";
-
-const DEBOUNCE_MS = 300;
 
 const isAbortError = (error: unknown) => error instanceof Error && error.name === "AbortError";
 
@@ -34,10 +33,8 @@ interface UseSenseSearchResult {
 
 const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSenseSearchResult => {
   const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [options, setOptions] = useState<SenseSearchOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<SenseSearchOption | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -47,18 +44,6 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
     resolvedSenseId.current = option?.id ?? null;
     setSelectedOption(option);
   }, []);
-
-  const isSearchable = debouncedQuery.length >= SENSE_SEARCH_MIN_QUERY_LENGTH;
-  const searchParams = {
-    query: debouncedQuery,
-    language,
-    limit: String(SENSE_SEARCH_DEFAULT_LIMIT),
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query.trim()), DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [query]);
 
   useEffect(() => {
     if (selectedSenseId <= 0) {
@@ -89,50 +74,37 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
     return () => controller.abort();
   }, [selectedSenseId, selectOption]);
 
-  useEffect(() => {
-    if (!isSearchable) {
+  const isLoading = useDebouncedFetch({
+    query,
+    minQueryLength: SENSE_SEARCH_MIN_QUERY_LENGTH,
+    fetcher: (trimmedQuery, signal) =>
+      fetchSenses({ query: trimmedQuery, language, limit: String(SENSE_SEARCH_DEFAULT_LIMIT), page: "1" }, signal),
+    onSuccess: (data) => {
+      setOptions(data.items);
+      setHasMore(data.hasMore);
+      setPage(1);
+    },
+    onError: () => {
       setOptions([]);
       setHasMore(false);
-      setIsLoading(false);
+    },
+    onIdle: () => {
+      setOptions([]);
+      setHasMore(false);
       setPage(1);
-      return;
-    }
-
-    const controller = new AbortController();
-    setIsLoading(true);
-
-    fetchSenses({ ...searchParams, page: "1" }, controller.signal)
-      .then((data) => {
-        setOptions(data.items);
-        setHasMore(data.hasMore);
-        setPage(1);
-      })
-      .catch((error: unknown) => {
-        if (isAbortError(error)) {
-          return;
-        }
-        console.error(error);
-        setOptions([]);
-        setHasMore(false);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => controller.abort();
-  }, [isSearchable, debouncedQuery, language]);
+    },
+  });
 
   const loadMore = useCallback(() => {
-    if (!isSearchable || !hasMore || isLoadingMore) {
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length < SENSE_SEARCH_MIN_QUERY_LENGTH || !hasMore || isLoadingMore) {
       return;
     }
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
 
-    fetchSenses({ ...searchParams, page: String(nextPage) })
+    fetchSenses({ query: trimmedQuery, language, limit: String(SENSE_SEARCH_DEFAULT_LIMIT), page: String(nextPage) })
       .then((data) => {
         setOptions((previous) => [...previous, ...data.items]);
         setHasMore(data.hasMore);
@@ -140,7 +112,7 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
       })
       .catch((error: unknown) => console.error(error))
       .finally(() => setIsLoadingMore(false));
-  }, [isSearchable, hasMore, isLoadingMore, page, debouncedQuery, language]);
+  }, [query, language, hasMore, isLoadingMore, page]);
 
   return {
     query,
