@@ -18,13 +18,6 @@ const Header = ({ isAdmin }: HeaderProps) => {
           <EntrySearchForm />
         </div>
         <nav className="flex shrink-0 flex-wrap items-center justify-evenly gap-2 text-sm md:justify-end md:gap-4">
-          <Link href="/lang/ar" className="text-blue-600 hover:underline">
-            Arabic
-          </Link>
-          <Link href="/lang/en" className="text-blue-600 hover:underline">
-            English
-          </Link>
-
           {isAdmin ? (
             <>
               <Link href="/admin/new-entry" className="text-blue-600 hover:underline">

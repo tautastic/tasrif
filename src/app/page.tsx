@@ -1,5 +1,12 @@
+import Link from "next/link";
 import EntrySection from "~/components/entry/EntrySection";
 import { getRandomLexicalEntries, getRecentLexicalEntries } from "~/server/db/repository/lexical-entry";
+
+const BROWSE_LINKS = [
+  { href: "/lang/ar", label: "Arabic entries" },
+  { href: "/lang/en", label: "English entries" },
+  { href: "/arabic-verb-form", label: "Arabic verb forms" },
+] as const;
 
 const EntryHighlights = async () => {
   const [recentEntries, randomEntries] = await Promise.all([getRecentLexicalEntries(), getRandomLexicalEntries()]);
@@ -15,6 +22,17 @@ const EntryHighlights = async () => {
 export default async function IndexPage() {
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      <p className="text-sm">
+        Browse:{" "}
+        {BROWSE_LINKS.map(({ href, label }, index) => (
+          <span key={href}>
+            {index > 0 && " · "}
+            <Link href={href} className="text-blue-600 hover:underline">
+              {label}
+            </Link>
+          </span>
+        ))}
+      </p>
       <EntryHighlights />
     </div>
   );
