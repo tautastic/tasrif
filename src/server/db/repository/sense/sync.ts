@@ -1,34 +1,18 @@
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { eq, inArray, or, sql } from "drizzle-orm";
 import type { SenseParseOutputType } from "~/components/admin/entry-edit-form/schema";
-import type { SenseSearchOption, SenseSearchResponse } from "~/lib/api/sense-search";
-import { type DbTransaction, db } from "~/server/db";
-import { type LanguageType, lexicalEntry, sense, senseRelation, translationLink } from "~/server/db/schema";
-
-const DEFAULT_RELATION_STRENGTH = 5;
-
-interface SavedSense {
-  id: number;
-  input: SenseParseOutputType;
-}
-
-const dedupeBy = <T>(items: readonly T[], keyOf: (item: T) => string): T[] => {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    const key = keyOf(item);
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-};
+import type { DbTransaction } from "~/server/db";
+import { type LanguageType, sense, senseRelation, translationLink } from "~/server/db/schema";
+import { DEFAULT_RELATION_STRENGTH, dedupeBy, type SavedSense } from "./shared";
 
 const upsertSenses = async (
   tx: DbTransaction,
   entryId: number,
   senses: SenseParseOutputType[],
 ): Promise<SavedSense[]> => {
-  const existing = await tx.select({ id: sense.id }).from(sense).where(eq(sense.lexicalEntryId, entryId));
+  const existing = await tx.query.sense.findMany({
+    where: { lexicalEntryId: entryId },
+    columns: { id: true },
+  });
   const incomingIds = new Set(senses.map((s) => s.id));
   const staleIds = existing.map((row) => row.id).filter((id) => !incomingIds.has(id));
 
@@ -138,67 +122,8 @@ export const syncSenses = async (
   entryId: number,
   entryLanguage: LanguageType,
   senses: SenseParseOutputType[],
-): Promise<void> => {
+) => {
   const saved = await upsertSenses(tx, entryId, senses);
   await replaceTranslations(tx, entryLanguage, saved);
   await replaceRelations(tx, saved);
-};
-
-export const searchSenses = async ({
-  query,
-  language,
-  page = 1,
-  limit = 20,
-}: {
-  query: string;
-  language?: LanguageType;
-  page?: number;
-  limit?: number;
-}): Promise<SenseSearchResponse> => {
-  const searchTerm = query.trim();
-  if (!searchTerm) {
-    return { items: [], hasMore: false };
-  }
-
-  const tsQuery = sql`plainto_tsquery('simple', ${searchTerm})`;
-  const matchesQuery = sql`${lexicalEntry.searchVector} @@ ${tsQuery}`;
-
-  const rows = await db
-    .select({
-      id: sense.id,
-      text: lexicalEntry.text,
-      pos: sense.pos,
-      language: lexicalEntry.language,
-    })
-    .from(sense)
-    .innerJoin(lexicalEntry, eq(sense.lexicalEntryId, lexicalEntry.id))
-    .where(language ? and(matchesQuery, eq(lexicalEntry.language, language)) : matchesQuery)
-    .orderBy(
-      desc(sql`ts_rank(${lexicalEntry.searchVector}, ${tsQuery})`),
-      asc(lexicalEntry.text),
-      asc(sense.pos),
-      asc(sense.id),
-    )
-    .limit(limit + 1)
-    .offset((page - 1) * limit);
-
-  return { items: rows.slice(0, limit), hasMore: rows.length > limit };
-};
-
-export const getSensesByIds = async (ids: number[]): Promise<SenseSearchOption[]> => {
-  if (ids.length === 0) {
-    return [];
-  }
-
-  return db
-    .select({
-      id: sense.id,
-      text: lexicalEntry.text,
-      pos: sense.pos,
-      language: lexicalEntry.language,
-    })
-    .from(sense)
-    .innerJoin(lexicalEntry, eq(sense.lexicalEntryId, lexicalEntry.id))
-    .where(inArray(sense.id, ids))
-    .orderBy(asc(lexicalEntry.text), asc(sense.pos), asc(sense.id));
 };
