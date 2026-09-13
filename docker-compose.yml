@@ -1,0 +1,91 @@
+name: tasrif
+
+x-db-image: &db-image
+  build:
+    context: .
+    dockerfile: db.Dockerfile
+  image: tasrif-db
+
+x-db-client-environment: &db-client-environment
+  PGHOST: db
+  PGUSER: ${PGUSER:?PGUSER must be set in .env}
+  PGPASSWORD: ${PGPASSWORD:?PGPASSWORD must be set in .env}
+  PGDATABASE: ${PGDATABASE:?PGDATABASE must be set in .env}
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: web.Dockerfile
+    image: tasrif-web
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *db-client-environment
+      AUTH_PASSWORD: ${AUTH_PASSWORD:?AUTH_PASSWORD must be set in .env}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set in .env}
+    ports:
+      - ${WEB_PORT:-127.0.0.1:3000}:3000
+    networks:
+      - frontend
+      - backend
+    logging: *logging
+
+  db:
+    <<: *db-image
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      APP_DB_USER: ${PGUSER:?PGUSER must be set in .env}
+      APP_DB_PASSWORD: ${PGPASSWORD:?PGPASSWORD must be set in .env}
+      APP_DB_NAME: ${PGDATABASE:?PGDATABASE must be set in .env}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "db-healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+      start_interval: 2s
+    stop_grace_period: 1m
+    networks:
+      - backend
+    logging: *logging
+
+  backup:
+    <<: *db-image
+    entrypoint: ["db-backup", "schedule"]
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *db-client-environment
+      BACKUP_KEEP: "7"
+      BACKUP_INTERVAL_SECONDS: "86400"
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+    networks:
+      - backend
+    logging: *logging
+
+volumes:
+  db-data:
+    name: tasrif-db-data
+    external: true
+
+networks:
+  frontend: {}
+  backend:
+    internal: true
