@@ -1,0 +1,396 @@
+{
+  "_license": "CC-BY-SA-4.0",
+  "_source": "https://en.wiktionary.org/wiki/Appendix:Arabic_verbs",
+  "_note": "Prose, examples, and tabular arrangements adapted from Wiktionary's \"Appendix:Arabic verbs\". Licensed under CC BY-SA 4.0. See LICENSE-WIKTIONARY.",
+  "content": [
+    {
+      "type": "heading",
+      "title": "Derived Stems"
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "value": "Arabic verbs are noted for an unusual system of derivation. From any particular root various verb stems may be formed. Western scholars usually refer to these derivations as “form I”, “form II”, ... up through “form XV,” though these designations are not used indigenously, where they are referred to by derivations from the root "
+        },
+        { "type": "ref", "href": "/root/فعل", "arabic": "ف ع ل", "transliteration": "f ʕ l" },
+        { "type": "text", "value": ". Accordingly, form I would be " },
+        { "type": "ref", "arabic": "فَعَلَ", "href": null, "transliteration": "faʕala" },
+        { "type": "text", "value": ", form II would be " },
+        { "type": "ref", "arabic": "فَعَّلَ", "href": null, "transliteration": "faʕʕala" },
+        {
+          "type": "text",
+          "value": ", etc. These forms refer to triliteral roots (those made of three consonants). There are also quadriliteral roots, made up of four consonants, which come in four forms, “form Iq”, “form IIq”, “form IIIq” and “form IVq”. Triliteral forms XI through XV and quadriliteral forms IIIq and IVq are rare and tend to be intransitive, often stative, verbs (having the meaning “to be or become Y” where Y is an adjective)."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "value": "These forms and their associated participles and verbal nouns are the primary means of forming vocabulary in Arabic. All of the examples shown here are the citation forms, which in Arabic means the 3rd-person masculine singular perfect (e.g., “he did”, “he wrote”)."
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "title": "Form I"
+    },
+    {
+      "type": "mainCategory",
+      "href": "arabic-verbs/form/1",
+      "label": "Arabic form-I verbs"
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "value": "Perfective " },
+        { "type": "ref", "arabic": "فَعَلَ", "href": null, "transliteration": "faʕala" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "فَعِلَ", "href": null, "transliteration": "faʕila" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "فَعُلَ", "href": null, "transliteration": "faʕula" },
+        { "type": "text", "value": ", imperfective " },
+        { "type": "ref", "arabic": "يَفْعَلُ", "href": null, "transliteration": "yafʕalu" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "يَفْعِلُ", "href": null, "transliteration": "yafʕilu" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "يَفْعُلُ", "href": null, "transliteration": "yafʕulu" },
+        { "type": "text", "value": ", active participle " },
+        { "type": "ref", "arabic": "فَاعِل", "href": null, "transliteration": "fāʕil" },
+        { "type": "text", "value": ", passive participle " },
+        { "type": "ref", "arabic": "مَفْعُول", "href": null, "transliteration": "mafʕūl" },
+        { "type": "text", "value": ", imperative (2nd person, m, sg) " },
+        { "type": "ref", "arabic": "اِفْعَلْ", "href": null, "transliteration": "ifʕal" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "اِفْعِلْ", "href": null, "transliteration": "ifʕil" },
+        { "type": "text", "value": ", " },
+        { "type": "ref", "arabic": "اُفْعُلْ", "href": null, "transliteration": "ufʕul" }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "value": "This is the simplest basic form of a verb; it gives the general idea of its root. Most verbs are triliteral, but there are a few quadriliteral ones."
+        }
+      ]
+    },
+    {
+      "type": "examples",
+      "items": [
+        [
+          {
+            "type": "ref",
+            "arabic": "قَتَلَ",
+            "transliteration": "qatala",
+            "gloss": "to kill",
+            "literal": "he killed"
+          }
+        ],
+        [
+          {
+            "type": "ref",
+            "arabic": "سَلِمَ",
+            "transliteration": "salima",
+            "gloss": "to be safe",
+            "literal": "he was safe"
+          }
+        ],
+        [
+          {
+            "type": "ref",
+            "arabic": "ضَحِكَ",
+            "transliteration": "ḍaḥika",
+            "gloss": "to laugh",
+            "literal": "he laughed"
+          }
+        ],
+        [
+          {
+            "type": "ref",
+            "arabic": "حَبَّ",
+            "transliteration": "ḥabba",
+            "gloss": "to love",
+            "literal": "he loved"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "value": "When the middle vowel of the perfective is " },
+        { "type": "italic", "value": "a" },
+        { "type": "text", "value": ", the middle vowel of the imperfective may be " },
+        { "type": "italic", "value": "a" },
+        { "type": "text", "value": ", " },
+        { "type": "italic", "value": "i" },
+        { "type": "text", "value": ", or " },
+        { "type": "italic", "value": "u" },
+        { "type": "text", "value": ". When the perfective vowel is " },
+        { "type": "italic", "value": "i" },
+        { "type": "text", "value": ", the imperfective vowel is usually " },
+        { "type": "italic", "value": "a" },
+        { "type": "text", "value": "; when the perfective vowel is " },
+        { "type": "italic", "value": "u" },
+        { "type": "text", "value": ", the imperfective vowel is also " },
+        { "type": "italic", "value": "u" },
+        { "type": "text", "value": "." }
+      ]
+    },
+    {
+      "type": "table",
+      "headers": [
+        { "content": "perfective vowel" },
+        { "content": "imperfective vowel" },
+        { "content": "example", "colSpan": 3 }
+      ],
+      "rows": [
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "a" }], "rowSpan": 3, "align": "center" },
+            { "content": [{ "type": "text", "value": "u" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "كَتَبَ", "transliteration": "kataba" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَكْتُبُ", "transliteration": "yaktubu" }] },
+            { "content": [{ "type": "text", "value": "to write" }] }
+          ]
+        },
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "i" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "غَسَلَ", "transliteration": "ḡasala" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَغْسِلُ", "transliteration": "yaḡsilu" }] },
+            { "content": [{ "type": "text", "value": "to wash" }] }
+          ]
+        },
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "a" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "ذَهَبَ", "transliteration": "ḏahaba" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَذْهَبُ", "transliteration": "yaḏhabu" }] },
+            { "content": [{ "type": "text", "value": "to go" }] }
+          ]
+        },
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "i" }], "rowSpan": 2, "align": "center" },
+            { "content": [{ "type": "text", "value": "a" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "شَرِبَ", "transliteration": "šariba" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَشْرَبُ", "transliteration": "yašrabu" }] },
+            { "content": [{ "type": "text", "value": "to drink" }] }
+          ]
+        },
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "i" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "حَسِبَ", "transliteration": "ḥasiba" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَحْسِبُ", "transliteration": "yaḥsibu" }] },
+            { "content": [{ "type": "text", "value": "to assume" }] }
+          ]
+        },
+        {
+          "cells": [
+            { "content": [{ "type": "text", "value": "u" }], "align": "center" },
+            { "content": [{ "type": "text", "value": "u" }], "align": "center" },
+            { "content": [{ "type": "ref", "arabic": "كَبُرَ", "transliteration": "kabura" }] },
+            { "content": [{ "type": "ref", "href": null, "arabic": "يَكْبُرُ", "transliteration": "yakburu" }] },
+            { "content": [{ "type": "text", "value": "to be big" }] }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "title": "Form II"
+    },
+    {
+      "type": "mainCategory",
+      "href": "arabic-verbs/form/2",
+      "label": "Arabic form-II verbs"
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "value": "Perfective " },
+        { "type": "ref", "arabic": "فَعَّلَ", "href": null, "transliteration": "faʕʕala" },
+        { "type": "text", "value": ", imperfective " },
+        { "type": "ref", "arabic": "يُفَعِّلُ", "href": null, "transliteration": "yufaʕʕilu" },
+        { "type": "text", "value": ", verbal noun generally " },
+        { "type": "ref", "arabic": "تَفْعِيل", "href": null, "transliteration": "tafʕīl" },
+        { "type": "text", "value": ", in weak verbs necessarily and final-hamzated verbs facultatively " },
+        { "type": "ref", "arabic": "تَفْعِلَة", "href": null, "transliteration": "tafʕila" },
+        { "type": "text", "value": ", with geminate verbs sometimes " },
+        { "type": "ref", "arabic": "تَفْعَال", "href": null, "transliteration": "tafʕāl" },
+        { "type": "text", "value": ", in rare historical cases a " },
+        { "type": "ref", "arabic": "فِعَّال", "href": null, "transliteration": "fiʕʕāl" },
+        { "type": "text", "value": " verbal noun exists, active participle " },
+        { "type": "ref", "arabic": "مُفَعِّل", "href": null, "transliteration": "mufaʕʕil" },
+        { "type": "text", "value": ", passive participle " },
+        { "type": "ref", "arabic": "مُفَعَّل", "href": null, "transliteration": "mufaʕʕal" },
+        { "type": "text", "value": ", imperative (2nd person, m, sg) " },
+        { "type": "ref", "arabic": "فَعِّلْ", "href": null, "transliteration": "faʕʕil" }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "value": "This stem is formed by doubling the second radical. The meaning this form imparts is intensive or extensive, causative, declarative, or denominative."
+        }
+      ]
+    },
+    {
+      "type": "meaningList",
+      "items": [
+        {
+          "label": "Intensive",
+          "arabic": "لِلْمُبَالَغَة",
+          "transliteration": "lilmubālaḡa",
+          "description": "the action of the base verb performed with great violence or force:",
+          "items": [
+            [
+              {
+                "type": "ref",
+                "arabic": "قَتَّلَ",
+                "transliteration": "qattala",
+                "gloss": "to massacre",
+                "cf": { "type": "ref", "arabic": "قَتَلَ", "transliteration": "qatala", "gloss": "to kill" }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "قَطَّعَ",
+                "transliteration": "qaṭṭaʕa",
+                "gloss": "to cut to pieces, to hack apart",
+                "cf": { "type": "ref", "arabic": "قَطَعَ", "transliteration": "qaṭaʕa", "gloss": "to cut" }
+              }
+            ]
+          ]
+        },
+        {
+          "label": "Causative or factitive",
+          "arabic": "لِلتَّعْدِيَة",
+          "description": "intransitive Form I verbs become transitive; transitive Form I verbs become doubly transitive:",
+          "items": [
+            [
+              {
+                "type": "ref",
+                "arabic": "كَتَّبَ",
+                "transliteration": "kattaba",
+                "gloss": "to cause to write, to teach to write",
+                "cf": { "type": "ref", "arabic": "كَتَبَ", "transliteration": "kataba", "gloss": "to write" }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "كَبَّرَ",
+                "transliteration": "kabbara",
+                "gloss": "to make big, to enlarge",
+                "cf": { "type": "ref", "arabic": "كَبُرَ", "transliteration": "kabura", "gloss": "to be big" }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "ظَمَّأَ",
+                "transliteration": "ẓammaʔa",
+                "gloss": "to make thirsty",
+                "cf": { "type": "ref", "arabic": "ظَمِئَ", "transliteration": "ẓamiʔa", "gloss": "to be thirsty" }
+              }
+            ]
+          ]
+        },
+        {
+          "label": "Declarative or estimative",
+          "description": "to regard or treat the object as having the quality of the base verb:",
+          "items": [
+            [
+              {
+                "type": "ref",
+                "arabic": "خَطَّأَ",
+                "transliteration": "ḵaṭṭaʔa",
+                "gloss": "to charge with an error, to declare guilty",
+                "cf": {
+                  "type": "ref",
+                  "arabic": "خَطِئَ",
+                  "transliteration": "ḵaṭiʔa",
+                  "gloss": "to err, to make a mistake"
+                }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "كَذَّبَ",
+                "transliteration": "kaḏḏaba",
+                "gloss": "to accuse of lying, to call a liar",
+                "cf": { "type": "ref", "arabic": "كَذَبَ", "transliteration": "kaḏaba", "gloss": "to lie" }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "كَفَّرَ",
+                "transliteration": "kaffara",
+                "gloss": "to declare an infidel, to charge with unbelief",
+                "cf": { "type": "ref", "arabic": "كَفَرَ", "transliteration": "kafara", "gloss": "to disbelieve" }
+              }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "جَهَّلَ",
+                "transliteration": "jahhala",
+                "gloss": "to regard as ignorant, to tax with ignorance",
+                "cf": { "type": "ref", "arabic": "جَهِلَ", "transliteration": "jahila", "gloss": "to be ignorant" }
+              }
+            ]
+          ]
+        },
+        {
+          "label": "Denominative",
+          "description": "expressing the making or doing of, or being occupied with, the thing expressed by the noun from which the verb is derived:",
+          "items": [
+            [
+              { "type": "ref", "arabic": "مَرَّضَ", "transliteration": "marraḍa", "gloss": "to nurse the sick" },
+              { "type": "text", "value": ", from " },
+              { "type": "ref", "arabic": "مَرِيض", "transliteration": "marīḍ", "gloss": "sick person" }
+            ],
+            [
+              { "type": "ref", "arabic": "جَنَّسَ", "transliteration": "jannasa", "gloss": "to classify" },
+              { "type": "text", "value": ", from " },
+              { "type": "ref", "arabic": "جِنْس", "transliteration": "jins", "gloss": "kind" }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "بَخَّرَ",
+                "transliteration": "baḵḵara",
+                "gloss": "to fumigate, to perfume with incense"
+              },
+              { "type": "text", "value": ", from " },
+              { "type": "ref", "arabic": "بَخُور", "transliteration": "baḵūr", "gloss": "incense" }
+            ],
+            [
+              {
+                "type": "ref",
+                "arabic": "خَمَّرَ",
+                "transliteration": "ḵammara",
+                "gloss": "to leaven, to cause to ferment"
+              },
+              { "type": "text", "value": ", from " },
+              { "type": "ref", "arabic": "خَمْر", "transliteration": "ḵamr", "gloss": "wine; yeast" }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
