@@ -1,9 +1,24 @@
 ## Running with Docker
 
-[`docker-compose.yml`](docker-compose.yml) runs three containers:
+[`docker-compose.yml`](docker-compose.yml) runs six containers:
 
 - **web** — the Next.js server ([`web.Dockerfile`](web.Dockerfile)), running as
-  an unprivileged user.
+  an unprivileged user. It is not published directly; `nginx` is the only
+  public entry point.
+- **nginx** — reverse proxy terminating HTTPS and forwarding to `web`. Config
+  is templated from [`nginx/templates/default.conf.template`](nginx/templates/default.conf.template)
+  using the `DOMAIN` environment variable. It also picks up
+  [`nginx/docker-entrypoint.d/99-reload-loop.sh`](nginx/docker-entrypoint.d/99-reload-loop.sh),
+  which backgrounds a loop that reloads nginx every 12h so renewed
+  certificates get picked up. It's a `docker-entrypoint.d/` script rather
+  than a custom `command:` override because the base image only runs its
+  config templating when it's actually invoked as `nginx` — overriding
+  `command:` would skip that step.
+- **certbot** — obtains and renews the Let's Encrypt certificate for `DOMAIN`,
+  checking for renewal every 12 hours.
+- **fail2ban** — watches nginx's logs and bans abusive IPs at the host
+  firewall level. Runs with `network_mode: host` since it manages `iptables`
+  directly.
 - **db** — PostgreSQL 18 ([`db.Dockerfile`](db.Dockerfile)). It publishes no
   ports and sits on an internal
   network shared only with `web` and `backup`. Over the network it accepts only
@@ -18,22 +33,64 @@
    `PGDATABASE` name the unprivileged
    role and the database it owns; `POSTGRES_PASSWORD` is for the superuser;
    `PGHOST` is ignored. Generate
-   `AUTH_SECRET` with `openssl rand -base64 32`.
+   `AUTH_SECRET` with `openssl rand -base64 32`. `DOMAIN` is the hostname
+   the site will be served on (it must already point at this machine) and
+   `CERTBOT_EMAIL` is where Let's Encrypt sends expiry/problem notices.
 2. Create the volume that holds the database (once):
    ```bash
    docker volume create tasrif-db-data
    ```
-3. Build and start everything:
+3. Make the mounted scripts executable — bind mounts preserve the host file's
+   executable bit, so this has to be set once on the host (git preserves it
+   afterwards):
    ```bash
-   docker compose up -d --build
+   chmod +x nginx/init-letsencrypt.sh nginx/docker-entrypoint.d/99-reload-loop.sh
+   ```
+4. Build everything except `nginx` and `certbot` first, since they need a
+   certificate to exist before they can start cleanly:
+   ```bash
+   docker compose build
+   docker compose up -d db backup web
+   ```
+5. Run the one-time bootstrap script to obtain the first certificate. It
+   spins up nginx with a throwaway self-signed cert just long enough to
+   complete the Let's Encrypt HTTP challenge, then swaps in the real one:
+   ```bash
+   ./nginx/init-letsencrypt.sh
+   ```
+6. Start the rest of the stack:
+   ```bash
+   docker compose up -d
    ```
 
-The app is published on `127.0.0.1:3000` (change it with `WEB_PORT`). In
-production, session cookies are
-`Secure`, so anywhere other than `localhost` the admin login only works over
-HTTPS. Put a reverse proxy in front
-that terminates TLS and sets `X-Forwarded-For`, which the login rate limit uses
-to identify clients.
+From then on, `docker compose up -d --build` is enough for routine deploys —
+`certbot` keeps the certificate renewed and `nginx` reloads periodically to
+pick up the new one.
+
+The app is published on ports 80/443 (change them with `HTTP_PORT` /
+`HTTPS_PORT`), with HTTP redirecting to HTTPS. Because nginx sits in front,
+`X-Forwarded-For` is already set correctly for the admin login rate limit —
+no extra reverse-proxy setup needed there.
+
+### fail2ban
+
+`fail2ban` reads `nginx`'s access log (shared via the `nginx-logs` volume)
+and bans IPs at the host firewall for:
+
+- repeated failed/rate-limited attempts against `/api/auth/login`
+  ([`fail2ban/jail.d/nginx-login.conf`](fail2ban/jail.d/nginx-login.conf))
+- generic exploit/bot probing
+  ([`fail2ban/jail.d/nginx-botsearch.conf`](fail2ban/jail.d/nginx-botsearch.conf))
+
+This is a network-level backstop on top of the app's own in-memory login
+rate limiter, not a replacement for it. `NET_ADMIN`/`NET_RAW` are usually
+enough for it to manage `iptables`; if bans don't take effect on your host,
+you may need to run it `privileged: true` instead.
+
+Check current bans with:
+```bash
+docker compose exec fail2ban fail2ban-client status nginx-login
+```
 
 ### Backups
 

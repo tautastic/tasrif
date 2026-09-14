@@ -33,11 +33,62 @@ services:
       <<: *db-client-environment
       AUTH_PASSWORD: ${AUTH_PASSWORD:?AUTH_PASSWORD must be set in .env}
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set in .env}
-    ports:
-      - ${WEB_PORT:-127.0.0.1:3000}:3000
     networks:
       - frontend
       - backend
+    logging: *logging
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN must be set in .env}
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/docker-entrypoint.d/99-reload-loop.sh:/docker-entrypoint.d/99-reload-loop.sh:ro
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+      - nginx-logs:/var/log/nginx
+    ports:
+      - ${HTTP_PORT:-80}:80
+      - ${HTTPS_PORT:-443}:443
+    networks:
+      - frontend
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $$!; done"]
+    networks:
+      - frontend
+    logging: *logging
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - nginx
+    environment:
+      TZ: ${TZ:-UTC}
+      F2B_LOG_TARGET: STDOUT
+      F2B_LOG_LEVEL: INFO
+      F2B_DB_PURGE_AGE: 30d
+    volumes:
+      - fail2ban-data:/data
+      - nginx-logs:/var/log/nginx:ro
+      - ./fail2ban/jail.d:/data/jail.d:ro
+      - ./fail2ban/filter.d:/data/filter.d:ro
     logging: *logging
 
   db:
@@ -84,6 +135,11 @@ volumes:
   db-data:
     name: tasrif-db-data
     external: true
+  certbot-etc:
+  certbot-var:
+  certbot-www:
+  nginx-logs:
+  fail2ban-data:
 
 networks:
   frontend: {}
