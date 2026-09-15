@@ -20,10 +20,7 @@ x-logging: &logging
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: web.Dockerfile
-    image: tasrif-web
+    image: ${WEB_IMAGE:-ghcr.io/tautastic/tasrif-web:latest}
     restart: unless-stopped
     init: true
     depends_on:

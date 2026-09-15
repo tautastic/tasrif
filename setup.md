@@ -2,9 +2,11 @@
 
 [`docker-compose.yml`](docker-compose.yml) runs six containers:
 
-- **web** — the Next.js server ([`web.Dockerfile`](web.Dockerfile)), running as
-  an unprivileged user. It is not published directly; `nginx` is the only
-  public entry point.
+- **web** — the Next.js server. Pulled from GitHub Container Registry
+  (`ghcr.io/tautastic/tasrif-web:latest`, built from [`web.Dockerfile`](web.Dockerfile)
+  by [`.github/workflows/docker-build-web.yml`](.github/workflows/docker-build-web.yml)
+  on every push to `main`), running as an unprivileged user. It is not
+  published directly; `nginx` is the only public entry point.
 - **nginx** — reverse proxy terminating HTTPS and forwarding to `web`. Config
   is templated from [`nginx/templates/default.conf.template`](nginx/templates/default.conf.template)
   using the `DOMAIN` environment variable. It also picks up
@@ -46,10 +48,11 @@
    ```bash
    chmod +x nginx/init-letsencrypt.sh nginx/docker-entrypoint.d/99-reload-loop.sh
    ```
-4. Build everything except `nginx` and `certbot` first, since they need a
-   certificate to exist before they can start cleanly:
+4. Build `db`/`backup` and pull `web` first, then start them — `nginx` and
+   `certbot` need a certificate to exist before they can start cleanly:
    ```bash
-   docker compose build
+   docker compose build db backup
+   docker compose pull web
    docker compose up -d db backup web
    ```
 5. Run the one-time bootstrap script to obtain the first certificate. It
@@ -63,9 +66,10 @@
    docker compose up -d
    ```
 
-From then on, `docker compose up -d --build` is enough for routine deploys —
-`certbot` keeps the certificate renewed and `nginx` reloads periodically to
-pick up the new one.
+From then on, `docker compose pull web && docker compose up -d` is enough for
+routine deploys — it pulls the latest image built by CI instead of rebuilding
+locally. `certbot` keeps the certificate renewed and `nginx` reloads
+periodically to pick up the new one.
 
 The app is published on ports 80/443 (change them with `HTTP_PORT` /
 `HTTPS_PORT`), with HTTP redirecting to HTTPS. Because nginx sits in front,
