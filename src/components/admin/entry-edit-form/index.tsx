@@ -8,15 +8,13 @@ import BasicFields from "~/components/admin/entry-edit-form/BasicFields";
 import SensesFields from "~/components/admin/entry-edit-form/SensesFields";
 import { type EntryFormInput, type EntryFormValues, entryFormSchema } from "~/components/admin/entry-edit-form/schema";
 import { createLexicalEntryAction, updateLexicalEntryAction } from "~/server/actions/lexical-entry";
-import type { MorphPatternSelect } from "~/server/db/schema";
 
-type EntryEditFormProps = { morphPatternOptions: MorphPatternSelect[] } & (
+type EntryEditFormProps =
   | { mode: "create"; entry: EntryFormInput }
-  | { mode: "edit"; entry: EntryFormInput & { id: number } }
-);
+  | { mode: "edit"; entry: EntryFormInput & { id: number } };
 
 const EntryEditForm = (props: EntryEditFormProps) => {
-  const { morphPatternOptions, entry } = props;
+  const { entry } = props;
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -50,7 +48,7 @@ const EntryEditForm = (props: EntryEditFormProps) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-        <BasicFields morphPatternOptions={morphPatternOptions} />
+        <BasicFields />
         <SensesFields />
 
         {serverError && <p className="text-red-600">{serverError}</p>}

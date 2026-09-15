@@ -5,7 +5,9 @@ import { syncSenses } from "~/server/db/repository/sense";
 import { lexicalEntry } from "~/server/db/schema";
 import { savedEntryColumns } from "./shared";
 
-export const createLexicalEntry = (input: EntryFormValues) => {
+export type PersistableEntry = Omit<EntryFormValues, "verbFormChoice"> & { morphPatternId: number | null };
+
+export const createLexicalEntry = (input: PersistableEntry) => {
   return db.transaction(async (tx) => {
     const [created] = await tx.insert(lexicalEntry).values(input).returning(savedEntryColumns);
     if (!created) {
@@ -16,7 +18,7 @@ export const createLexicalEntry = (input: EntryFormValues) => {
   });
 };
 
-export const updateLexicalEntry = (input: EntryFormValues & { id: number }) => {
+export const updateLexicalEntry = (input: PersistableEntry & { id: number }) => {
   return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(lexicalEntry)

@@ -6,6 +6,9 @@ export const getLexicalEntryForEdit = (id: number) => {
     where: { id },
     columns: { searchVector: false },
     with: {
+      morphPattern: {
+        columns: { formNumber: true, perfectVowel: true, imperfectVowel: true },
+      },
       senses: {
         with: { translations: true, relatedSenses: true },
         orderBy: (sense) => [asc(sense.senseNumber)],

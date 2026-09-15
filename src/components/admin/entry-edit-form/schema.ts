@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { morphologyOverridesSchema } from "~/lib/validation/morphology";
+import { verbFormChoiceSchema } from "~/lib/validation/verbFormChoice";
 import { languageOptions, type PartOfSpeechType, posTypeEnum, senseRelationTypeEnum } from "~/server/db/schema";
 
 const senseSchema = z.object({
@@ -44,7 +45,7 @@ const entryBaseSchema = z.object({
   }),
   text: z.string().trim().min(1, "Text is required"),
   root: z.string().nullable(),
-  morphPatternId: z.number().nullable(),
+  verbFormChoice: verbFormChoiceSchema.nullable(),
   senses: z.array(senseSchema),
   morphologyOverrides: morphologyOverridesSchema.nullish(),
   isVerified: z.boolean().default(false),
@@ -61,10 +62,10 @@ const normalizeEntryData = <T extends EntryBase>(data: T) => {
   };
 
   if (base.language === "en") {
-    return { ...base, root: null, morphPatternId: null };
+    return { ...base, root: null, verbFormChoice: null };
   }
   if (!hasVerbSense(base)) {
-    return { ...base, morphPatternId: null };
+    return { ...base, verbFormChoice: null };
   }
   return base;
 };
@@ -79,18 +80,18 @@ const validateEntryData = (data: EntryBase, ctx: z.RefinementCtx) => {
   }
 
   if (hasVerbSense(data)) {
-    if (!data.morphPatternId) {
+    if (!data.verbFormChoice) {
       ctx.addIssue({
         code: "custom",
-        message: "Morphological pattern is required for Arabic entries with verb senses",
-        path: ["morphPatternId"],
+        message: "Verb form is required for Arabic entries with verb senses",
+        path: ["verbFormChoice"],
       });
     }
-  } else if (data.morphPatternId) {
+  } else if (data.verbFormChoice) {
     ctx.addIssue({
       code: "custom",
-      message: "Morphological pattern is only allowed for entries with verb senses",
-      path: ["morphPatternId"],
+      message: "Verb form is only allowed for entries with verb senses",
+      path: ["verbFormChoice"],
     });
   }
 };

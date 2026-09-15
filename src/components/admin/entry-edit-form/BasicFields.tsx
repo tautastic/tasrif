@@ -1,20 +1,16 @@
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import SelectField from "~/components/ui/SelectField";
 import TextField from "~/components/ui/TextField";
-import { formatMorphPatternFormNumber } from "~/lib/formatting";
-import type { MorphPatternSelect, PartOfSpeechType } from "~/server/db/schema";
+import {
+  formatVerbFormChoiceLabel,
+  formIVerbFormChoices,
+  higherVerbFormChoices,
+} from "~/lib/validation/verbFormChoice";
+import type { PartOfSpeechType } from "~/server/db/schema";
 import type { EntryFormInput, EntryFormValues } from "./schema";
+import VerbFormStatus from "./VerbFormStatus";
 
-const formatMorphPatternFullTitle = (formNumber: number, description: string): string => {
-  const title = `Form ${formatMorphPatternFormNumber(formNumber)}`;
-  return description === "" ? title : `${title}, ${description}`;
-};
-
-interface BasicFieldsProps {
-  morphPatternOptions: MorphPatternSelect[];
-}
-
-const BasicFields = ({ morphPatternOptions }: BasicFieldsProps) => {
+const BasicFields = () => {
   const {
     register,
     control,
@@ -22,6 +18,8 @@ const BasicFields = ({ morphPatternOptions }: BasicFieldsProps) => {
   } = useFormContext<EntryFormInput, unknown, EntryFormValues>();
   const language = useWatch({ control, name: "language" });
   const senses = useWatch({ control, name: "senses" });
+  const root = useWatch({ control, name: "root" });
+  const verbFormChoice = useWatch({ control, name: "verbFormChoice" });
   const isArabic = language === "ar";
   const hasSenseWith = (pos: PartOfSpeechType) => senses?.some((s) => s.pos === pos) ?? false;
   const hasVerb = hasSenseWith("verb");
@@ -60,28 +58,38 @@ const BasicFields = ({ morphPatternOptions }: BasicFieldsProps) => {
               </div>
               <div className="col-span-2">
                 <Controller
-                  name="morphPatternId"
+                  name="verbFormChoice"
                   control={control}
                   render={({ field }) => (
                     <SelectField
-                      id="morphPatternId"
-                      label="Pattern"
+                      id="verbFormChoice"
+                      label="Verb form"
                       registration={{
                         ...field,
-                        onChange: (e) => field.onChange(e.target.value ? Number(e.target.value) : null),
+                        onChange: (e) => field.onChange(e.target.value || null),
                         value: field.value ?? "",
                       }}
-                      error={errors.morphPatternId?.message}
+                      error={errors.verbFormChoice?.message}
                     >
                       <option className="hidden" value=""></option>
-                      {morphPatternOptions.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {formatMorphPatternFullTitle(p.formNumber, p.description)}
-                        </option>
-                      ))}
+                      <optgroup label="Form I">
+                        {formIVerbFormChoices.map((choice) => (
+                          <option key={choice} value={choice}>
+                            {formatVerbFormChoiceLabel(choice)}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Forms II – X">
+                        {higherVerbFormChoices.map((choice) => (
+                          <option key={choice} value={choice}>
+                            {formatVerbFormChoiceLabel(choice)}
+                          </option>
+                        ))}
+                      </optgroup>
                     </SelectField>
                   )}
                 />
+                <VerbFormStatus root={root ?? ""} verbFormChoice={verbFormChoice ?? null} />
               </div>
               <div className="flex flex-col justify-end">
                 <Controller

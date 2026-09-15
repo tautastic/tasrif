@@ -10,8 +10,10 @@ import {
   entryEditSchema,
 } from "~/components/admin/entry-edit-form/schema";
 import { isNonEmptyString } from "~/lib/validation";
+import { formatVerbFormChoiceLabel, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
 import { requireAdminAction } from "~/server/auth/guard";
 import { createLexicalEntry, deleteLexicalEntryById, updateLexicalEntry } from "~/server/db/repository/lexical-entry";
+import { resolveVerbMorphPattern } from "~/server/db/repository/morph-pattern";
 import type { LanguageType } from "~/server/db/schema";
 
 const parseOrThrow = <S extends z.ZodType>(schema: S, data: unknown): z.output<S> => {
@@ -43,18 +45,47 @@ const revalidateLexicalEntryPages = (...entries: RevalidateLexicalEntryPages[]) 
   });
 };
 
+const withResolvedMorphPattern = async <T extends { root: string | null; verbFormChoice: VerbFormChoice | null }>(
+  entry: T,
+): Promise<Omit<T, "verbFormChoice"> & { morphPatternId: number | null }> => {
+  const { verbFormChoice, ...rest } = entry;
+  if (!verbFormChoice) {
+    return { ...rest, morphPatternId: null };
+  }
+  if (!rest.root) {
+    throw new Error("Root is required to resolve a verb's morphological pattern");
+  }
+
+  let pattern: Awaited<ReturnType<typeof resolveVerbMorphPattern>>;
+  try {
+    pattern = await resolveVerbMorphPattern(rest.root, verbFormChoice);
+  } catch {
+    throw new Error(`Root '${rest.root}' is not a valid triliteral root`);
+  }
+
+  if (!pattern) {
+    throw new Error(
+      `No morphological pattern is available yet for root '${rest.root}' in ${formatVerbFormChoiceLabel(verbFormChoice)}`,
+    );
+  }
+
+  return { ...rest, morphPatternId: pattern.id };
+};
+
 export async function createLexicalEntryAction(data: EntryCreateType) {
   await requireAdminAction();
   const entry = parseOrThrow(entryCreateSchema, data);
-  revalidateLexicalEntryPages(entry);
-  return createLexicalEntry(entry);
+  const resolved = await withResolvedMorphPattern(entry);
+  revalidateLexicalEntryPages(resolved);
+  return createLexicalEntry(resolved);
 }
 
 export async function updateLexicalEntryAction(data: EntryEditType) {
   await requireAdminAction();
   const entry = parseOrThrow(entryEditSchema, data);
+  const resolved = await withResolvedMorphPattern(entry);
 
-  const updated = await updateLexicalEntry({ ...entry, id: entry.id });
+  const updated = await updateLexicalEntry(resolved);
   if (!updated) {
     throw new Error(`Lexical entry with id '${entry.id}' no longer exists`);
   }

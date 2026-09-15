@@ -3,20 +3,26 @@ import { notFound } from "next/navigation";
 import { EntryEditForm } from "~/components/admin/entry-edit-form";
 import { parseMorphologyOverrides } from "~/lib/validation/morphology";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { findVerbFormChoice } from "~/lib/validation/verbFormChoice";
 import { getLexicalEntryForEdit } from "~/server/db/repository/lexical-entry";
-import { getAllMorphPatterns } from "~/server/db/repository/morph-pattern";
 
 export default async function EditEntryPage({ params }: { params: Promise<{ id: string }> }) {
   const entryId = await parseIdOrNotFound(params);
-  const [rawEntry, patterns] = await Promise.all([getLexicalEntryForEdit(entryId), getAllMorphPatterns()]);
+  const rawEntry = await getLexicalEntryForEdit(entryId);
 
   if (!rawEntry) {
     notFound();
   }
 
-  const { morphologyOverrides: rawMorphologyOverrides, ...entry } = rawEntry;
+  const {
+    morphologyOverrides: rawMorphologyOverrides,
+    morphPattern,
+    morphPatternId: _morphPatternId,
+    ...entry
+  } = rawEntry;
 
   const morphologyOverrides = parseMorphologyOverrides(rawMorphologyOverrides);
+  const verbFormChoice = morphPattern ? (findVerbFormChoice(morphPattern) ?? null) : null;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -35,10 +41,10 @@ export default async function EditEntryPage({ params }: { params: Promise<{ id: 
       </div>
       <EntryEditForm
         mode="edit"
-        morphPatternOptions={patterns}
         entry={{
           ...entry,
           morphologyOverrides,
+          verbFormChoice,
         }}
       />
     </div>
