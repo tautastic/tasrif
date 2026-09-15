@@ -2,6 +2,8 @@ import Link from "next/link";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { getVerbFormsWithCounts } from "~/server/db/repository/morph-pattern";
 
+export const dynamic = "force-dynamic";
+
 export default async function ArabicVerbFormsPage() {
   const forms = await getVerbFormsWithCounts();
 
