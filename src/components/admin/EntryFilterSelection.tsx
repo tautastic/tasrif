@@ -15,7 +15,7 @@ const EntryFilterSelection: FC<{ value: string; options: readonly string[] }> = 
     <select
       value={value}
       onChange={handleChange}
-      className="mb-4 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700"
+      className="mb-4 border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700"
     >
       {options.map((f) => (
         <option key={f} value={f}>

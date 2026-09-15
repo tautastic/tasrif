@@ -19,13 +19,21 @@ export const getVerbFormsWithCounts = async () => {
 
 const INVALID_ROOT_SQLSTATE = "22023";
 
-const isInvalidRootError = (error: unknown): error is { message: string } =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (error as { code: unknown }).code === INVALID_ROOT_SQLSTATE &&
-  "message" in error &&
-  typeof (error as { message: unknown }).message === "string";
+const getInvalidRootCause = (error: unknown): { message: string } | null => {
+  if (typeof error !== "object" || error === null || !("cause" in error)) {
+    return null;
+  }
+  const cause = (error as { cause: unknown }).cause;
+  if (
+    typeof cause !== "object" ||
+    cause === null ||
+    (cause as { code?: unknown }).code !== INVALID_ROOT_SQLSTATE ||
+    typeof (cause as { message?: unknown }).message !== "string"
+  ) {
+    return null;
+  }
+  return cause as { message: string };
+};
 
 export interface RootClassification {
   labels: string[] | null;
@@ -37,8 +45,9 @@ export const describeVerbRoot = async (root: string): Promise<RootClassification
     const result = await db.execute<{ describe_root: string[] }>(sql`SELECT describe_root(${root}) AS describe_root`);
     return { labels: result.rows[0]?.describe_root ?? null, rootError: null };
   } catch (error) {
-    if (isInvalidRootError(error)) {
-      return { labels: null, rootError: error.message };
+    const invalidRootCause = getInvalidRootCause(error);
+    if (invalidRootCause) {
+      return { labels: null, rootError: invalidRootCause.message };
     }
     throw error;
   }

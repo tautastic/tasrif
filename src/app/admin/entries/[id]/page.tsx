@@ -24,7 +24,7 @@ export default async function AdminEntryPreviewPage({ params }: { params: Promis
           &larr; Back to entries
         </Link>
         {!entry.isVerified && (
-          <span className="text-sm font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-sm">Unverified</span>
+          <span className="text-sm font-medium text-amber-700 bg-amber-100 px-2 py-1">Unverified</span>
         )}
       </div>
 

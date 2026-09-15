@@ -22,7 +22,7 @@
       U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
   }
 
-  input {
+  input:not([type="checkbox"]):not([type="radio"]) {
     height: 2.5rem;
   }
 
@@ -44,5 +44,27 @@
   .prose h4,
   .prose h5 {
     font-family: "Linux Libertine", "Georgia", "Times", "Source Serif 4", serif;
+  }
+}
+
+@layer components {
+  .field-control {
+    @apply w-full border border-gray-300 px-3 py-2;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-4 py-2 hover:bg-gray-300;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white px-4 py-2 hover:bg-red-700;
+  }
+
+  .nav-link {
+    @apply text-blue-700 hover:underline;
   }
 }

@@ -44,7 +44,7 @@ const SenseItem = ({ sense, language }: SenseItemProps) => {
 
   return (
     <div id={senseItemId} className="pl-0">
-      <span className="text-sm font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-sm">
+      <span className="text-sm font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5">
         {formatPartOfSpeechType(sense.pos)}
       </span>
 

@@ -44,7 +44,7 @@ const AsyncSenseSelect = ({ id, language, value, onChange, onBlur, placeholder }
         onChange={(event) => setQuery(event.target.value)}
         onBlur={onBlur}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded px-3 py-2"
+        className="field-control"
       />
 
       {selectedLabel && <p className="text-xs text-gray-600">Selected: {selectedLabel}</p>}
@@ -56,7 +56,7 @@ const AsyncSenseSelect = ({ id, language, value, onChange, onBlur, placeholder }
       ) : options.length === 0 ? (
         <p className="text-xs text-gray-500">No matching senses found.</p>
       ) : (
-        <div className="border rounded divide-y divide-gray-100">
+        <div className="border border-gray-300 divide-y divide-gray-100">
           {options.map((option) => (
             <button
               key={option.id}

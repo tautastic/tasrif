@@ -13,7 +13,7 @@ export default async function DeleteEntryPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 border border-gray-300 rounded-lg text-center">
+    <div className="max-w-lg mx-auto mt-10 p-6 border border-gray-300 text-center">
       <h1 className="text-2xl font-bold mb-4">Delete Entry</h1>
 
       <p className="mb-2">Are you sure you want to delete this entry?</p>
@@ -28,7 +28,7 @@ export default async function DeleteEntryPage({ params }: { params: Promise<{ id
 
       <form action={deleteLexicalEntryAction.bind(null, entryId)}>
         <div className="flex justify-center space-x-4">
-          <button type="submit" className="bg-red-600 text-white rounded px-4 py-2 hover:bg-red-700">
+          <button type="submit" className="btn-danger">
             Delete
           </button>
           <CancelButton />

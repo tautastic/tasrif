@@ -27,7 +27,7 @@ const BasicFields = () => {
   const hasAdjective = hasSenseWith("adjective");
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <SelectField id="language" label="Language" registration={register("language")} error={errors.language?.message}>
         <option value="en">English</option>
         <option value="ar">Arabic</option>
@@ -56,7 +56,7 @@ const BasicFields = () => {
                   error={errors.morphologyOverrides?.masdar_override?.message}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <Controller
                   name="verbFormChoice"
                   control={control}
@@ -89,7 +89,7 @@ const BasicFields = () => {
                     </SelectField>
                   )}
                 />
-                <VerbFormStatus root={root ?? ""} verbFormChoice={verbFormChoice ?? null} />
+                {root?.trim() && <VerbFormStatus root={root.trim()} verbFormChoice={verbFormChoice ?? null} />}
               </div>
               <div className="flex flex-col justify-end">
                 <Controller
@@ -102,7 +102,7 @@ const BasicFields = () => {
                         checked={field.value ?? false}
                         onChange={(e) => field.onChange(e.target.checked)}
                         onBlur={field.onBlur}
-                        className="rounded border-gray-300"
+                        className="border-gray-300"
                       />
                       <span>No Passive</span>
                     </label>
@@ -166,7 +166,7 @@ const BasicFields = () => {
                 checked={field.value ?? false}
                 onChange={(e) => field.onChange(e.target.checked)}
                 onBlur={field.onBlur}
-                className="rounded border-gray-300"
+                className="border-gray-300"
               />
               <span>Verified</span>
             </label>

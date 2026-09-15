@@ -10,8 +10,6 @@ export interface FieldRegistration<E extends HTMLElement> {
   value?: string | number | readonly string[];
 }
 
-export const CONTROL_CLASS_NAME = "w-full border border-gray-300 rounded px-3 py-2";
-
 interface FieldProps {
   id?: string;
   label: string;

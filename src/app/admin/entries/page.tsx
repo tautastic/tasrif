@@ -50,11 +50,11 @@ export default async function AdminEntriesPage({
               </td>
               <td className="w-full py-1.5 pr-2 sm:py-2 sm:pr-4">
                 {!entry.isVerified ? (
-                  <span className="block w-full text-center text-[10px] font-medium text-amber-700 bg-amber-100 px-1 py-0.5 sm:px-1.5 rounded-sm sm:text-xs">
+                  <span className="block w-full text-center text-[10px] font-medium text-amber-700 bg-amber-100 px-1 py-0.5 sm:px-1.5 sm:text-xs">
                     Unverified
                   </span>
                 ) : (
-                  <span className="block w-full text-center text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1 py-0.5 sm:px-1.5 rounded-sm sm:text-xs">
+                  <span className="block w-full text-center text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1 py-0.5 sm:px-1.5 sm:text-xs">
                     Verified
                   </span>
                 )}

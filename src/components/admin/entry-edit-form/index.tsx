@@ -54,18 +54,10 @@ const EntryEditForm = (props: EntryEditFormProps) => {
         {serverError && <p className="text-red-600">{serverError}</p>}
 
         <div className="flex space-x-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={isSubmitting} className="btn-primary">
             {isSubmitting ? "Saving..." : props.mode === "edit" ? "Save Changes" : "Create Entry"}
           </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="bg-gray-200 text-gray-800 rounded px-4 py-2 hover:bg-gray-300"
-          >
+          <button type="button" onClick={() => router.back()} className="btn-secondary">
             Cancel
           </button>
         </div>

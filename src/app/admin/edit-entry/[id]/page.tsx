@@ -25,9 +25,9 @@ export default async function EditEntryPage({ params }: { params: Promise<{ id: 
   const verbFormChoice = morphPattern ? (findVerbFormChoice(morphPattern) ?? null) : null;
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 items-baseline">
-        <h1 className="text-2xl font-bold mb-4">Edit Entry</h1>
+        <h1 className="text-xl font-bold mb-4 sm:text-2xl">Edit Entry</h1>
         <Link href={`/admin/entries/${entryId}`} className="text-blue-600 hover:underline text-sm">
           Preview
         </Link>

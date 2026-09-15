@@ -43,7 +43,7 @@ const SenseEditor = ({
   });
 
   return (
-    <fieldset className="border border-gray-300 rounded p-4 mb-4">
+    <fieldset className="border border-gray-300 p-4 mb-4">
       <legend className="px-2 flex items-center gap-1">
         <span>Sense {senseIndex + 1}</span>
         <button
@@ -124,7 +124,7 @@ const SenseEditor = ({
         />
 
         <div>
-          <h3 className="text-md font-medium mb-1">Translations</h3>
+          <h3 className="text-base font-medium mb-1">Translations</h3>
           <button
             type="button"
             onClick={() => translationsFieldArray.append({ targetSenseId: 0, domain: "", note: "" })}
@@ -134,7 +134,7 @@ const SenseEditor = ({
           </button>
 
           {translationsFieldArray.fields.map((translation, translationIndex) => (
-            <fieldset key={translation.id} className="border border-gray-300 rounded p-3 mb-3">
+            <fieldset key={translation.id} className="border border-gray-300 p-3 mb-3">
               <legend className="px-2">
                 Translation {translationIndex + 1}
                 <button
@@ -189,7 +189,7 @@ const SenseEditor = ({
         </div>
 
         <div>
-          <h3 className="text-md font-medium mb-1">Relations</h3>
+          <h3 className="text-base font-medium mb-1">Relations</h3>
           <button
             type="button"
             onClick={() =>
@@ -206,7 +206,7 @@ const SenseEditor = ({
           </button>
 
           {relationsFieldArray.fields.map((relation, relationIndex) => (
-            <fieldset key={relation.id} className="border border-gray-300 rounded p-3 mb-3">
+            <fieldset key={relation.id} className="border border-gray-300 p-3 mb-3">
               <legend className="px-2">
                 Relation {relationIndex + 1}
                 <button
@@ -340,7 +340,7 @@ const SensesFields = () => {
         <button
           type="button"
           onClick={addSense}
-          className="bg-green-600 text-sm text-white rounded px-3 py-1 hover:bg-green-700"
+          className="bg-green-600 text-sm text-white px-3 py-1 hover:bg-green-700"
         >
           +
         </button>

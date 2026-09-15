@@ -9,7 +9,7 @@ interface PaginationProps {
 
 const MAX_VISIBLE_PAGES = 5;
 
-const linkClassName = "px-2 sm:px-3 py-1 border border-gray-200 rounded text-xs sm:text-sm";
+const linkClassName = "px-2 sm:px-3 py-1 border border-gray-200 text-xs sm:text-sm";
 
 const visiblePages = (currentPage: number, totalPages: number): number[] => {
   const start = Math.max(

@@ -3,31 +3,33 @@
 import Link from "next/link";
 import { useIsAdmin } from "~/hooks/useIsAdmin";
 
+const NAV_LINK_CLASS_NAME = "text-blue-700 hover:underline";
+
 const AdminNav = () => {
   const isAdmin = useIsAdmin();
 
   if (!isAdmin) {
     return (
-      <Link href="/auth/login" className="text-blue-600 hover:underline">
+      <Link href="/auth/login" className={NAV_LINK_CLASS_NAME}>
         Login
       </Link>
     );
   }
 
   return (
-    <>
-      <Link href="/admin/entries" className="text-blue-600 hover:underline">
+    <div className="flex flex-wrap items-center divide-x divide-gray-300">
+      <Link href="/admin/entries" className={`${NAV_LINK_CLASS_NAME} pr-3`}>
         Entries
       </Link>
-      <Link href="/admin/new-entry" className="text-blue-600 hover:underline">
+      <Link href="/admin/new-entry" className={`${NAV_LINK_CLASS_NAME} px-3`}>
         Add Entry
       </Link>
-      <form action="/api/auth/logout" method="POST">
-        <button type="submit" className="text-blue-600 hover:underline hover:cursor-pointer">
+      <form action="/api/auth/logout" method="POST" className="pl-3">
+        <button type="submit" className={`${NAV_LINK_CLASS_NAME} cursor-pointer`}>
           Logout
         </button>
       </form>
-    </>
+    </div>
   );
 };
 

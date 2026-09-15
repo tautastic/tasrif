@@ -1,5 +1,5 @@
 import type { TextareaHTMLAttributes } from "react";
-import { CONTROL_CLASS_NAME, Field, type FieldErrorLike, type FieldRegistration } from "~/components/ui/Field";
+import { Field, type FieldErrorLike, type FieldRegistration } from "~/components/ui/Field";
 
 interface TextAreaFieldProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange" | "onBlur" | "ref"> {
   label: string;
@@ -9,7 +9,7 @@ interface TextAreaFieldProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaEle
 
 const TextAreaField = ({ label, error, registration, ...textareaProps }: TextAreaFieldProps) => (
   <Field id={textareaProps.id} label={label} error={error}>
-    <textarea {...registration} {...textareaProps} className={`${CONTROL_CLASS_NAME} h-24`} />
+    <textarea {...registration} {...textareaProps} className="field-control h-24" />
   </Field>
 );
 
