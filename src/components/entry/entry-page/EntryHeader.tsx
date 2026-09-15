@@ -1,11 +1,10 @@
-import Link from "next/link";
+import AdminEditLink from "~/components/entry/entry-page/AdminEditLink";
 import { type MorphologyOverrides, parseMorphologyOverrides } from "~/lib/validation/morphology";
 import type { EntryPageEntry } from "~/server/db/repository/lexical-entry";
 import type { PartOfSpeechType } from "~/server/db/schema";
 
 interface EntryHeaderProps {
   entry: EntryPageEntry;
-  isAdmin: boolean;
 }
 
 const EXTRA_FORMS = [
@@ -14,7 +13,7 @@ const EXTRA_FORMS = [
   { key: "elative_form", label: "elative", pos: "adjective" },
 ] as const satisfies ReadonlyArray<{ key: keyof MorphologyOverrides; label: string; pos: PartOfSpeechType }>;
 
-const EntryHeader = ({ entry, isAdmin }: EntryHeaderProps) => {
+const EntryHeader = ({ entry }: EntryHeaderProps) => {
   const overrides = parseMorphologyOverrides(entry.morphologyOverrides);
   const availablePos = new Set(entry.senses.map((sense) => sense.pos));
 
@@ -37,13 +36,7 @@ const EntryHeader = ({ entry, isAdmin }: EntryHeaderProps) => {
           ))}
         </div>
       )}
-      {isAdmin && (
-        <span className="text-sm ml-auto">
-          <Link href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline mr-3">
-            Edit
-          </Link>
-        </span>
-      )}
+      <AdminEditLink entryId={entry.id} />
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { countEntriesWithRoot } from "./shared";
 
 export const getLexicalEntryByNormalizedText = async (normalizedText: string) => {
   const entries = await db.query.lexicalEntry.findMany({
-    where: { normalizedText },
+    where: { normalizedText, isVerified: true },
     columns: { searchVector: false },
     with: {
       morphPattern: {

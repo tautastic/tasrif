@@ -1,5 +1,6 @@
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
 import {
+  boolean,
   customType,
   index,
   integer,
@@ -48,6 +49,7 @@ export const lexicalEntry = pgTable(
     passiveParticiple: text("passive_participle"),
     searchVector: tsVector("search_vector"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    isVerified: boolean("is_verified").default(false).notNull(),
   },
   (table) => [
     unique("unique_language_text").on(table.language, table.text),

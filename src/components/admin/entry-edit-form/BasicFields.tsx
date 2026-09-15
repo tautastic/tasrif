@@ -146,6 +146,25 @@ const BasicFields = ({ morphPatternOptions }: BasicFieldsProps) => {
           />
         )
       )}
+
+      <div className="flex flex-col justify-end">
+        <Controller
+          name="isVerified"
+          control={control}
+          render={({ field }) => (
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={field.value ?? false}
+                onChange={(e) => field.onChange(e.target.checked)}
+                onBlur={field.onBlur}
+                className="rounded border-gray-300"
+              />
+              <span>Verified</span>
+            </label>
+          )}
+        />
+      </div>
     </div>
   );
 };

@@ -4,13 +4,11 @@ import EntryHeader from "~/components/entry/entry-page/EntryHeader";
 import RootInfoBox from "~/components/entry/entry-page/RootInfoBox";
 import SenseList from "~/components/entry/entry-page/SenseList";
 import { decodeSlugOrNotFound } from "~/lib/validation/params";
-import { isAuthenticated } from "~/server/auth";
 import { getLexicalEntryByNormalizedText } from "~/server/db/repository/lexical-entry";
 
 export const revalidate = 3600;
 
 export default async function EntryPage({ params }: { params: Promise<{ slug: string }> }) {
-  const isAdmin = await isAuthenticated();
   const decodedSlug = await decodeSlugOrNotFound(params);
   const page = await getLexicalEntryByNormalizedText(decodedSlug);
 
@@ -24,7 +22,7 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
       <div>
         {page.entries.map((entry) => (
           <div key={entry.id} className="mb-8">
-            <EntryHeader entry={entry} isAdmin={isAdmin} />
+            <EntryHeader entry={entry} />
             <SenseList senses={entry.senses} language={page.language} />
             {entry.morphPattern && (
               <div className="mt-4 overflow-x-auto">

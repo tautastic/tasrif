@@ -4,6 +4,7 @@ interface PaginationProps {
   currentPage: number;
   totalPages: number;
   basePath: string;
+  extraParams?: Record<string, string>;
 }
 
 const MAX_VISIBLE_PAGES = 5;
@@ -19,15 +20,20 @@ const visiblePages = (currentPage: number, totalPages: number): number[] => {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 };
 
+const buildHref = (basePath: string, page: number, extraParams: Record<string, string>): string =>
+  `${basePath}?${new URLSearchParams({ ...extraParams, page: String(page) }).toString()}`;
+
 const StepLink = ({
   label,
   page,
   basePath,
+  extraParams,
   disabled,
 }: {
   label: string;
   page: number;
   basePath: string;
+  extraParams: Record<string, string>;
   disabled: boolean;
 }) =>
   disabled ? (
@@ -35,24 +41,30 @@ const StepLink = ({
       {label}
     </span>
   ) : (
-    <Link href={`${basePath}?page=${page}`} className={`${linkClassName} hover:bg-gray-50`}>
+    <Link href={buildHref(basePath, page, extraParams)} className={`${linkClassName} hover:bg-gray-50`}>
       {label}
     </Link>
   );
 
-const Pagination = ({ currentPage, totalPages, basePath }: PaginationProps) => {
+const Pagination = ({ currentPage, totalPages, basePath, extraParams = {} }: PaginationProps) => {
   if (totalPages <= 1) {
     return null;
   }
 
   return (
     <nav className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 mt-6" aria-label="Pagination">
-      <StepLink label="Previous" page={currentPage - 1} basePath={basePath} disabled={currentPage <= 1} />
+      <StepLink
+        label="Previous"
+        page={currentPage - 1}
+        basePath={basePath}
+        extraParams={extraParams}
+        disabled={currentPage <= 1}
+      />
 
       {visiblePages(currentPage, totalPages).map((page) => (
         <Link
           key={page}
-          href={`${basePath}?page=${page}`}
+          href={buildHref(basePath, page, extraParams)}
           className={`${linkClassName} ${page === currentPage ? "bg-blue-600 text-white" : "hover:bg-gray-50"}`}
           aria-current={page === currentPage ? "page" : undefined}
         >
@@ -60,7 +72,13 @@ const Pagination = ({ currentPage, totalPages, basePath }: PaginationProps) => {
         </Link>
       ))}
 
-      <StepLink label="Next" page={currentPage + 1} basePath={basePath} disabled={currentPage >= totalPages} />
+      <StepLink
+        label="Next"
+        page={currentPage + 1}
+        basePath={basePath}
+        extraParams={extraParams}
+        disabled={currentPage >= totalPages}
+      />
     </nav>
   );
 };

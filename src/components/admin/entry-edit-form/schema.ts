@@ -47,6 +47,7 @@ const entryBaseSchema = z.object({
   morphPatternId: z.number().nullable(),
   senses: z.array(senseSchema),
   morphologyOverrides: morphologyOverridesSchema.nullish(),
+  isVerified: z.boolean().default(false),
 });
 
 type EntryBase = z.infer<typeof entryBaseSchema>;

@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { lexicalEntry, morphPattern } from "~/server/db/schema";
 
@@ -15,7 +15,7 @@ export const getVerbFormsWithCounts = async () => {
       total: count(lexicalEntry.id),
     })
     .from(morphPattern)
-    .leftJoin(lexicalEntry, eq(lexicalEntry.morphPatternId, morphPattern.id))
+    .leftJoin(lexicalEntry, and(eq(lexicalEntry.morphPatternId, morphPattern.id), eq(lexicalEntry.isVerified, true)))
     .groupBy(morphPattern.formNumber)
     .orderBy(asc(morphPattern.formNumber));
 

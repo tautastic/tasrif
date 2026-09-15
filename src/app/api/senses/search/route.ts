@@ -6,6 +6,7 @@ import {
   SENSE_SEARCH_MIN_QUERY_LENGTH,
   type SenseSearchResponse,
 } from "~/lib/api/sense-search";
+import { isAuthenticated } from "~/server/auth";
 import { getSensesByIds, searchSenses } from "~/server/db/repository/sense";
 import { languageOptions } from "~/server/db/schema";
 
@@ -26,6 +27,10 @@ const searchQuerySchema = z.object({
 });
 
 export async function GET(request: Request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
 
   const idsParam = searchParams.get("ids");
