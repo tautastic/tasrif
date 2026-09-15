@@ -12,6 +12,7 @@ export interface ArabicRefData {
 export type InlineNode =
   | { type: "text"; value: string }
   | { type: "italic"; value: string }
+  | { type: "bold"; content: InlineNode[] }
   | ({ type: "ref" } & ArabicRefData);
 
 export interface TableHeaderCell {
@@ -37,13 +38,20 @@ export interface MeaningItemData {
   items: InlineNode[][];
 }
 
+/** A bullet whose own text introduces a further indented bullet list. */
+export interface NestedListItemData {
+  content: InlineNode[];
+  items: InlineNode[][];
+}
+
 export type BlockNode =
   | { type: "heading"; title: string }
   | { type: "mainCategory"; href: string; label: string }
   | { type: "paragraph"; content: InlineNode[] }
   | { type: "examples"; items: InlineNode[][] }
   | { type: "table"; headers: TableHeaderCell[]; rows: TableRow[] }
-  | { type: "meaningList"; items: MeaningItemData[] };
+  | { type: "meaningList"; items: MeaningItemData[] }
+  | { type: "nestedList"; items: NestedListItemData[] };
 
 interface ContentFile {
   _license: string;

@@ -7,6 +7,7 @@ import {
   type BlockNode,
   type InlineNode,
   type MeaningItemData,
+  type NestedListItemData,
   type TableHeaderCell,
   type TableRow,
 } from "~/content/appendix/arabic-verbs";
@@ -61,6 +62,12 @@ const Inline = ({ nodes }: { nodes: InlineNode[] }) => (
           return <Fragment key={index}>{node.value}</Fragment>;
         case "italic":
           return <i key={index}>{node.value}</i>;
+        case "bold":
+          return (
+            <b key={index}>
+              <Inline nodes={node.content} />
+            </b>
+          );
         case "ref":
           return <ArabicRef key={index} {...node} />;
         default:
@@ -96,6 +103,19 @@ const MeaningItem = ({ item }: { item: MeaningItemData }) => (
       </>
     )}{" "}
     — {item.description}
+    <ul className="list-disc ml-6 mt-2 space-y-1">
+      {item.items.map((nodes, index) => (
+        <li key={index}>
+          <Inline nodes={nodes} />
+        </li>
+      ))}
+    </ul>
+  </li>
+);
+
+const NestedListItem = ({ item }: { item: NestedListItemData }) => (
+  <li>
+    <Inline nodes={item.content} />
     <ul className="list-disc ml-6 mt-2 space-y-1">
       {item.items.map((nodes, index) => (
         <li key={index}>
@@ -169,6 +189,14 @@ const Block = ({ node }: { node: BlockNode }) => {
         <ul className="list-disc ml-6 mt-4 space-y-4">
           {node.items.map((item, index) => (
             <MeaningItem key={index} item={item} />
+          ))}
+        </ul>
+      );
+    case "nestedList":
+      return (
+        <ul className="list-disc ml-6 mt-4 space-y-4">
+          {node.items.map((item, index) => (
+            <NestedListItem key={index} item={item} />
           ))}
         </ul>
       );
