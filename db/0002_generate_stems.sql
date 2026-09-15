@@ -222,18 +222,82 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION regenerate_derived_stems_for_entry
+(
+  p_entry_id INTEGER
+) RETURNS void
+  LANGUAGE plpgsql AS
+$$
+DECLARE
+  v_root TEXT;
+  v_morph_pattern_id INTEGER;
+  v_morphology_overrides jsonb;
+  pattern_rules jsonb;
+  v_form_number INTEGER;
+  v_no_affix boolean;
+  v_no_passive BOOLEAN;
+BEGIN
+  SELECT root, morph_pattern_id, morphology_overrides
+  INTO v_root, v_morph_pattern_id, v_morphology_overrides
+  FROM lexical_entry
+  WHERE id = p_entry_id;
+
+  IF v_morph_pattern_id IS NOT NULL AND v_root IS NOT NULL AND LENGTH(v_root) >= 3 THEN
+    SELECT rules, form_number, no_affix
+    INTO pattern_rules, v_form_number, v_no_affix
+    FROM morph_pattern
+    WHERE id = v_morph_pattern_id;
+    IF pattern_rules IS NOT NULL THEN
+      v_no_passive := COALESCE((v_morphology_overrides ->> 'no_passive')::boolean, FALSE);
+      UPDATE lexical_entry
+      SET masdar             = vn.masdar,
+          active_participle  = vn.active_participle,
+          passive_participle = vn.passive_participle
+      FROM generate_verbal_nouns(v_root, pattern_rules, v_form_number,
+                                 COALESCE(v_morphology_overrides, '{}'::jsonb), v_no_passive) AS vn
+      WHERE id = p_entry_id;
+      DELETE FROM conjugation WHERE lexical_entry_id = p_entry_id;
+      INSERT INTO conjugation (lexical_entry_id, voice, mood, person, form)
+      SELECT p_entry_id, 'active', cr.mood, kv.key::person_type, kv.value
+      FROM generate_conjugation_rows(v_root, pattern_rules, v_form_number,
+                                     COALESCE(v_morphology_overrides, '{}'::jsonb),
+                                     v_no_affix) AS cr,
+           LATERAL jsonb_each_text(cr.person_forms) AS kv(key, value)
+      WHERE kv.value IS NOT NULL AND kv.value <> '';
+    ELSE
+      UPDATE lexical_entry SET masdar = NULL, active_participle = NULL, passive_participle = NULL WHERE id = p_entry_id;
+      DELETE FROM conjugation WHERE lexical_entry_id = p_entry_id;
+    END IF;
+  ELSE
+    UPDATE lexical_entry SET masdar = NULL, active_participle = NULL, passive_participle = NULL WHERE id = p_entry_id;
+    DELETE FROM conjugation WHERE lexical_entry_id = p_entry_id;
+  END IF;
+  PERFORM recalculate_search_vector(p_entry_id);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION regenerate_all_derived_stems
+(
+) RETURNS void
+  LANGUAGE plpgsql AS
+$$
+DECLARE
+  v_entry_id INTEGER;
+BEGIN
+  FOR v_entry_id IN SELECT id FROM lexical_entry
+    LOOP
+      PERFORM regenerate_derived_stems_for_entry(v_entry_id);
+    END LOOP;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION update_lexical_entry_derived_stems
 (
 ) RETURNS TRIGGER
   LANGUAGE plpgsql AS
 $$
 DECLARE
-  root_text TEXT;
-  pattern_rules jsonb;
-  v_form_number INTEGER;
-  v_no_affix boolean;
   stems_changed BOOLEAN := FALSE;
-  v_no_passive BOOLEAN;
 BEGIN
   IF TG_OP = 'INSERT' THEN
     stems_changed := TRUE;
@@ -244,63 +308,10 @@ BEGIN
     END IF;
   END IF;
   IF stems_changed THEN
-    IF NEW.morph_pattern_id IS NOT NULL AND NEW.root IS NOT NULL AND LENGTH(NEW.root) >= 3 THEN
-      SELECT rules, form_number, no_affix
-      INTO pattern_rules, v_form_number, v_no_affix
-      FROM morph_pattern
-      WHERE id = NEW.morph_pattern_id;
-      IF pattern_rules IS NOT NULL THEN
-        v_no_passive := COALESCE((NEW.morphology_overrides ->> 'no_passive')::boolean, FALSE);
-        UPDATE lexical_entry
-        SET masdar             = vn.masdar,
-            active_participle  = vn.active_participle,
-            passive_participle = vn.passive_participle
-        FROM generate_verbal_nouns(NEW.root, pattern_rules, v_form_number,
-                                   COALESCE(NEW.morphology_overrides, '{}'::jsonb), v_no_passive) AS vn
-        WHERE id = NEW.id;
-        DELETE FROM conjugation WHERE lexical_entry_id = NEW.id;
-        INSERT INTO conjugation (lexical_entry_id, mood,
-                                 first_person_singular,
-                                 second_person_masculine_singular,
-                                 second_person_feminine_singular,
-                                 third_person_masculine_singular,
-                                 third_person_feminine_singular,
-                                 second_person_dual,
-                                 third_person_masculine_dual,
-                                 third_person_feminine_dual,
-                                 first_person_plural,
-                                 second_person_masculine_plural,
-                                 second_person_feminine_plural,
-                                 third_person_masculine_plural,
-                                 third_person_feminine_plural)
-        SELECT NEW.id,
-               cr.mood,
-               cr.person_forms ->> 'first_person_singular',
-               cr.person_forms ->> 'second_person_masculine_singular',
-               cr.person_forms ->> 'second_person_feminine_singular',
-               cr.person_forms ->> 'third_person_masculine_singular',
-               cr.person_forms ->> 'third_person_feminine_singular',
-               cr.person_forms ->> 'second_person_dual',
-               cr.person_forms ->> 'third_person_masculine_dual',
-               cr.person_forms ->> 'third_person_feminine_dual',
-               cr.person_forms ->> 'first_person_plural',
-               cr.person_forms ->> 'second_person_masculine_plural',
-               cr.person_forms ->> 'second_person_feminine_plural',
-               cr.person_forms ->> 'third_person_masculine_plural',
-               cr.person_forms ->> 'third_person_feminine_plural'
-        FROM generate_conjugation_rows(NEW.root, pattern_rules, v_form_number,
-                                       COALESCE(NEW.morphology_overrides, '{}'::jsonb),
-                                       v_no_affix) AS cr;
-      ELSE
-        UPDATE lexical_entry SET masdar = NULL, active_participle = NULL, passive_participle = NULL WHERE id = NEW.id;
-        DELETE FROM conjugation WHERE lexical_entry_id = NEW.id;
-      END IF;
-    ELSE
-      UPDATE lexical_entry SET masdar = NULL, active_participle = NULL, passive_participle = NULL WHERE id = NEW.id;
-      DELETE FROM conjugation WHERE lexical_entry_id = NEW.id;
-    END IF;
+    PERFORM regenerate_derived_stems_for_entry(NEW.id);
+  ELSE
+    PERFORM recalculate_search_vector(NEW.id);
   END IF;
-  PERFORM recalculate_search_vector(NEW.id);
   RETURN NEW;
 END;
 $$;
@@ -315,8 +326,13 @@ CREATE OR REPLACE FUNCTION refresh_derived_stems_for_pattern
 (
 ) RETURNS TRIGGER AS
 $$
+DECLARE
+  v_entry_id INTEGER;
 BEGIN
-  UPDATE lexical_entry SET morph_pattern_id = morph_pattern_id WHERE morph_pattern_id = NEW.id;
+  FOR v_entry_id IN SELECT id FROM lexical_entry WHERE morph_pattern_id = NEW.id
+    LOOP
+      PERFORM regenerate_derived_stems_for_entry(v_entry_id);
+    END LOOP;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

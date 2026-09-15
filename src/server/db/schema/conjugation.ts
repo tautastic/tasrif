@@ -1,7 +1,10 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { index, integer, pgTable, serial, text, unique } from "drizzle-orm/pg-core";
-import { affixMoodEnum } from "./affixRules";
+import { index, integer, pgEnum, pgTable, serial, text, unique } from "drizzle-orm/pg-core";
+import { affixMoodEnum, personTypeEnum } from "./affixRules";
 import { lexicalEntry } from "./lexicalEntry";
+
+export const voiceTypeEnum = pgEnum("voice_type", ["active", "passive"]);
+export type VoiceType = (typeof voiceTypeEnum.enumValues)[number];
 
 export const conjugation = pgTable(
   "conjugation",
@@ -10,25 +13,20 @@ export const conjugation = pgTable(
     lexicalEntryId: integer("lexical_entry_id")
       .notNull()
       .references(() => lexicalEntry.id, { onDelete: "cascade" }),
+    voice: voiceTypeEnum("voice").notNull().default("active"),
     mood: affixMoodEnum("mood").notNull(),
-    firstPersonSingular: text("first_person_singular"),
-    secondPersonMasculineSingular: text("second_person_masculine_singular"),
-    secondPersonFeminineSingular: text("second_person_feminine_singular"),
-    thirdPersonMasculineSingular: text("third_person_masculine_singular"),
-    thirdPersonFeminineSingular: text("third_person_feminine_singular"),
-    secondPersonDual: text("second_person_dual"),
-    thirdPersonMasculineDual: text("third_person_masculine_dual"),
-    thirdPersonFeminineDual: text("third_person_feminine_dual"),
-    firstPersonPlural: text("first_person_plural"),
-    secondPersonMasculinePlural: text("second_person_masculine_plural"),
-    secondPersonFemininePlural: text("second_person_feminine_plural"),
-    thirdPersonMasculinePlural: text("third_person_masculine_plural"),
-    thirdPersonFemininePlural: text("third_person_feminine_plural"),
+    person: personTypeEnum("person").notNull(),
+    form: text("form").notNull(),
   },
   (table) => [
     index("idx_conjugation_entry").on(table.lexicalEntryId),
     index("idx_conjugation_mood").on(table.mood),
-    unique("unique_conjugation_entry_mood").on(table.lexicalEntryId, table.mood),
+    unique("unique_conjugation_entry_voice_mood_person").on(
+      table.lexicalEntryId,
+      table.voice,
+      table.mood,
+      table.person,
+    ),
   ],
 );
 

@@ -1,5 +1,5 @@
 import FormReference from "~/components/entry/FormReference";
-import type { AffixMoodType, ConjugationSelect } from "~/server/db/schema";
+import type { AffixMoodType, ConjugationSelect, PersonType, VoiceType } from "~/server/db/schema";
 
 interface ConjugationTableProps {
   word: string;
@@ -11,32 +11,30 @@ interface ConjugationTableProps {
   conjugations: ConjugationSelect[];
 }
 
-type PersonColumn = Exclude<keyof ConjugationSelect, "id" | "lexicalEntryId" | "mood">;
-
 interface PersonSlot {
-  masculine?: PersonColumn;
-  feminine?: PersonColumn;
+  masculine?: PersonType;
+  feminine?: PersonType;
 }
 
 const FULL_PERSON_SLOTS: readonly PersonSlot[] = [
-  { masculine: "firstPersonSingular" },
-  { masculine: "secondPersonMasculineSingular", feminine: "secondPersonFeminineSingular" },
-  { masculine: "thirdPersonMasculineSingular", feminine: "thirdPersonFeminineSingular" },
-  { masculine: "secondPersonDual" },
-  { masculine: "thirdPersonMasculineDual", feminine: "thirdPersonFeminineDual" },
-  { masculine: "firstPersonPlural" },
-  { masculine: "secondPersonMasculinePlural", feminine: "secondPersonFemininePlural" },
-  { masculine: "thirdPersonMasculinePlural", feminine: "thirdPersonFemininePlural" },
+  { masculine: "first_person_singular" },
+  { masculine: "second_person_masculine_singular", feminine: "second_person_feminine_singular" },
+  { masculine: "third_person_masculine_singular", feminine: "third_person_feminine_singular" },
+  { masculine: "second_person_dual" },
+  { masculine: "third_person_masculine_dual", feminine: "third_person_feminine_dual" },
+  { masculine: "first_person_plural" },
+  { masculine: "second_person_masculine_plural", feminine: "second_person_feminine_plural" },
+  { masculine: "third_person_masculine_plural", feminine: "third_person_feminine_plural" },
 ];
 
 const IMPERATIVE_PERSON_SLOTS: readonly PersonSlot[] = [
   {},
-  { masculine: "secondPersonMasculineSingular", feminine: "secondPersonFeminineSingular" },
+  { masculine: "second_person_masculine_singular", feminine: "second_person_feminine_singular" },
   {},
-  { masculine: "secondPersonDual" },
+  { masculine: "second_person_dual" },
   {},
   {},
-  { masculine: "secondPersonMasculinePlural", feminine: "secondPersonFemininePlural" },
+  { masculine: "second_person_masculine_plural", feminine: "second_person_feminine_plural" },
   {},
 ];
 
@@ -78,6 +76,8 @@ const headerTh = `${baseTh} bg-[#ddefd3]`;
 const genderTh = `${baseTh} bg-[#eaf5e4]`;
 const moodTh = `${headerTh} w-30 h-32`;
 
+const ACTIVE_VOICE: VoiceType = "active";
+
 const ArabicForm = ({ form }: { form: string | null | undefined }) => (form ? <span lang="ar">{form}</span> : null);
 
 const StackedLabel = ({ label, arabicLabel }: { label: string; arabicLabel: string }) => (
@@ -102,12 +102,12 @@ const PrincipalPartRow = ({ label, arabicLabel, form }: { label: string; arabicL
 const MoodRows = ({
   label,
   arabicLabel,
-  conjugation,
+  forms,
   slots,
 }: {
   label: string;
   arabicLabel: string;
-  conjugation: ConjugationSelect;
+  forms: ReadonlyMap<PersonType, string>;
   slots: readonly PersonSlot[];
 }) => (
   <>
@@ -118,7 +118,7 @@ const MoodRows = ({
       <th className={genderTh}>m</th>
       {slots.map((slot, index) => (
         <td key={index} rowSpan={slot.feminine ? 1 : 2} className={baseTd}>
-          <ArabicForm form={slot.masculine && conjugation[slot.masculine]} />
+          <ArabicForm form={slot.masculine && forms.get(slot.masculine)} />
         </td>
       ))}
     </tr>
@@ -127,13 +127,29 @@ const MoodRows = ({
       {slots.map((slot, index) =>
         slot.feminine ? (
           <td key={index} className={baseTd}>
-            <ArabicForm form={conjugation[slot.feminine]} />
+            <ArabicForm form={forms.get(slot.feminine)} />
           </td>
         ) : null,
       )}
     </tr>
   </>
 );
+
+const buildActiveFormsByMood = (conjugations: ConjugationSelect[]): Map<AffixMoodType, Map<PersonType, string>> => {
+  const byMood = new Map<AffixMoodType, Map<PersonType, string>>();
+  for (const row of conjugations) {
+    if (row.voice !== ACTIVE_VOICE) {
+      continue;
+    }
+    let forms = byMood.get(row.mood);
+    if (!forms) {
+      forms = new Map();
+      byMood.set(row.mood, forms);
+    }
+    forms.set(row.person, row.form);
+  }
+  return byMood;
+};
 
 const ConjugationTable = ({
   word,
@@ -144,7 +160,7 @@ const ConjugationTable = ({
   passiveParticiple,
   conjugations,
 }: ConjugationTableProps) => {
-  const byMood = new Map(conjugations.map((conjugation) => [conjugation.mood, conjugation]));
+  const byMood = buildActiveFormsByMood(conjugations);
 
   const principalParts = [
     { label: "verbal noun", arabicLabel: "الْمَصْدَر", form: masdar },
@@ -205,14 +221,14 @@ const ConjugationTable = ({
           </tr>
 
           {MOODS.map(({ mood, label, arabicLabel }) => {
-            const conjugation = byMood.get(mood);
+            const forms = byMood.get(mood);
             return (
-              conjugation && (
+              forms && (
                 <MoodRows
                   key={mood}
                   label={label}
                   arabicLabel={arabicLabel}
-                  conjugation={conjugation}
+                  forms={forms}
                   slots={mood === "imperative" ? IMPERATIVE_PERSON_SLOTS : FULL_PERSON_SLOTS}
                 />
               )
