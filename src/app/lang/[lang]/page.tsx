@@ -3,13 +3,7 @@ import PaginatedEntryList from "~/components/entry/PaginatedEntryList";
 import { formatLanguageName } from "~/lib/formatting";
 import { ENTRY_LIST_PAGE_SIZE, notFoundIfEmpty, parsePageParam } from "~/lib/pagination";
 import { getLexicalEntriesByLanguage } from "~/server/db/repository/lexical-entry";
-import { isLanguageType, languageOptions } from "~/server/db/schema";
-
-export const revalidate = 3600;
-
-export function generateStaticParams() {
-  return languageOptions.map((lang) => ({ lang }));
-}
+import { isLanguageType } from "~/server/db/schema";
 
 export default async function LangPage({
   params,

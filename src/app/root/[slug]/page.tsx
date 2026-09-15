@@ -4,8 +4,6 @@ import { ENTRY_LIST_PAGE_SIZE, notFoundIfEmpty, parsePageParam } from "~/lib/pag
 import { decodeSlugOrNotFound } from "~/lib/validation/params";
 import { getLexicalEntriesByRoot } from "~/server/db/repository/lexical-entry";
 
-export const revalidate = 3600;
-
 export default async function RootPage({
   params,
   searchParams,

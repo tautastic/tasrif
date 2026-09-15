@@ -2,8 +2,6 @@ import Link from "next/link";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { getVerbFormsWithCounts } from "~/server/db/repository/morph-pattern";
 
-export const revalidate = 3600;
-
 export default async function ArabicVerbFormsPage() {
   const forms = await getVerbFormsWithCounts();
 

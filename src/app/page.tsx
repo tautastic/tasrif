@@ -2,6 +2,8 @@ import Link from "next/link";
 import EntrySection from "~/components/entry/EntrySection";
 import { getRandomLexicalEntries, getRecentLexicalEntries } from "~/server/db/repository/lexical-entry";
 
+export const dynamic = "force-dynamic";
+
 const BROWSE_LINKS = [
   { href: "/lang/ar", label: "Arabic entries" },
   { href: "/lang/en", label: "English entries" },
