@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { getVerbFormsWithCounts } from "~/server/db/repository/morph-pattern";
 
-export const dynamic = "force-dynamic";
-
 export default async function ArabicVerbFormsPage() {
+  await connection();
   const forms = await getVerbFormsWithCounts();
 
   return (

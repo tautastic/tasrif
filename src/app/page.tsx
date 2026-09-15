@@ -1,8 +1,7 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import EntrySection from "~/components/entry/EntrySection";
 import { getRandomLexicalEntries, getRecentLexicalEntries } from "~/server/db/repository/lexical-entry";
-
-export const dynamic = "force-dynamic";
 
 const BROWSE_LINKS = [
   { href: "/lang/ar", label: "Arabic entries" },
@@ -11,6 +10,7 @@ const BROWSE_LINKS = [
 ] as const;
 
 const EntryHighlights = async () => {
+  await connection();
   const [recentEntries, randomEntries] = await Promise.all([getRecentLexicalEntries(), getRandomLexicalEntries()]);
 
   return (
