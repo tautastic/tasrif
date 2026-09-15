@@ -21,7 +21,7 @@ const EntryHighlights = async () => {
 
 export default async function IndexPage() {
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
       <p className="text-sm">
         Browse:{" "}
         {BROWSE_LINKS.map(({ href, label }, index) => (

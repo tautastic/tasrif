@@ -24,18 +24,20 @@ const EntryHeader = ({ entry }: EntryHeaderProps) => {
 
   return (
     <div id={entry.text} className="flex items-baseline gap-2 border-b border-[#a2a9b1] pb-1 mb-3">
-      <span className="text-2xl font-bold mb-1" lang={entry.language}>
-        {entry.text}
-      </span>
-      {forms.length > 0 && (
-        <div className="text-gray-700 mb-3 space-x-4">
-          {forms.map(({ label, value }) => (
-            <span key={label}>
-              {label}: <span lang="ar">{value}</span>
-            </span>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col items-baseline gap-y-1 gap-x-3 mb-2 md:flex-row">
+        <span className="text-2xl" lang={entry.language}>
+          {entry.text}
+        </span>
+        {forms.length > 0 && (
+          <div className="text-xs flex flex-row flex-wrap text-gray-700 gap-y-1.5 gap-x-4 text-nowrap md:text-base">
+            {forms.map(({ label, value }) => (
+              <span key={label}>
+                {label}: <span lang="ar">{value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
       <AdminEditLink entryId={entry.id} />
     </div>
   );

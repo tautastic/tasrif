@@ -1,4 +1,5 @@
 import Link from "next/link";
+import EntryFilterSelection from "~/components/admin/EntryFilterSelection";
 import Pagination from "~/components/Pagination";
 import { ENTRY_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
 import {
@@ -16,54 +17,64 @@ export default async function AdminEntriesPage({
   searchParams: Promise<{ page?: string; filter?: string }>;
 }) {
   const { page: pageParam, filter: filterParam } = await searchParams;
-  const filter = isAdminEntryFilter(filterParam) ? filterParam : "Unverified";
+  const filter = isAdminEntryFilter(filterParam) ? filterParam : "All";
   const page = parsePageParam(pageParam);
   const { items, total } = await getLexicalEntriesForAdmin({ filter, page, limit: ENTRY_LIST_PAGE_SIZE });
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-2">Entries</h1>
-      <p className="text-sm text-gray-600 mb-4">{total} entries</p>
+    <div className="mx-auto p-4 sm:p-6">
+      <h1 className="text-xl sm:text-2xl font-bold mb-2">Entries</h1>
+      <p className="text-xs sm:text-sm text-gray-600 mb-4">{total} entries</p>
 
-      <div className="flex flex-wrap gap-2 mb-4 text-sm">
-        {AdminEntryFilterOptions.map((f) => (
-          <Link
-            key={f}
-            href={`/admin/entries?filter=${f}`}
-            className={`px-3 py-1 rounded border ${
-              f === filter ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 text-gray-700"
-            }`}
-          >
-            {f}
-          </Link>
-        ))}
-      </div>
+      <EntryFilterSelection value={filter} options={AdminEntryFilterOptions} />
 
-      <ul className="divide-y divide-gray-100">
-        {items.map((entry) => (
-          <li key={entry.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between py-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span lang={entry.language} className="truncate">
-                {entry.text}
-              </span>
-              {!entry.isVerified && (
-                <span className="text-xs font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-sm shrink-0">
-                  Unverified
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 shrink-0 text-sm">
-              <Link href={`/admin/entries/${entry.id}`} className="text-blue-600 hover:underline">
-                Preview
-              </Link>
-              <Link href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
-                Edit
-              </Link>
-            </div>
-          </li>
-        ))}
-        {items.length === 0 && <li className="py-4 text-sm text-gray-500">No entries found.</li>}
-      </ul>
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-gray-200 text-xs text-gray-500 sm:text-sm">
+            <th className="py-2 pr-4 font-medium">Text</th>
+            <th className="py-2 pr-4 font-medium">Status</th>
+            <th className="py-2 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {items.map((entry) => (
+            <tr key={entry.id}>
+              <td className="py-1.5 pr-2 sm:py-2 sm:pr-4 w-full">
+                <Link
+                  href={`/admin/entries/${entry.id}`}
+                  lang={entry.language}
+                  className="text-sm block truncate text-blue-600 hover:underline w-min sm:text-base"
+                >
+                  {entry.text}
+                </Link>
+              </td>
+              <td className="w-full py-1.5 pr-2 sm:py-2 sm:pr-4">
+                {!entry.isVerified ? (
+                  <span className="block w-full text-center text-[10px] font-medium text-amber-700 bg-amber-100 px-1 py-0.5 sm:px-1.5 rounded-sm sm:text-xs">
+                    Unverified
+                  </span>
+                ) : (
+                  <span className="block w-full text-center text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1 py-0.5 sm:px-1.5 rounded-sm sm:text-xs">
+                    Verified
+                  </span>
+                )}
+              </td>
+              <td className="py-1.5 sm:py-2 whitespace-nowrap text-xs sm:text-sm">
+                <Link href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
+                  Edit
+                </Link>
+              </td>
+            </tr>
+          ))}
+          {items.length === 0 && (
+            <tr>
+              <td colSpan={3} className="py-4 text-sm text-gray-500">
+                No entries found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
 
       <Pagination
         currentPage={page}

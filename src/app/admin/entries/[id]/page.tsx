@@ -18,7 +18,7 @@ export default async function AdminEntryPreviewPage({ params }: { params: Promis
   const { entry, rootInfo, language } = preview;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto p-6">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4 text-sm">
         <Link href="/admin/entries" className="text-blue-600 hover:underline">
           &larr; Back to entries
@@ -29,24 +29,22 @@ export default async function AdminEntryPreviewPage({ params }: { params: Promis
       </div>
 
       <RootInfoBox rootInfo={rootInfo} />
-      <div>
-        <div className="mb-8">
-          <EntryHeader entry={entry} />
-          <SenseList senses={entry.senses} language={language} />
-          {entry.morphPattern && (
-            <div className="mt-4 overflow-x-auto">
-              <ConjugationTable
-                word={entry.text}
-                patternFormNumber={entry.morphPattern.formNumber}
-                patternDescription={entry.morphPattern.description}
-                masdar={entry.masdar}
-                activeParticiple={entry.activeParticiple}
-                passiveParticiple={entry.passiveParticiple}
-                conjugations={entry.conjugations}
-              />
-            </div>
-          )}
-        </div>
+      <div className="mb-8">
+        <EntryHeader entry={entry} />
+        <SenseList senses={entry.senses} language={language} />
+        {entry.morphPattern && (
+          <div className="mt-4 overflow-x-auto">
+            <ConjugationTable
+              word={entry.text}
+              patternFormNumber={entry.morphPattern.formNumber}
+              patternDescription={entry.morphPattern.description}
+              masdar={entry.masdar}
+              activeParticiple={entry.activeParticiple}
+              passiveParticiple={entry.passiveParticiple}
+              conjugations={entry.conjugations}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

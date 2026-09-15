@@ -3,7 +3,7 @@ import { db } from "~/server/db";
 import { lexicalEntry } from "~/server/db/schema";
 import { countEntriesWithRoot } from "./shared";
 
-export const AdminEntryFilterOptions = ["Unverified", "Verified", "All"] as const;
+export const AdminEntryFilterOptions = ["All", "Verified", "Unverified"] as const;
 export type AdminEntryFilterValue = (typeof AdminEntryFilterOptions)[number];
 
 export const getLexicalEntriesForAdmin = async ({

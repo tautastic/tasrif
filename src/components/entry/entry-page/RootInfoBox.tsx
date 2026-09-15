@@ -13,7 +13,7 @@ const RootInfoBox = ({ rootInfo }: RootInfoBoxProps) => {
 
   return (
     <div className="block sm:float-right w-full sm:w-auto mb-4 sm:mb-0 mx-auto sm:mx-0 text-center sm:text-right sm:ml-4">
-      <table className="w-full max-w-40 border-collapse border border-[#b4b4b4] inline-table text-base">
+      <table className="w-full max-w-80 border-collapse border border-[#b4b4b4] inline-table text-base">
         <tbody>
           <tr>
             <th className="border border-[#b4b4b4] px-3 py-1 font-medium bg-[#ddefd3] text-center">
