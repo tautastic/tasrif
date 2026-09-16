@@ -14,6 +14,10 @@
     "dev": "next dev",
     "preview": "next build && next start",
     "start": "next start",
+    "test": "node --import ./tests/harness/register.ts --test \"tests/**/*.test.ts\"",
+    "test:one": "node --import ./tests/harness/register.ts --test",
+    "test:corpus": "CORPUS=1 node --import ./tests/harness/register.ts --test \"tests/corpus/**/*.test.ts\"",
+    "test:db:stop": "docker rm -f tasrif-test-pg",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

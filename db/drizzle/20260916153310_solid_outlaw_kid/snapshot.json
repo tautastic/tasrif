@@ -1,0 +1,1689 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "1c680ff5-f9f5-4b3e-b4aa-a951666fc6db",
+  "prevIds": [
+    "5ba4e2c5-58c2-4d86-9d6b-d49e55a23e79"
+  ],
+  "ddl": [
+    {
+      "values": [
+        "perfect",
+        "imperative",
+        "imperfect_indicative",
+        "imperfect_subjunctive",
+        "imperfect_jussive"
+      ],
+      "name": "affix_mood",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "first_person_singular",
+        "second_person_masculine_singular",
+        "second_person_feminine_singular",
+        "third_person_masculine_singular",
+        "third_person_feminine_singular",
+        "second_person_dual",
+        "third_person_masculine_dual",
+        "third_person_feminine_dual",
+        "first_person_plural",
+        "second_person_masculine_plural",
+        "second_person_feminine_plural",
+        "third_person_masculine_plural",
+        "third_person_feminine_plural"
+      ],
+      "name": "person_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "active",
+        "passive"
+      ],
+      "name": "voice_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "ar",
+        "en"
+      ],
+      "name": "lang_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "sound",
+        "waw",
+        "ya",
+        "hamza"
+      ],
+      "name": "radical_kind",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "a",
+        "i",
+        "u"
+      ],
+      "name": "short_vowel",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "noun",
+        "verb",
+        "adjective",
+        "adverb",
+        "preposition",
+        "conjunction",
+        "interjection",
+        "pronoun",
+        "determiner",
+        "particle",
+        "adverbial_phrase",
+        "idiom"
+      ],
+      "name": "pos_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "synonym",
+        "antonym",
+        "hyponym",
+        "hypernym",
+        "near_synonym"
+      ],
+      "name": "sense_relation_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "affix_rules",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "conjugation",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "lexical_entry",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "lexical_pattern_override",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "morph_pattern",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "sense",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "sense_relation",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "translation_link",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "affix_mood",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mood",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "person_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "person",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "form",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "''",
+      "generated": null,
+      "identity": null,
+      "name": "prefix",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "''",
+      "generated": null,
+      "identity": null,
+      "name": "suffix",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lexical_entry_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "voice_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'active'",
+      "generated": null,
+      "identity": null,
+      "name": "voice",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "affix_mood",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mood",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "person_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "person",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "form",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "lang_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "LOWER(REGEXP_REPLACE(text, '[[:punct:][:space:]ً-ٰٟؐ-ؚ]', '', 'g'))",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "normalized_text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "varchar(10)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "root",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "latin_root",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "morph_pattern_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "morphology_overrides",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "masdar",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "active_participle",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "passive_participle",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "tsvector",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "search_vector",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_verified",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "varchar(10)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "root",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "form_number",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "short_vowel",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "perfect_vowel",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "short_vowel",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "imperfect_vowel",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "morph_pattern_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "form_number",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "vocalic_template",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "rules",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "no_affix",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_lexical",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "radical_kind",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'sound'",
+      "generated": null,
+      "identity": null,
+      "name": "radical1_kind",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "radical_kind",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'sound'",
+      "generated": null,
+      "identity": null,
+      "name": "radical2_kind",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "radical_kind",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'sound'",
+      "generated": null,
+      "identity": null,
+      "name": "radical3_kind",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_geminate",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "short_vowel",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "perfect_vowel",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "short_vowel",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "imperfect_vowel",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lexical_entry_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "pos_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "pos",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "sense_number",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "definitions",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "context_tags",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "examples",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "sense_id_1",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "sense_id_2",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "sense_relation_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "relation_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "5",
+      "generated": null,
+      "identity": null,
+      "name": "strength",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "context_note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "en_sense_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ar_sense_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "5",
+      "generated": null,
+      "identity": null,
+      "name": "frequency_rank",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "type": "varchar(50)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "domain",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "lexical_entry_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_conjugation_entry",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "mood",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_conjugation_mood",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "root",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_lexical_entry_root",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "latin_root",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_lexical_entry_latin_root",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "morph_pattern_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_lexical_entry_pattern",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "\"text\" gin_trgm_ops",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "idx_lexical_entry_text_trgm",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "search_vector",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "idx_lexical_entry_search_vector",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "language",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "\"created_at\" DESC",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_lexical_entry_language_created_at",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "morph_pattern_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_lexical_pattern_override_pattern",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "form_number",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_form_number",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "description",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_description",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "definitions",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "idx_sense_definitions",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "context_tags",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "idx_sense_context_tags",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "lexical_entry_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "lexical_entry",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "conjugation_lexical_entry_id_lexical_entry_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "morph_pattern_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "morph_pattern",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "lexical_entry_morph_pattern_id_morph_pattern_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "morph_pattern_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "morph_pattern",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "lexical_pattern_override_morph_pattern_id_morph_pattern_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "lexical_entry_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "lexical_entry",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "sense_lexical_entry_id_lexical_entry_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "sense_id_1"
+      ],
+      "schemaTo": "public",
+      "tableTo": "sense",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "sense_relation_sense_id_1_sense_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "sense_id_2"
+      ],
+      "schemaTo": "public",
+      "tableTo": "sense",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "sense_relation_sense_id_2_sense_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "en_sense_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "sense",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "translation_link_en_sense_id_sense_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "ar_sense_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "sense",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "translation_link_ar_sense_id_sense_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "affix_rules_pkey",
+      "schema": "public",
+      "table": "affix_rules",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "conjugation_pkey",
+      "schema": "public",
+      "table": "conjugation",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "lexical_entry_pkey",
+      "schema": "public",
+      "table": "lexical_entry",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "lexical_pattern_override_pkey",
+      "schema": "public",
+      "table": "lexical_pattern_override",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "morph_pattern_pkey",
+      "schema": "public",
+      "table": "morph_pattern",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "sense_pkey",
+      "schema": "public",
+      "table": "sense",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "sense_relation_pkey",
+      "schema": "public",
+      "table": "sense_relation",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "translation_link_pkey",
+      "schema": "public",
+      "table": "translation_link",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "mood",
+        "person",
+        "form"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_affix_rule",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "affix_rules"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "lexical_entry_id",
+        "voice",
+        "mood",
+        "person"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_conjugation_entry_voice_mood_person",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "conjugation"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "language",
+        "text"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_language_text",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "lexical_entry"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "root",
+        "form_number",
+        "perfect_vowel",
+        "imperfect_vowel"
+      ],
+      "nullsNotDistinct": true,
+      "name": "unique_lexical_pattern_override_key",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "form_number",
+        "description"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_form_number_description",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "lexical_entry_id",
+        "sense_number"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_sense_number",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "sense"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "sense_id_1",
+        "sense_id_2",
+        "relation_type"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_relation",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "en_sense_id",
+        "ar_sense_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "unique_translation",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "translation_link"
+    },
+    {
+      "value": "(\"form_number\" = 1) = (\"perfect_vowel\" IS NOT NULL AND \"imperfect_vowel\" IS NOT NULL)",
+      "name": "chk_lexical_pattern_override_form1_vowels",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "lexical_pattern_override"
+    },
+    {
+      "value": "(\"form_number\" = 1) = (\"perfect_vowel\" IS NOT NULL AND \"imperfect_vowel\" IS NOT NULL)",
+      "name": "chk_morph_pattern_form1_vowels",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "morph_pattern"
+    },
+    {
+      "value": "sense_id_1 != sense_id_2",
+      "name": "sense_different",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "sense_relation"
+    },
+    {
+      "definition": "\n  SELECT DISTINCT ON (sense_id, target_normalized_text, relation_type)\n      sense_id,\n      target_sense_id,\n      target_text,\n      target_normalized_text,\n      relation_type,\n      context_note,\n      strength\n  FROM (\n      SELECT\n      sr.sense_id_1 AS sense_id,\n      sr.sense_id_2 AS target_sense_id,\n      le.text AS target_text,\n      le.normalized_text AS target_normalized_text,\n      sr.relation_type,\n      sr.context_note,\n      sr.strength\n      FROM sense_relation sr\n      INNER JOIN sense s ON sr.sense_id_2 = s.id\n      INNER JOIN lexical_entry le ON s.lexical_entry_id = le.id\n      UNION ALL\n      SELECT\n      sr.sense_id_2 AS sense_id,\n      sr.sense_id_1 AS target_sense_id,\n      le.text AS target_text,\n      le.normalized_text AS target_normalized_text,\n      CASE sr.relation_type\n      WHEN 'hyponym'  THEN 'hypernym'\n      WHEN 'hypernym' THEN 'hyponym'\n      ELSE sr.relation_type\n      END AS relation_type,\n      sr.context_note,\n      sr.strength\n      FROM sense_relation sr\n      INNER JOIN sense s ON sr.sense_id_1 = s.id\n      INNER JOIN lexical_entry le ON s.lexical_entry_id = le.id\n      ) AS combined\n  ORDER BY sense_id, target_normalized_text, relation_type, target_sense_id\n    ",
+      "with": null,
+      "withNoData": null,
+      "using": null,
+      "tablespace": null,
+      "materialized": false,
+      "name": "sense_relation_normalized",
+      "entityType": "views",
+      "schema": "public"
+    },
+    {
+      "definition": "\n    SELECT DISTINCT ON (sense_id, target_normalized_text)\n      sense_id,\n      target_sense_id,\n      target_text,\n      target_normalized_text,\n      domain,\n      note,\n      frequency_rank\n    FROM (\n      SELECT\n        tl.en_sense_id AS sense_id,\n        tl.ar_sense_id AS target_sense_id,\n        ar_le.text AS target_text,\n        ar_le.normalized_text AS target_normalized_text,\n        tl.domain,\n        tl.note,\n        tl.frequency_rank\n      FROM translation_link tl\n        INNER JOIN sense ar_s ON tl.ar_sense_id = ar_s.id\n        INNER JOIN lexical_entry ar_le ON ar_s.lexical_entry_id = ar_le.id\n      UNION ALL\n      SELECT\n        tl.ar_sense_id AS sense_id,\n        tl.en_sense_id AS target_sense_id,\n        en_le.text AS target_text,\n        en_le.normalized_text AS target_normalized_text,\n        tl.domain,\n        tl.note,\n        tl.frequency_rank\n      FROM translation_link tl\n        INNER JOIN sense en_s ON tl.en_sense_id = en_s.id\n        INNER JOIN lexical_entry en_le ON en_s.lexical_entry_id = en_le.id\n    ) AS combined\n    ORDER BY sense_id, target_normalized_text, frequency_rank, target_sense_id\n    ",
+      "with": null,
+      "withNoData": null,
+      "using": null,
+      "tablespace": null,
+      "materialized": false,
+      "name": "sense_translation_normalized",
+      "entityType": "views",
+      "schema": "public"
+    }
+  ],
+  "renames": []
+}

@@ -247,7 +247,7 @@ BEGIN
     INTO pattern_rules, v_form_number, v_no_affix
     FROM morph_pattern
     WHERE id = v_morph_pattern_id;
-    IF pattern_rules IS NOT NULL THEN
+    IF JSONB_TYPEOF(pattern_rules) = 'object' THEN
       v_no_passive := COALESCE((v_morphology_overrides ->> 'no_passive')::boolean, FALSE);
       UPDATE lexical_entry
       SET masdar             = vn.masdar,
@@ -338,7 +338,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER trg_refresh_derived_stems_after_pattern_update
-  AFTER UPDATE OF rules, form_number
+  AFTER UPDATE OF rules, form_number, no_affix
   ON morph_pattern
   FOR EACH ROW
 EXECUTE FUNCTION refresh_derived_stems_for_pattern();

@@ -29,6 +29,7 @@ export const morphPattern = pgTable(
     description: text("description").notNull(),
     rules: jsonb("rules").notNull(),
     noAffix: boolean("no_affix").notNull().default(false),
+    isLexical: boolean("is_lexical").notNull().default(false),
     radical1Kind: radicalKindEnum("radical1_kind").notNull().default("sound"),
     radical2Kind: radicalKindEnum("radical2_kind").notNull().default("sound"),
     radical3Kind: radicalKindEnum("radical3_kind").notNull().default("sound"),
