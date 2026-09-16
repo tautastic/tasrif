@@ -50,6 +50,7 @@ WHERE lexical.form_number = 1
   AND NOT EXISTS (SELECT 1
                   FROM lexical_pattern_override o
                   WHERE o.morph_pattern_id = lexical.id
+                    AND o.form_number = lexical.form_number
                     AND o.root = strip_root_noise(e.root));
 
 SELECT regenerate_all_derived_stems();
