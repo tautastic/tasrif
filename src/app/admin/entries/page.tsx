@@ -28,7 +28,7 @@ export default async function AdminEntriesPage({
 
       <EntryFilterSelection value={filter} options={AdminEntryFilterOptions} />
 
-      <table className="w-full text-left">
+      <table className="w-full text-left max-w-md">
         <thead>
           <tr className="border-b border-gray-200 text-xs text-gray-500 sm:text-sm">
             <th className="py-2 pr-4 font-medium">Text</th>
@@ -36,7 +36,7 @@ export default async function AdminEntriesPage({
             <th className="py-2 font-medium">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-300">
           {items.map((entry) => (
             <tr key={entry.id}>
               <td className="py-1.5 pr-2 sm:py-2 sm:pr-4 w-full">
