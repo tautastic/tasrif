@@ -45,7 +45,12 @@ CREATE OR REPLACE FUNCTION normalize_arabic_gemination
   LANGUAGE sql
   IMMUTABLE AS
 $$
-SELECT REGEXP_REPLACE(input, '([ء-غف-ي])ْ\1', '\1ّ', 'g')
+SELECT REGEXP_REPLACE(
+         input,
+         '([ء-غف-ي])\u0652\1([\u064B-\u0650]?)',
+         '\1\2' || U&'\0651',
+         'g'
+       )
 $$;
 
 CREATE OR REPLACE FUNCTION normalize_arabic_hamza_assimilation
@@ -98,6 +103,36 @@ SELECT REGEXP_REPLACE(
        )
 $$;
 
+CREATE OR REPLACE FUNCTION normalize_arabic_hamza_seating_after_alif
+(
+  input text
+) RETURNS text
+  LANGUAGE sql
+  IMMUTABLE AS
+$$
+SELECT REGEXP_REPLACE(
+         REGEXP_REPLACE(
+           REGEXP_REPLACE(
+             REGEXP_REPLACE(
+               input,
+               '(\u0627)[\u0621\u0623-\u0626](\u0650)([\u0621-\u064A])',
+               '\1' || U&'\0626' || '\2\3',
+               'g'
+             ),
+             '(\u0627)[\u0621\u0623-\u0626](\u064F)([\u0621-\u064A])',
+             '\1' || U&'\0624' || '\2\3',
+             'g'
+           ),
+           '(\u0627)[\u0623-\u0626]([\u064E\u0652])([\u0621-\u064A])',
+           '\1' || U&'\0621' || '\2\3',
+           'g'
+         ),
+         '(\u0627)[\u0623-\u0626]([\u064B-\u0652]?)($|[^\u0621-\u0652])',
+         '\1' || U&'\0621' || '\2\3',
+         'g'
+       )
+$$;
+
 CREATE OR REPLACE FUNCTION normalize_arabic_hamza_seating_waw_yeh
 (
   input text
@@ -137,13 +172,15 @@ CREATE OR REPLACE FUNCTION normalize_arabic_orthography
 $$
 SELECT normalize_arabic_long_vowels(
          normalize_arabic_hamza_assimilation(
-           normalize_arabic_hamza_seating_alif(
-             normalize_arabic_hamza_seating_waw_yeh(
-               normalize_arabic_hamza_seating_bare(
-                 normalize_arabic_initial_hamza(
-                   normalize_arabic_gemination(
-                     normalize_arabic_alef_maqsura(
-                       normalize_arabic_remove_tatweel(input)
+           normalize_arabic_hamza_seating_after_alif(
+             normalize_arabic_hamza_seating_alif(
+               normalize_arabic_hamza_seating_waw_yeh(
+                 normalize_arabic_hamza_seating_bare(
+                   normalize_arabic_initial_hamza(
+                     normalize_arabic_gemination(
+                       normalize_arabic_alef_maqsura(
+                         normalize_arabic_remove_tatweel(input)
+                       )
                      )
                    )
                  )

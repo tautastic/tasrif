@@ -4,6 +4,7 @@
     "ignoreUnknown": true,
     "includes": [
       "./src/**",
+      "./tests/**",
       "./biome.json",
       "./cron.Dockerfile",
       "./docker-compose.yml",

@@ -1,3 +1,18 @@
+CREATE OR REPLACE FUNCTION strip_root_noise
+(
+  root_text TEXT
+) RETURNS TEXT
+  LANGUAGE sql
+  IMMUTABLE AS
+$$
+SELECT REGEXP_REPLACE(
+         BTRIM(root_text),
+         '[\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u00A0\u200C-\u200F\s-]',
+         '',
+         'g'
+       )
+$$;
+
 CREATE OR REPLACE FUNCTION transliterate_arabic_root
 (
   root_text TEXT
@@ -7,12 +22,7 @@ CREATE OR REPLACE FUNCTION transliterate_arabic_root
 $$
 SELECT NULLIF(
   TRANSLATE(
-    REGEXP_REPLACE(
-      BTRIM(root_text),
-      '[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]',
-      '',
-      'g'
-    ),
+    strip_root_noise(root_text),
     'ابتثجحخدذرزسشصضطظعغفقكلمنهويءأإآؤئةى',
     'ʔbtṯjḥḵdḏrzsšṣḍṭẓʕḡfqklmnhwyʔʔʔʔʔʔhy'
   ),

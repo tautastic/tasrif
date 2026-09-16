@@ -1,0 +1,65 @@
+# Schema inventory built from db/drizzle/*/migration.sql and db/*.sql
+#
+# This records what the repository builds, not what production happens to contain.
+# Adding or removing a function, trigger, enum, composite type or relation shows up
+# here as a reviewable diff; regenerate with UPDATE_GOLDENS=1.
+
+## relations (10)
+r affix_rules
+r conjugation
+r lexical_entry
+r lexical_pattern_override
+r morph_pattern
+r sense
+r sense_relation
+v sense_relation_normalized
+v sense_translation_normalized
+r translation_link
+
+## enums (8)
+affix_mood: perfect, imperative, imperfect_indicative, imperfect_subjunctive, imperfect_jussive
+lang_type: ar, en
+person_type: first_person_singular, second_person_masculine_singular, second_person_feminine_singular, third_person_masculine_singular, third_person_feminine_singular, second_person_dual, third_person_masculine_dual, third_person_feminine_dual, first_person_plural, second_person_masculine_plural, second_person_feminine_plural, third_person_masculine_plural, third_person_feminine_plural
+pos_type: noun, verb, adjective, adverb, preposition, conjunction, interjection, pronoun, determiner, particle, adverbial_phrase, idiom
+radical_kind: sound, waw, ya, hamza
+sense_relation_type: synonym, antonym, hyponym, hypernym, near_synonym
+short_vowel: a, i, u
+voice_type: active, passive
+
+## composite types (1)
+root_classification(radical1 radical_kind, radical2 radical_kind, radical3 radical_kind, is_geminate boolean)
+
+## functions (28)
+build_person_forms(p_affix_mood affix_mood, p_template_value jsonb, p_form_number integer, p_use_affix boolean, p_c1 text, p_c2 text, p_c3 text) -> jsonb [stable]
+classify_root(root_text text) -> root_classification [immutable]
+classify_root_radical(radical text) -> radical_kind [immutable]
+describe_root(root_text text) -> text[] [immutable]
+generate_conjugation_rows(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_affix boolean) -> TABLE(mood affix_mood, person_forms jsonb) [stable]
+generate_verbal_nouns(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_passive boolean) -> TABLE(masdar text, active_participle text, passive_participle text) [stable]
+normalize_arabic_alef_maqsura(input text) -> text [immutable]
+normalize_arabic_gemination(input text) -> text [immutable]
+normalize_arabic_hamza_assimilation(input text) -> text [immutable]
+normalize_arabic_hamza_seating_after_alif(input text) -> text [immutable]
+normalize_arabic_hamza_seating_alif(input text) -> text [immutable]
+normalize_arabic_hamza_seating_bare(input text) -> text [immutable]
+normalize_arabic_hamza_seating_waw_yeh(input text) -> text [immutable]
+normalize_arabic_initial_hamza(input text) -> text [immutable]
+normalize_arabic_long_vowels(input text) -> text [immutable]
+normalize_arabic_orthography(input text) -> text [immutable]
+normalize_arabic_remove_tatweel(input text) -> text [immutable]
+recalculate_search_vector(p_entry_id integer) -> void [volatile]
+refresh_derived_stems_for_pattern() -> trigger [volatile]
+regenerate_all_derived_stems() -> void [volatile]
+regenerate_derived_stems_for_entry(p_entry_id integer) -> void [volatile]
+replace_root_placeholders(template_text text, c1 text, c2 text, c3 text) -> text [immutable]
+resolve_morph_pattern_id(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel) -> integer [stable]
+root_classification_labels(classification root_classification) -> text[] [immutable]
+set_lexical_entry_latin_root() -> trigger [volatile]
+strip_root_noise(root_text text) -> text [immutable]
+transliterate_arabic_root(root_text text) -> text [immutable]
+update_lexical_entry_derived_stems() -> trigger [volatile]
+
+## triggers (3)
+CREATE TRIGGER trg_refresh_derived_stems_after_pattern_update AFTER UPDATE OF rules, form_number, no_affix ON public.morph_pattern FOR EACH ROW EXECUTE FUNCTION refresh_derived_stems_for_pattern()
+CREATE TRIGGER trg_set_lexical_entry_latin_root BEFORE INSERT OR UPDATE OF root ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION set_lexical_entry_latin_root()
+CREATE TRIGGER trg_update_lexical_entry_derived_stems AFTER INSERT OR UPDATE OF root, morph_pattern_id, morphology_overrides, text ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION update_lexical_entry_derived_stems()

@@ -1,0 +1,94 @@
+resolve_morph_pattern_id coverage matrix
+========================================
+
+Which (root shape, verb form choice) pairs currently resolve to a morph_pattern row.
+
+Gaps are expected, not failures. The pattern catalogue in db/0004_add_morphological_patterns.sql
+is incomplete, so an unresolved pair means the verb form picker finds no pattern for that root.
+This file exists so that adding patterns later shows up as an intentional diff, and so that
+losing coverage fails loudly.
+
+Columns are the verb form choices declared in src/lib/validation/verbFormChoice.ts, in their
+declared order. 1au..1uu are form I with the given perfect ~ imperfect vowel pair, 2..10 are
+the derived forms.
+
+  X = resolves to a pattern
+  - = resolve_morph_pattern_id returns NULL
+
+shape                         1au 1aa 1ai 1ia 1ii 1uu 2   3   4   5   6   7   8   9   10
+----------------------------- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+assimilated-waw               -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+assimilated-waw-final-weak-ya -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+assimilated-ya                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+final-weak-waw                -   -   -   -   -   -   -   -   X   -   -   -   X   -   X
+final-weak-ya                 -   X   -   -   -   -   -   -   X   -   -   -   X   -   X
+geminate                      -   -   X   -   -   -   -   -   -   -   -   -   -   -   -
+hamzated-first                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+hamzated-second               -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+hamzated-second-final-weak-ya -   X   -   -   -   -   -   -   -   -   -   -   -   -   -
+hamzated-third                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+hollow-waw                    X   -   -   -   -   -   -   -   -   -   -   -   -   -   X
+hollow-waw-final-weak-ya      -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+hollow-ya                     -   -   X   -   -   -   -   -   -   -   -   -   -   -   -
+sound                         X   X   X   X   X   X   X   X   X   X   X   X   X   X   X
+
+Root used for each shape
+------------------------
+  assimilated-waw               وعد
+  assimilated-waw-final-weak-ya وقي
+  assimilated-ya                يسر
+  final-weak-waw                دعو
+  final-weak-ya                 رمي
+  geminate                      مدد
+  hamzated-first                أكل
+  hamzated-second               سأل
+  hamzated-second-final-weak-ya نأي
+  hamzated-third                قرأ
+  hollow-waw                    قول
+  hollow-waw-final-weak-ya      روي
+  hollow-ya                     بيع
+  sound                         كتب
+
+Resolved pairs in detail
+------------------------
+  assimilated-waw               (nothing resolves)
+  assimilated-waw-final-weak-ya (nothing resolves)
+  assimilated-ya                (nothing resolves)
+  final-weak-waw                form-4      form 4, "final-weak waw"
+  final-weak-waw                form-8      form 8, "final-weak waw"
+  final-weak-waw                form-10     form 10, "final-weak waw"
+  final-weak-ya                 form-1-a-a  form 1, "a ~ a, final-weak"
+  final-weak-ya                 form-4      form 4, "final-weak ya"
+  final-weak-ya                 form-8      form 8, "final-weak ya"
+  final-weak-ya                 form-10     form 10, "final-weak ya"
+  geminate                      form-1-a-i  form 1, "a ~ i, geminate"
+  hamzated-first                (nothing resolves)
+  hamzated-second               (nothing resolves)
+  hamzated-second-final-weak-ya form-1-a-a  form 1, "a ~ a, final-weak, hamzated middle"
+  hamzated-third                (nothing resolves)
+  hollow-waw                    form-1-a-u  form 1, "a ~ u, hollow waw"
+  hollow-waw                    form-10     form 10, "hollow waw"
+  hollow-waw-final-weak-ya      (nothing resolves)
+  hollow-ya                     form-1-a-i  form 1, "a ~ i, hollow ya"
+  sound                         form-1-a-u  form 1, "a ~ u"
+  sound                         form-1-a-a  form 1, "a ~ a"
+  sound                         form-1-a-i  form 1, "a ~ i"
+  sound                         form-1-i-a  form 1, "i ~ a"
+  sound                         form-1-i-i  form 1, "i ~ i"
+  sound                         form-1-u-u  form 1, "u ~ u"
+  sound                         form-2      form 2, ""
+  sound                         form-3      form 3, ""
+  sound                         form-4      form 4, ""
+  sound                         form-5      form 5, ""
+  sound                         form-6      form 6, ""
+  sound                         form-7      form 7, ""
+  sound                         form-8      form 8, ""
+  sound                         form-9      form 9, ""
+  sound                         form-10     form 10, ""
+
+Lexical overrides
+-----------------
+
+Roots whose pattern is chosen by lexical_pattern_override rather than by root shape.
+
+  form 1 a ~ a  "a ~ a, final-weak, hamzated middle, hamza elided" [is_lexical]  رأي
