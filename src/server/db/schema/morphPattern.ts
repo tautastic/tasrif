@@ -13,6 +13,7 @@ import {
   unique,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { MorphPatternRules } from "~/lib/validation/morphPatternRules";
 
 export const radicalKindEnum = pgEnum("radical_kind", ["sound", "waw", "ya", "hamza"]);
 export type RadicalKind = (typeof radicalKindEnum.enumValues)[number];
@@ -27,7 +28,7 @@ export const morphPattern = pgTable(
     formNumber: smallint("form_number").notNull(),
     vocalicTemplate: varchar("vocalic_template", { length: 255 }).notNull(),
     description: text("description").notNull(),
-    rules: jsonb("rules").notNull(),
+    rules: jsonb("rules").$type<MorphPatternRules>().notNull(),
     noAffix: boolean("no_affix").notNull().default(false),
     isLexical: boolean("is_lexical").notNull().default(false),
     radical1Kind: radicalKindEnum("radical1_kind").notNull().default("sound"),

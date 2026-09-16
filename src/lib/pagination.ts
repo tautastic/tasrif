@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 export const ENTRY_LIST_PAGE_SIZE = 100;
+export const MORPH_PATTERN_LIST_PAGE_SIZE = 50;
 
 export const parsePageParam = (pageParam: string | string[] | undefined): number => {
   const raw = Array.isArray(pageParam) ? pageParam[0] : pageParam;

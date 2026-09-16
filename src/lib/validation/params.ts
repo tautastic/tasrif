@@ -20,8 +20,12 @@ export const decodeSlugOrNotFound = async (params: Promise<{ slug: string }>): P
   return decoded;
 };
 
-export const parseIdOrNotFound = async (params: Promise<{ id: string }>): Promise<number> => {
-  const { id } = await params;
+export const parseIdOrNotFound = async <K extends string = "id">(
+  params: Promise<Record<K, string>>,
+  key: K = "id" as K,
+): Promise<number> => {
+  const resolved = await params;
+  const id = resolved[key];
   if (!/^[1-9]\d*$/.test(id)) {
     notFound();
   }
