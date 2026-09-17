@@ -6,7 +6,8 @@ import {
   SENSE_SEARCH_MIN_QUERY_LENGTH,
   type SenseSearchResponse,
 } from "~/lib/api/sense-search";
-import { isAuthenticated } from "~/server/auth";
+import { parseQuery } from "~/server/api/query";
+import { requireAdminApi } from "~/server/auth/guard";
 import { getSensesByIds, searchSenses } from "~/server/db/repository/sense";
 import { languageOptions } from "~/server/db/schema";
 
@@ -27,8 +28,9 @@ const searchQuerySchema = z.object({
 });
 
 export async function GET(request: Request) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await requireAdminApi();
+  if (unauthorized) {
+    return unauthorized;
   }
 
   const { searchParams } = new URL(request.url);
@@ -39,12 +41,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ items, hasMore: false } satisfies SenseSearchResponse);
   }
 
-  const params = searchQuerySchema.safeParse(Object.fromEntries(searchParams));
-  if (!params.success) {
-    return NextResponse.json({ error: "Invalid search parameters" }, { status: 400 });
+  const parsed = parseQuery(searchQuerySchema, searchParams);
+  if (parsed.response) {
+    return parsed.response;
   }
 
-  const { query, language, page, limit } = params.data;
+  const { query, language, page, limit } = parsed.data;
   if (query.length < SENSE_SEARCH_MIN_QUERY_LENGTH) {
     return NextResponse.json({ items: [], hasMore: false } satisfies SenseSearchResponse);
   }

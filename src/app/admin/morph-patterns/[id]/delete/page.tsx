@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import CancelButton from "~/components/admin/delete-entry/CancelButton";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { deleteMorphPatternAction } from "~/server/actions/morph-pattern";
 import { getMorphPatternById, getMorphPatternUsageCounts } from "~/server/db/repository/morph-pattern";
@@ -26,7 +27,7 @@ export default async function DeleteMorphPatternPage({ params }: { params: Promi
           {pattern.vocalicTemplate}
         </div>
         <div className="text-sm text-gray-600">
-          Form {pattern.formNumber}
+          Form {formatMorphPatternFormNumber(pattern.formNumber)}
           {pattern.description ? ` — ${pattern.description}` : ""}
         </div>
       </div>

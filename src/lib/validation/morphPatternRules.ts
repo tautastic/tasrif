@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { affixMoodEnum, personTypeEnum } from "~/server/db/schema/affixRules";
 
-// Canonical source: the shapes generate_conjugation_rows / generate_verbal_nouns (db/0002_generate_stems.sql)
-// actually read, and what tests/invariants/pattern-data.test.ts enforces against the database. Keep both in sync.
-
 export const PERSONS = personTypeEnum.enumValues;
 export const MOODS = affixMoodEnum.enumValues;
 export type Person = (typeof PERSONS)[number];

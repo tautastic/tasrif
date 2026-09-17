@@ -104,18 +104,17 @@ const entryIdSchema = z
     error: "ID must be positive",
   });
 
-export const entryCreateSchema = entryBaseSchema.transform(normalizeEntryData).superRefine(validateEntryData);
+export const entryCreateSchema = entryBaseSchema.superRefine(validateEntryData).transform(normalizeEntryData);
 export const entryEditSchema = entryBaseSchema
   .extend({ id: entryIdSchema })
-  .transform(normalizeEntryData)
-  .superRefine(validateEntryData);
+  .superRefine(validateEntryData)
+  .transform(normalizeEntryData);
 
 export const entryFormSchema = entryBaseSchema
   .extend({ id: entryIdSchema.optional() })
-  .transform(normalizeEntryData)
-  .superRefine(validateEntryData);
+  .superRefine(validateEntryData)
+  .transform(normalizeEntryData);
 
-export type SenseParseInputType = z.input<typeof senseSchema>;
 export type SenseParseOutputType = z.output<typeof senseSchema>;
 
 export type EntryCreateType = z.output<typeof entryCreateSchema>;

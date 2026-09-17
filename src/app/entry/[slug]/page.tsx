@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-import ConjugationTable from "~/components/entry/ConjugationTable";
-import EntryHeader from "~/components/entry/entry-page/EntryHeader";
+import EntryDetail from "~/components/entry/entry-page/EntryDetail";
 import RootInfoBox from "~/components/entry/entry-page/RootInfoBox";
-import SenseList from "~/components/entry/entry-page/SenseList";
 import { decodeSlugOrNotFound } from "~/lib/validation/params";
 import { getLexicalEntryByNormalizedText } from "~/server/db/repository/lexical-entry";
 
@@ -21,23 +19,7 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
       <RootInfoBox rootInfo={page.rootInfo} />
       <div>
         {page.entries.map((entry) => (
-          <div key={entry.id} className="mb-8">
-            <EntryHeader entry={entry} />
-            <SenseList senses={entry.senses} language={page.language} />
-            {entry.morphPattern && (
-              <div className="mt-4 overflow-x-auto">
-                <ConjugationTable
-                  word={entry.text}
-                  patternFormNumber={entry.morphPattern.formNumber}
-                  patternDescription={entry.morphPattern.description}
-                  masdar={entry.masdar}
-                  activeParticiple={entry.activeParticiple}
-                  passiveParticiple={entry.passiveParticiple}
-                  conjugations={entry.conjugations}
-                />
-              </div>
-            )}
-          </div>
+          <EntryDetail key={entry.id} entry={entry} language={page.language} />
         ))}
       </div>
     </>

@@ -27,9 +27,10 @@ export const useVerbFormResolution = (
 ): VerbFormResolutionResponse | null => {
   const [result, setResult] = useState<VerbFormResolutionResponse | null>(null);
   const trimmedRoot = root.trim();
+  const debounceKey = trimmedRoot.length >= MIN_ROOT_LENGTH ? `${trimmedRoot}|${formChoice ?? ""}` : trimmedRoot;
 
   useDebouncedFetch({
-    query: `${trimmedRoot}|${formChoice ?? ""}`,
+    query: debounceKey,
     minQueryLength: MIN_ROOT_LENGTH,
     fetcher: (_, signal) => fetchResolution(trimmedRoot, formChoice, signal),
     onSuccess: setResult,

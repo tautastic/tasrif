@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Logical backups of the application database in pg_dump's compressed custom format.
-#
-#   db-backup            take a backup now, then delete all but the newest $BACKUP_KEEP backups
-#   db-backup schedule   keep running and take a backup whenever the newest one is $BACKUP_INTERVAL_SECONDS old
 set -Eeuo pipefail
 shopt -s nullglob
 export LC_ALL=C

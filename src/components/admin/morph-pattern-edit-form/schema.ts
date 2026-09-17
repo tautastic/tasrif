@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateFormOneVowels } from "~/lib/validation/formOneVowels";
 import { MOODS, type MorphPatternRules, morphPatternRulesSchema, STEM_KEY } from "~/lib/validation/morphPatternRules";
 import { radicalKindEnum, shortVowelEnum } from "~/server/db/schema";
 
@@ -30,18 +31,7 @@ const morphPatternBaseSchema = z.object(morphPatternShape);
 type MorphPatternBase = z.infer<typeof morphPatternBaseSchema>;
 
 const validateMorphPatternData = (data: MorphPatternBase, ctx: z.RefinementCtx) => {
-  const hasBothVowels = data.perfectVowel !== null && data.imperfectVowel !== null;
-  const hasEitherVowel = data.perfectVowel !== null || data.imperfectVowel !== null;
-  if (data.formNumber === 1 && !hasBothVowels) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Form I needs both a perfect and an imperfect vowel",
-      path: ["perfectVowel"],
-    });
-  }
-  if (data.formNumber !== 1 && hasEitherVowel) {
-    ctx.addIssue({ code: "custom", message: "Perfect/imperfect vowels only apply to form I", path: ["perfectVowel"] });
-  }
+  validateFormOneVowels(data, ctx);
 
   if (data.noAffix) {
     for (const key of [...MOODS, STEM_KEY]) {

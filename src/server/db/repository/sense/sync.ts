@@ -52,16 +52,18 @@ const upsertSenses = async (
         examples: sql`excluded.examples`,
       },
     })
-    .returning({ id: sense.id });
+    .returning({ id: sense.id, senseNumber: sense.senseNumber });
 
   if (rows.length !== senses.length) {
     throw new Error("Sense upsert returned an unexpected number of rows");
   }
 
-  return senses.map((input, index) => {
-    const id = rows[index]?.id;
-    if (id === undefined || (input.id !== undefined && input.id !== id)) {
-      throw new Error("Sense upsert returned rows out of order");
+  const idBySenseNumber = new Map(rows.map((row) => [row.senseNumber, row.id]));
+
+  return senses.map((input) => {
+    const id = idBySenseNumber.get(input.senseNumber);
+    if (id === undefined) {
+      throw new Error(`Sense upsert did not return a row for sense number ${input.senseNumber}`);
     }
     return { id, input };
   });

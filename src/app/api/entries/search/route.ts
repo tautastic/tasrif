@@ -10,13 +10,7 @@ const searchQuerySchema = z.object({
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const params = searchQuerySchema.safeParse(Object.fromEntries(searchParams));
-
-  if (!params.success) {
-    return NextResponse.json({ error: "Invalid search parameters" }, { status: 400 });
-  }
-
-  const { query, limit } = params.data;
+  const { query, limit } = searchQuerySchema.parse(Object.fromEntries(searchParams));
   if (!query) {
     return NextResponse.json({ items: [] } satisfies EntrySearchResponse);
   }

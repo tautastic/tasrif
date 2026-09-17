@@ -2,40 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { z } from "zod";
 import {
   type OverrideCreateType,
   type OverrideEditType,
   overrideCreateSchema,
   overrideEditSchema,
 } from "~/components/admin/lexical-pattern-override-form/schema";
+import { parseOrThrow } from "~/server/actions/shared";
 import { requireAdminAction } from "~/server/auth/guard";
+import { isUniqueViolation } from "~/server/db/pg-error";
 import { createOverride, deleteOverrideById, updateOverride } from "~/server/db/repository/lexical-pattern-override";
-
-const parseOrThrow = <S extends z.ZodType>(schema: S, data: unknown): z.output<S> => {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    const details = result.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`);
-    throw new Error(`Invalid override data — ${details.join("; ")}`);
-  }
-  return result.data;
-};
-
-const UNIQUE_VIOLATION_SQLSTATE = "23505";
-
-const isUniqueViolation = (error: unknown): boolean => {
-  if (typeof error !== "object" || error === null || !("cause" in error)) {
-    return false;
-  }
-  const cause = (error as { cause: unknown }).cause;
-  return (
-    typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === UNIQUE_VIOLATION_SQLSTATE
-  );
-};
 
 export async function createOverrideAction(morphPatternId: number, data: OverrideCreateType) {
   await requireAdminAction();
-  const override = parseOrThrow(overrideCreateSchema, data);
+  const override = parseOrThrow(overrideCreateSchema, data, "override data");
 
   try {
     const created = await createOverride({ ...override, morphPatternId });
@@ -51,7 +31,7 @@ export async function createOverrideAction(morphPatternId: number, data: Overrid
 
 export async function updateOverrideAction(morphPatternId: number, data: OverrideEditType) {
   await requireAdminAction();
-  const override = parseOrThrow(overrideEditSchema, data);
+  const override = parseOrThrow(overrideEditSchema, data, "override data");
 
   try {
     const updated = await updateOverride({ ...override, morphPatternId });

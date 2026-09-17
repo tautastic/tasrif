@@ -29,12 +29,9 @@ REVOKE ALL ON DATABASE :"app_db" FROM PUBLIC;
 SQL
 
 cat >"$PGDATA/pg_hba.conf" <<EOF
-# TYPE  DATABASE        USER            ADDRESS         METHOD
-# Connections from inside this container: the entrypoint, the health check and docker compose exec.
 local   all             all                             trust
 host    all             all             127.0.0.1/32    trust
 host    all             all             ::1/128         trust
-# Connections from other containers (web app, backups) may only use the application role and database.
 host    "$APP_DB_NAME"  "$APP_DB_USER"  all             scram-sha-256
 EOF
 

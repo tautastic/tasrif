@@ -1,6 +1,7 @@
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import SelectField from "~/components/ui/SelectField";
 import TextField from "~/components/ui/TextField";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { type RadicalKind, radicalKindEnum, shortVowelEnum } from "~/server/db/schema";
 import type { MorphPatternFormInput, MorphPatternFormValues } from "./schema";
 
@@ -48,7 +49,7 @@ const BasicFields = () => {
           >
             {FORM_NUMBERS.map((n) => (
               <option key={n} value={n}>
-                Form {n}
+                Form {formatMorphPatternFormNumber(n)}
               </option>
             ))}
           </SelectField>

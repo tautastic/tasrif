@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { z } from "zod";
 import {
   type EntryCreateType,
   type EntryEditType,
@@ -11,19 +10,12 @@ import {
 } from "~/components/admin/entry-edit-form/schema";
 import { isNonEmptyString } from "~/lib/validation";
 import { formatVerbFormChoiceLabel, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
+import { parseOrThrow } from "~/server/actions/shared";
 import { requireAdminAction } from "~/server/auth/guard";
+import { getPgErrorWithCode, isUniqueViolation } from "~/server/db/pg-error";
 import { createLexicalEntry, deleteLexicalEntryById, updateLexicalEntry } from "~/server/db/repository/lexical-entry";
-import { resolveVerbMorphPattern } from "~/server/db/repository/morph-pattern";
+import { INVALID_ROOT_SQLSTATE, resolveVerbMorphPattern } from "~/server/db/repository/morph-pattern";
 import type { LanguageType } from "~/server/db/schema";
-
-const parseOrThrow = <S extends z.ZodType>(schema: S, data: unknown): z.output<S> => {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    const details = result.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`);
-    throw new Error(`Invalid entry data — ${details.join("; ")}`);
-  }
-  return result.data;
-};
 
 interface RevalidateLexicalEntryPages {
   root?: string | null;
@@ -59,7 +51,10 @@ const withResolvedMorphPattern = async <T extends { root: string | null; verbFor
   let pattern: Awaited<ReturnType<typeof resolveVerbMorphPattern>>;
   try {
     pattern = await resolveVerbMorphPattern(rest.root, verbFormChoice);
-  } catch {
+  } catch (error) {
+    if (!getPgErrorWithCode(error, INVALID_ROOT_SQLSTATE)) {
+      throw error;
+    }
     throw new Error(`Root '${rest.root}' is not a valid triliteral root`);
   }
 
@@ -74,24 +69,40 @@ const withResolvedMorphPattern = async <T extends { root: string | null; verbFor
 
 export async function createLexicalEntryAction(data: EntryCreateType) {
   await requireAdminAction();
-  const entry = parseOrThrow(entryCreateSchema, data);
+  const entry = parseOrThrow(entryCreateSchema, data, "entry data");
   const resolved = await withResolvedMorphPattern(entry);
-  revalidateLexicalEntryPages(resolved);
-  return createLexicalEntry(resolved);
+
+  try {
+    const created = await createLexicalEntry(resolved);
+    revalidateLexicalEntryPages(resolved, created);
+    return created;
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("An entry with this language and text already exists");
+    }
+    throw error;
+  }
 }
 
 export async function updateLexicalEntryAction(data: EntryEditType) {
   await requireAdminAction();
-  const entry = parseOrThrow(entryEditSchema, data);
+  const entry = parseOrThrow(entryEditSchema, data, "entry data");
   const resolved = await withResolvedMorphPattern(entry);
 
-  const updated = await updateLexicalEntry(resolved);
-  if (!updated) {
-    throw new Error(`Lexical entry with id '${entry.id}' no longer exists`);
-  }
+  try {
+    const updated = await updateLexicalEntry(resolved);
+    if (!updated) {
+      throw new Error(`Lexical entry with id '${entry.id}' no longer exists`);
+    }
 
-  revalidateLexicalEntryPages(entry, updated);
-  return updated;
+    revalidateLexicalEntryPages(entry, updated);
+    return updated;
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("An entry with this language and text already exists");
+    }
+    throw error;
+  }
 }
 
 export async function deleteLexicalEntryAction(id: number) {

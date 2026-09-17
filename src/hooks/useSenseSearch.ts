@@ -95,6 +95,8 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
     },
   });
 
+  const loadMoreControllerRef = useRef<AbortController | null>(null);
+
   const loadMore = useCallback(() => {
     const trimmedQuery = query.trim();
     if (trimmedQuery.length < SENSE_SEARCH_MIN_QUERY_LENGTH || !hasMore || isLoadingMore) {
@@ -102,17 +104,36 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
     }
 
     const nextPage = page + 1;
+    const controller = new AbortController();
+    loadMoreControllerRef.current = controller;
     setIsLoadingMore(true);
 
-    fetchSenses({ query: trimmedQuery, language, limit: String(SENSE_SEARCH_DEFAULT_LIMIT), page: String(nextPage) })
+    fetchSenses(
+      { query: trimmedQuery, language, limit: String(SENSE_SEARCH_DEFAULT_LIMIT), page: String(nextPage) },
+      controller.signal,
+    )
       .then((data) => {
         setOptions((previous) => [...previous, ...data.items]);
         setHasMore(data.hasMore);
         setPage(nextPage);
       })
-      .catch((error: unknown) => console.error(error))
-      .finally(() => setIsLoadingMore(false));
+      .catch((error: unknown) => {
+        if (!isAbortError(error)) {
+          console.error(error);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoadingMore(false);
+        }
+      });
   }, [query, language, hasMore, isLoadingMore, page]);
+
+  useEffect(() => {
+    return () => {
+      loadMoreControllerRef.current?.abort();
+    };
+  }, [query, language]);
 
   return {
     query,

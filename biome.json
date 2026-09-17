@@ -6,13 +6,12 @@
       "./src/**",
       "./tests/**",
       "./biome.json",
-      "./cron.Dockerfile",
+      "./db.Dockerfile",
       "./docker-compose.yml",
       "./drizzle.config.ts",
-      "./next.config.js",
+      "./next.config.ts",
       "./package.json",
       "./postcss.config.mjs",
-      "./tailwind.config.ts",
       "./tsconfig.json",
       "./web.Dockerfile"
     ]

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateFormOneVowels } from "~/lib/validation/formOneVowels";
 import { shortVowelEnum } from "~/server/db/schema";
 
 const optionalTrimmedString = z
@@ -18,30 +19,16 @@ const overrideShape = {
 };
 
 const overrideBaseSchema = z.object(overrideShape);
-type OverrideBase = z.infer<typeof overrideBaseSchema>;
-
-const validateOverrideData = (data: OverrideBase, ctx: z.RefinementCtx) => {
-  const hasBothVowels = data.perfectVowel !== null && data.imperfectVowel !== null;
-  const hasEitherVowel = data.perfectVowel !== null || data.imperfectVowel !== null;
-  if (data.formNumber === 1 && !hasBothVowels) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Form I needs both a perfect and an imperfect vowel",
-      path: ["perfectVowel"],
-    });
-  }
-  if (data.formNumber !== 1 && hasEitherVowel) {
-    ctx.addIssue({ code: "custom", message: "Perfect/imperfect vowels only apply to form I", path: ["perfectVowel"] });
-  }
-};
 
 const overrideIdSchema = z.int({ error: "ID must be provided" }).positive({ error: "ID must be positive" });
 
-export const overrideCreateSchema = overrideBaseSchema.superRefine(validateOverrideData);
-export const overrideEditSchema = overrideBaseSchema.extend({ id: overrideIdSchema }).superRefine(validateOverrideData);
+export const overrideCreateSchema = overrideBaseSchema.superRefine(validateFormOneVowels);
+export const overrideEditSchema = overrideBaseSchema
+  .extend({ id: overrideIdSchema })
+  .superRefine(validateFormOneVowels);
 export const overrideFormSchema = overrideBaseSchema
   .extend({ id: overrideIdSchema.optional() })
-  .superRefine(validateOverrideData);
+  .superRefine(validateFormOneVowels);
 
 export type OverrideCreateType = z.output<typeof overrideCreateSchema>;
 export type OverrideEditType = z.output<typeof overrideEditSchema>;

@@ -1,18 +1,16 @@
 import { db } from "~/server/db";
 import { morphPattern } from "~/server/db/schema";
-import { countEntriesWithRoot } from "./shared";
+import { countEntriesWithRoot, entryMorphPatternSummaryColumns, senseWithTranslationsAndRelations } from "./shared";
 
 export const getLexicalEntryByNormalizedText = async (normalizedText: string) => {
   const entries = await db.query.lexicalEntry.findMany({
     where: { normalizedText, isVerified: true },
     columns: { searchVector: false },
     with: {
-      morphPattern: {
-        columns: { formNumber: true, description: true },
-      },
+      morphPattern: { columns: entryMorphPatternSummaryColumns },
       senses: {
-        with: { translations: true, relatedSenses: true },
-        orderBy: (senses, { sql }) => [sql`${senses.senseNumber}`],
+        with: senseWithTranslationsAndRelations,
+        orderBy: (senses, { asc }) => [asc(senses.senseNumber)],
       },
       conjugations: true,
     },

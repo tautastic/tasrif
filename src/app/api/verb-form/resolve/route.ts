@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { VerbFormResolutionResponse } from "~/lib/api/verb-form";
 import { verbFormChoiceSchema } from "~/lib/validation/verbFormChoice";
-import { isAuthenticated } from "~/server/auth";
+import { parseQuery } from "~/server/api/query";
+import { requireAdminApi } from "~/server/auth/guard";
 import { describeVerbRoot, resolveVerbMorphPattern } from "~/server/db/repository/morph-pattern";
 
 const querySchema = z.object({
@@ -11,17 +12,18 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await requireAdminApi();
+  if (unauthorized) {
+    return unauthorized;
   }
 
   const { searchParams } = new URL(request.url);
-  const params = querySchema.safeParse(Object.fromEntries(searchParams));
-  if (!params.success) {
-    return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+  const parsed = parseQuery(querySchema, searchParams);
+  if (parsed.response) {
+    return parsed.response;
   }
 
-  const { root, formChoice } = params.data;
+  const { root, formChoice } = parsed.data;
   const { labels, rootError } = await describeVerbRoot(root);
 
   if (!labels) {

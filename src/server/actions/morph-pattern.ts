@@ -2,15 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { z } from "zod";
 import {
   type MorphPatternCreateType,
   type MorphPatternEditType,
   morphPatternCreateSchema,
   morphPatternEditSchema,
 } from "~/components/admin/morph-pattern-edit-form/schema";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import type { MorphPatternRules } from "~/lib/validation/morphPatternRules";
+import { parseOrThrow } from "~/server/actions/shared";
 import { requireAdminAction } from "~/server/auth/guard";
+import { isUniqueViolation } from "~/server/db/pg-error";
 import {
   createMorphPattern,
   deleteMorphPatternById,
@@ -20,27 +22,6 @@ import {
   previewVerbalNouns,
   updateMorphPattern,
 } from "~/server/db/repository/morph-pattern";
-
-const parseOrThrow = <S extends z.ZodType>(schema: S, data: unknown): z.output<S> => {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    const details = result.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`);
-    throw new Error(`Invalid pattern data — ${details.join("; ")}`);
-  }
-  return result.data;
-};
-
-const UNIQUE_VIOLATION_SQLSTATE = "23505";
-
-const isUniqueViolation = (error: unknown): boolean => {
-  if (typeof error !== "object" || error === null || !("cause" in error)) {
-    return false;
-  }
-  const cause = (error as { cause: unknown }).cause;
-  return (
-    typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === UNIQUE_VIOLATION_SQLSTATE
-  );
-};
 
 const assertNotAmbiguous = async (pattern: MorphPatternCreateType | MorphPatternEditType, excludeId?: number) => {
   if (pattern.isLexical) {
@@ -67,7 +48,7 @@ const assertNotAmbiguous = async (pattern: MorphPatternCreateType | MorphPattern
 
 export async function createMorphPatternAction(data: MorphPatternCreateType) {
   await requireAdminAction();
-  const pattern = parseOrThrow(morphPatternCreateSchema, data);
+  const pattern = parseOrThrow(morphPatternCreateSchema, data, "pattern data");
   await assertNotAmbiguous(pattern);
 
   try {
@@ -76,7 +57,9 @@ export async function createMorphPatternAction(data: MorphPatternCreateType) {
     return created;
   } catch (error) {
     if (isUniqueViolation(error)) {
-      throw new Error(`A form ${pattern.formNumber} pattern with description "${pattern.description}" already exists`);
+      throw new Error(
+        `A form ${formatMorphPatternFormNumber(pattern.formNumber)} pattern with description "${pattern.description}" already exists`,
+      );
     }
     throw error;
   }
@@ -84,7 +67,7 @@ export async function createMorphPatternAction(data: MorphPatternCreateType) {
 
 export async function updateMorphPatternAction(data: MorphPatternEditType) {
   await requireAdminAction();
-  const pattern = parseOrThrow(morphPatternEditSchema, data);
+  const pattern = parseOrThrow(morphPatternEditSchema, data, "pattern data");
   await assertNotAmbiguous(pattern, pattern.id);
 
   try {
@@ -97,7 +80,9 @@ export async function updateMorphPatternAction(data: MorphPatternEditType) {
     return updated;
   } catch (error) {
     if (isUniqueViolation(error)) {
-      throw new Error(`A form ${pattern.formNumber} pattern with description "${pattern.description}" already exists`);
+      throw new Error(
+        `A form ${formatMorphPatternFormNumber(pattern.formNumber)} pattern with description "${pattern.description}" already exists`,
+      );
     }
     throw error;
   }

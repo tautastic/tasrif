@@ -1,6 +1,9 @@
 import Link from "next/link";
+import AdminBadge from "~/components/admin/AdminBadge";
+import AdminTable, { type AdminTableColumn } from "~/components/admin/AdminTable";
 import MorphPatternFilterSelection from "~/components/admin/MorphPatternFilterSelection";
 import Pagination from "~/components/Pagination";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { MORPH_PATTERN_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
 import {
   listMorphPatternsForAdmin,
@@ -17,6 +20,14 @@ const parseFormNumberParam = (value: string | undefined): number | undefined => 
   }
   return Number(value);
 };
+
+const morphPatternColumns: AdminTableColumn[] = [
+  { header: "Form" },
+  { header: "Template" },
+  { header: "Description" },
+  { header: "Flags", className: "whitespace-nowrap" },
+  { header: "Actions", className: "whitespace-nowrap" },
+];
 
 export default async function MorphPatternsPage({
   searchParams,
@@ -51,46 +62,33 @@ export default async function MorphPatternsPage({
         lexicalFilterOptions={MorphPatternLexicalFilterOptions}
       />
 
-      <table className="w-full text-left">
-        <thead>
-          <tr className="border-b border-gray-200 text-xs text-gray-500 sm:text-sm">
-            <th className="py-2 pr-4 font-medium">Form</th>
-            <th className="py-2 pr-4 font-medium">Template</th>
-            <th className="py-2 pr-4 font-medium">Description</th>
-            <th className="py-2 pr-4 font-medium">Flags</th>
-            <th className="py-2 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-300">
-          {items.map((pattern) => (
-            <tr key={pattern.id}>
-              <td className="py-2 pr-4 text-sm">{pattern.formNumber}</td>
-              <td className="py-2 pr-4 text-sm" lang="ar" dir="rtl">
-                <Link href={`/admin/morph-patterns/${pattern.id}`} className="text-blue-600 hover:underline">
-                  {pattern.vocalicTemplate}
-                </Link>
-              </td>
-              <td className="py-2 pr-4 text-sm">{pattern.description || "—"}</td>
-              <td className="py-2 pr-4 text-xs whitespace-nowrap">
-                {pattern.isLexical && <span className="mr-1 bg-purple-100 px-1.5 py-0.5 text-purple-700">Lexical</span>}
-                {pattern.noAffix && <span className="bg-amber-100 px-1.5 py-0.5 text-amber-700">No-affix</span>}
-              </td>
-              <td className="py-2 text-sm whitespace-nowrap">
-                <Link href={`/admin/morph-patterns/${pattern.id}/edit`} className="text-blue-600 hover:underline">
-                  Edit
-                </Link>
-              </td>
-            </tr>
-          ))}
-          {items.length === 0 && (
-            <tr>
-              <td colSpan={5} className="py-4 text-sm text-gray-500">
-                No patterns found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <AdminTable
+        columns={morphPatternColumns}
+        emptyMessage="No patterns found."
+        rows={items.map((pattern) => ({
+          key: pattern.id,
+          cells: [
+            formatMorphPatternFormNumber(pattern.formNumber),
+            <span key="template" lang="ar" dir="rtl">
+              <Link href={`/admin/morph-patterns/${pattern.id}`} className="text-blue-600 hover:underline">
+                {pattern.vocalicTemplate}
+              </Link>
+            </span>,
+            pattern.description || "—",
+            <div key="flags" className="flex flex-wrap gap-1">
+              {pattern.isLexical && <AdminBadge color="purple">Lexical</AdminBadge>}
+              {pattern.noAffix && <AdminBadge color="amber">No-affix</AdminBadge>}
+            </div>,
+            <Link
+              key="edit"
+              href={`/admin/morph-patterns/${pattern.id}/edit`}
+              className="text-blue-600 hover:underline"
+            >
+              Edit
+            </Link>,
+          ],
+        }))}
+      />
 
       <Pagination
         currentPage={page}

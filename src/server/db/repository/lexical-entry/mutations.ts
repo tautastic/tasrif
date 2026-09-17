@@ -19,11 +19,12 @@ export const createLexicalEntry = (input: PersistableEntry) => {
 };
 
 export const updateLexicalEntry = (input: PersistableEntry & { id: number }) => {
+  const { id, ...values } = input;
   return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(lexicalEntry)
-      .set(input)
-      .where(eq(lexicalEntry.id, input.id))
+      .set(values)
+      .where(eq(lexicalEntry.id, id))
       .returning(savedEntryColumns);
     if (!updated) {
       return null;

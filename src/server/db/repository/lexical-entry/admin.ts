@@ -1,7 +1,7 @@
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { lexicalEntry } from "~/server/db/schema";
-import { countEntriesWithRoot } from "./shared";
+import { countEntriesWithRoot, entryMorphPatternSummaryColumns, senseWithTranslationsAndRelations } from "./shared";
 
 export const AdminEntryFilterOptions = ["All", "Verified", "Unverified"] as const;
 export type AdminEntryFilterValue = (typeof AdminEntryFilterOptions)[number];
@@ -18,7 +18,14 @@ export const getLexicalEntriesForAdmin = async ({
   const [items, total] = await Promise.all([
     db.query.lexicalEntry.findMany({
       where: filter === "All" ? undefined : { isVerified: filter === "Verified" },
-      columns: { id: true, text: true, normalizedText: true, language: true, isVerified: true },
+      columns: { id: true, text: true, normalizedText: true, language: true, isVerified: true, root: true },
+      with: {
+        morphPattern: { columns: { formNumber: true } },
+        senses: {
+          columns: { pos: true },
+          orderBy: (senses, { asc }) => [asc(senses.senseNumber)],
+        },
+      },
       orderBy: (entry) => [desc(entry.createdAt), asc(entry.id)],
       limit,
       offset: (page - 1) * limit,
@@ -36,12 +43,10 @@ export const getLexicalEntryByIdForAdmin = async (id: number) => {
     where: { id },
     columns: { searchVector: false },
     with: {
-      morphPattern: {
-        columns: { formNumber: true, description: true },
-      },
+      morphPattern: { columns: entryMorphPatternSummaryColumns },
       senses: {
-        with: { translations: true, relatedSenses: true },
-        orderBy: (senses, { sql }) => [sql`${senses.senseNumber}`],
+        with: senseWithTranslationsAndRelations,
+        orderBy: (senses, { asc }) => [asc(senses.senseNumber)],
       },
       conjugations: true,
     },

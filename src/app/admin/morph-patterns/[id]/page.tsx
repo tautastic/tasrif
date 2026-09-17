@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PatternPreviewPanel from "~/components/admin/PatternPreviewPanel";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { listOverridesForPattern } from "~/server/db/repository/lexical-pattern-override";
 import { getMorphPatternById, getMorphPatternUsageCounts } from "~/server/db/repository/morph-pattern";
@@ -25,7 +26,7 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
           {pattern.vocalicTemplate}
         </h1>
         <span className="text-sm text-gray-600">
-          Form {pattern.formNumber}
+          Form {formatMorphPatternFormNumber(pattern.formNumber)}
           {pattern.description ? ` — ${pattern.description}` : ""}
         </span>
         <Link href={`/admin/morph-patterns/${patternId}/edit`} className="text-sm text-blue-600 hover:underline">
@@ -104,7 +105,7 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
                   <td className="py-1.5 pr-4" lang="ar" dir="rtl">
                     {override.root}
                   </td>
-                  <td className="py-1.5 pr-4">{override.formNumber}</td>
+                  <td className="py-1.5 pr-4">{formatMorphPatternFormNumber(override.formNumber)}</td>
                   <td className="py-1.5 pr-4">
                     {override.perfectVowel ?? "—"} / {override.imperfectVowel ?? "—"}
                   </td>

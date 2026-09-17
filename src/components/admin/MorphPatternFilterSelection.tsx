@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, FC } from "react";
+import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import type { MorphPatternLexicalFilterValue } from "~/server/db/repository/morph-pattern";
 
 const FORM_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
@@ -51,7 +52,7 @@ const MorphPatternFilterSelection: FC<MorphPatternFilterSelectionProps> = ({
         <option value="">All forms</option>
         {FORM_NUMBERS.map((n) => (
           <option key={n} value={n}>
-            Form {n}
+            Form {formatMorphPatternFormNumber(n)}
           </option>
         ))}
       </select>

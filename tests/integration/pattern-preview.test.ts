@@ -3,10 +3,6 @@ import { assertArabicEqual, assertParadigmEqual, conjugate, findPattern, openDat
 
 const db = await openDatabase();
 
-// Same rules object as the seeded (form_number=1, description='a ~ u') row in
-// db/0004_add_morphological_patterns.sql — kept in sync deliberately, since this test's whole
-// point is to prove the *literal* jsonb codepath (used to preview an unsaved admin pattern)
-// produces identical output to conjugating a persisted pattern with the same rules.
 const FORM_I_A_U_RULES = {
   masdar: "{1}َ{2}ْ{3}",
   perfect: "{1}َ{2}َ{3}",

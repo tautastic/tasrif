@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ConjugationTable from "~/components/entry/ConjugationTable";
-import EntryHeader from "~/components/entry/entry-page/EntryHeader";
+import EntryDetail from "~/components/entry/entry-page/EntryDetail";
 import RootInfoBox from "~/components/entry/entry-page/RootInfoBox";
-import SenseList from "~/components/entry/entry-page/SenseList";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { getLexicalEntryByIdForAdmin } from "~/server/db/repository/lexical-entry/admin";
 
@@ -29,23 +27,7 @@ export default async function AdminEntryPreviewPage({ params }: { params: Promis
       </div>
 
       <RootInfoBox rootInfo={rootInfo} />
-      <div className="mb-8">
-        <EntryHeader entry={entry} />
-        <SenseList senses={entry.senses} language={language} />
-        {entry.morphPattern && (
-          <div className="mt-4 overflow-x-auto">
-            <ConjugationTable
-              word={entry.text}
-              patternFormNumber={entry.morphPattern.formNumber}
-              patternDescription={entry.morphPattern.description}
-              masdar={entry.masdar}
-              activeParticiple={entry.activeParticiple}
-              passiveParticiple={entry.passiveParticiple}
-              conjugations={entry.conjugations}
-            />
-          </div>
-        )}
-      </div>
+      <EntryDetail entry={entry} language={language} />
     </div>
   );
 }

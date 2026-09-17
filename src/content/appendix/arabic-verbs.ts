@@ -38,7 +38,6 @@ export interface MeaningItemData {
   items: InlineNode[][];
 }
 
-/** A bullet whose own text introduces a further indented bullet list. */
 export interface NestedListItemData {
   content: InlineNode[];
   items: InlineNode[][];

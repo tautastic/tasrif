@@ -2,12 +2,12 @@ import Link from "next/link";
 
 const ADMIN_LINKS = [
   { href: "/admin/entries", label: "Entries", description: "Browse and edit dictionary entries" },
-  { href: "/admin/new-entry", label: "Add Entry", description: "Create a new dictionary entry" },
   {
     href: "/admin/morph-patterns",
     label: "Patterns",
     description: "Manage morphological patterns and their overrides",
   },
+  { href: "/admin/new-entry", label: "Add Entry", description: "Create a new dictionary entry" },
 ] as const;
 
 export default function AdminDashboardPage() {

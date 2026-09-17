@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { type LanguageType, lexicalEntry, morphPattern } from "~/server/db/schema";
 
@@ -60,7 +60,7 @@ export const getLexicalEntriesByLanguage = async ({
   page: number;
   limit: number;
 }) => {
-  const [items, [totals]] = await Promise.all([
+  const [items, total] = await Promise.all([
     db.query.lexicalEntry.findMany({
       where: { language, isVerified: true },
       orderBy: (entry) => [desc(entry.createdAt)],
@@ -68,13 +68,10 @@ export const getLexicalEntriesByLanguage = async ({
       limit,
       offset: (page - 1) * limit,
     }),
-    db
-      .select({ count: count() })
-      .from(lexicalEntry)
-      .where(and(eq(lexicalEntry.language, language), eq(lexicalEntry.isVerified, true))),
+    db.$count(lexicalEntry, and(eq(lexicalEntry.language, language), eq(lexicalEntry.isVerified, true))),
   ]);
 
-  return { items, total: totals?.count ?? 0 };
+  return { items, total };
 };
 
 export const getLexicalEntriesByFormNumber = async ({

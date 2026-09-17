@@ -1,6 +1,7 @@
 import { and, asc, count, eq, sql } from "drizzle-orm";
 import { resolveVerbFormChoice, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
 import { db } from "~/server/db";
+import { getPgErrorWithCode } from "~/server/db/pg-error";
 import { lexicalEntry, morphPattern } from "~/server/db/schema";
 
 export const getVerbFormsWithCounts = async () => {
@@ -17,23 +18,7 @@ export const getVerbFormsWithCounts = async () => {
   return rows.filter((row) => row.total > 0);
 };
 
-const INVALID_ROOT_SQLSTATE = "22023";
-
-const getInvalidRootCause = (error: unknown): { message: string } | null => {
-  if (typeof error !== "object" || error === null || !("cause" in error)) {
-    return null;
-  }
-  const cause = (error as { cause: unknown }).cause;
-  if (
-    typeof cause !== "object" ||
-    cause === null ||
-    (cause as { code?: unknown }).code !== INVALID_ROOT_SQLSTATE ||
-    typeof (cause as { message?: unknown }).message !== "string"
-  ) {
-    return null;
-  }
-  return cause as { message: string };
-};
+export const INVALID_ROOT_SQLSTATE = "22023";
 
 export interface RootClassification {
   labels: string[] | null;
@@ -45,7 +30,7 @@ export const describeVerbRoot = async (root: string): Promise<RootClassification
     const result = await db.execute<{ describe_root: string[] }>(sql`SELECT describe_root(${root}) AS describe_root`);
     return { labels: result.rows[0]?.describe_root ?? null, rootError: null };
   } catch (error) {
-    const invalidRootCause = getInvalidRootCause(error);
+    const invalidRootCause = getPgErrorWithCode(error, INVALID_ROOT_SQLSTATE);
     if (invalidRootCause) {
       return { labels: null, rootError: invalidRootCause.message };
     }

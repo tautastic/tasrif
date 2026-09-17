@@ -5,7 +5,11 @@ import { lexicalEntry } from "~/server/db/schema";
 export const savedEntryColumns = {
   id: lexicalEntry.id,
   normalizedText: lexicalEntry.normalizedText,
+  isVerified: lexicalEntry.isVerified,
 };
+
+export const entryMorphPatternSummaryColumns = { formNumber: true, description: true } as const;
+export const senseWithTranslationsAndRelations = { translations: true, relatedSenses: true } as const;
 
 export const countEntriesWithRoot = async (root: string | null) => {
   if (!root) {

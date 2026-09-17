@@ -1,6 +1,9 @@
 import Link from "next/link";
+import AdminBadge from "~/components/admin/AdminBadge";
+import AdminTable, { type AdminTableColumn } from "~/components/admin/AdminTable";
 import EntryFilterSelection from "~/components/admin/EntryFilterSelection";
 import Pagination from "~/components/Pagination";
+import { formatMorphPatternFormNumber, formatPartOfSpeechType, formatRoot } from "~/lib/formatting";
 import { ENTRY_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
 import {
   AdminEntryFilterOptions,
@@ -10,6 +13,15 @@ import {
 
 const isAdminEntryFilter = (value: string | undefined): value is AdminEntryFilterValue =>
   value !== undefined && (AdminEntryFilterOptions as readonly string[]).includes(value);
+
+const entryColumns: AdminTableColumn[] = [
+  { header: "Text" },
+  { header: "Root", hideBelowSm: true },
+  { header: "Senses", hideBelowSm: true },
+  { header: "Form", hideBelowSm: true },
+  { header: "Status", className: "whitespace-nowrap" },
+  { header: "Actions", className: "whitespace-nowrap" },
+];
 
 export default async function AdminEntriesPage({
   searchParams,
@@ -28,53 +40,68 @@ export default async function AdminEntriesPage({
 
       <EntryFilterSelection value={filter} options={AdminEntryFilterOptions} />
 
-      <table className="w-full text-left max-w-md">
-        <thead>
-          <tr className="border-b border-gray-200 text-xs text-gray-500 sm:text-sm">
-            <th className="py-2 pr-4 font-medium">Text</th>
-            <th className="py-2 pr-4 font-medium">Status</th>
-            <th className="py-2 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-300">
-          {items.map((entry) => (
-            <tr key={entry.id}>
-              <td className="py-1.5 pr-2 sm:py-2 sm:pr-4 w-full">
+      <AdminTable
+        columns={entryColumns}
+        emptyMessage="No entries found."
+        rows={items.map((entry) => {
+          const pos = [...new Set(entry.senses.map((sense) => sense.pos))];
+
+          return {
+            key: entry.id,
+            cells: [
+              <div key="text">
                 <Link
                   href={`/admin/entries/${entry.id}`}
                   lang={entry.language}
-                  className="text-sm block truncate text-blue-600 hover:underline w-min sm:text-base"
+                  className="block truncate text-base font-medium text-blue-600 hover:underline"
                 >
                   {entry.text}
                 </Link>
-              </td>
-              <td className="w-full py-1.5 pr-2 sm:py-2 sm:pr-4">
-                {!entry.isVerified ? (
-                  <span className="block w-full text-center text-[10px] font-medium text-amber-700 bg-amber-100 px-1 py-0.5 sm:px-1.5 sm:text-xs">
-                    Unverified
-                  </span>
-                ) : (
-                  <span className="block w-full text-center text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1 py-0.5 sm:px-1.5 sm:text-xs">
-                    Verified
-                  </span>
+                {(entry.root || pos.length > 0) && (
+                  <p className="mt-0.5 truncate text-xs text-gray-500 sm:hidden">
+                    {entry.root && <span lang="ar">{formatRoot(entry.root)}</span>}
+                    {entry.root && pos.length > 0 && " · "}
+                    {pos.length > 0 && pos.map((p) => formatPartOfSpeechType(p)).join(", ")}
+                  </p>
                 )}
-              </td>
-              <td className="py-1.5 sm:py-2 whitespace-nowrap text-xs sm:text-sm">
-                <Link href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
-                  Edit
-                </Link>
-              </td>
-            </tr>
-          ))}
-          {items.length === 0 && (
-            <tr>
-              <td colSpan={3} className="py-4 text-sm text-gray-500">
-                No entries found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              </div>,
+              entry.root ? (
+                <span key="root" lang="ar" className="text-xs text-gray-600">
+                  {formatRoot(entry.root)}
+                </span>
+              ) : (
+                <span key="root" className="text-xs text-gray-600">
+                  —
+                </span>
+              ),
+              pos.length > 0 ? (
+                <div key="senses" className="flex flex-wrap gap-1">
+                  {pos.map((p) => (
+                    <AdminBadge key={p}>{formatPartOfSpeechType(p)}</AdminBadge>
+                  ))}
+                </div>
+              ) : (
+                "—"
+              ),
+              <span key="form" className="text-xs text-gray-600">
+                {entry.morphPattern ? formatMorphPatternFormNumber(entry.morphPattern.formNumber) : "—"}
+              </span>,
+              entry.isVerified ? (
+                <AdminBadge key="status" color="emerald">
+                  Verified
+                </AdminBadge>
+              ) : (
+                <AdminBadge key="status" color="amber">
+                  Unverified
+                </AdminBadge>
+              ),
+              <Link key="edit" href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
+                Edit
+              </Link>,
+            ],
+          };
+        })}
+      />
 
       <Pagination
         currentPage={page}

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { isAdminPassword, setSessionCookie } from "~/server/auth";
 import { getRateLimitStatus, registerFailedAttempt, registerSuccessfulAttempt } from "~/server/auth/rate-limit";
+
+const loginBodySchema = z.object({ password: z.string().min(1) });
 
 const getClientIp = (request: Request): string => {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",").at(0)?.trim();
@@ -22,11 +25,13 @@ export async function POST(request: Request) {
   }
 
   const body: unknown = await request.json().catch(() => null);
-  const password = typeof body === "object" && body !== null ? (body as { password?: unknown }).password : undefined;
+  const parsedBody = loginBodySchema.safeParse(body);
 
-  if (typeof password !== "string" || password === "") {
+  if (!parsedBody.success) {
     return NextResponse.json({ error: "Missing password" }, { status: 400 });
   }
+
+  const { password } = parsedBody.data;
 
   if (!isAdminPassword(password)) {
     registerFailedAttempt(clientIp);

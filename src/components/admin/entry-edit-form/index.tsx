@@ -39,7 +39,7 @@ const EntryEditForm = (props: EntryEditFormProps) => {
         props.mode === "edit"
           ? await updateLexicalEntryAction({ ...values, id: props.entry.id })
           : await createLexicalEntryAction(values);
-      router.push(`/entry/${saved.normalizedText}`);
+      router.push(saved.isVerified ? `/entry/${saved.normalizedText}` : `/admin/entries/${saved.id}`);
     } catch (error) {
       setServerError(error instanceof Error ? error.message : "Failed to save entry.");
     }
