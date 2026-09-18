@@ -5,6 +5,7 @@ import EntryFilterSelection from "~/components/admin/EntryFilterSelection";
 import Pagination from "~/components/Pagination";
 import { formatMorphPatternFormNumber, formatPartOfSpeechType, formatRoot } from "~/lib/formatting";
 import { ENTRY_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
+import { deleteLexicalEntriesAction } from "~/server/actions/lexical-entry";
 import {
   AdminEntryFilterOptions,
   type AdminEntryFilterValue,
@@ -38,11 +39,15 @@ export default async function AdminEntriesPage({
       <h1 className="text-xl sm:text-2xl font-bold mb-2">Entries</h1>
       <p className="text-xs sm:text-sm text-gray-600 mb-4">{total} entries</p>
 
-      <EntryFilterSelection value={filter} options={AdminEntryFilterOptions} />
-
       <AdminTable
         columns={entryColumns}
         emptyMessage="No entries found."
+        toolbar={<EntryFilterSelection value={filter} options={AdminEntryFilterOptions} />}
+        selection={{
+          entityName: "Entry",
+          entityNamePlural: "Entries",
+          onDeleteSelectedAction: deleteLexicalEntriesAction,
+        }}
         rows={items.map((entry) => {
           const pos = [...new Set(entry.senses.map((sense) => sense.pos))];
 
@@ -95,9 +100,14 @@ export default async function AdminEntriesPage({
                   Unverified
                 </AdminBadge>
               ),
-              <Link key="edit" href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
-                Edit
-              </Link>,
+              <div key="actions" className="flex gap-3">
+                <Link href={`/admin/edit-entry/${entry.id}`} className="text-blue-600 hover:underline">
+                  Edit
+                </Link>
+                <Link href={`/admin/delete-entry/${entry.id}`} className="text-red-600 hover:underline">
+                  Delete
+                </Link>
+              </div>,
             ],
           };
         })}

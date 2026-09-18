@@ -105,6 +105,27 @@ export async function deleteMorphPatternAction(id: number) {
   redirect("/admin/morph-patterns");
 }
 
+export async function deleteMorphPatternsAction(ids: number[]) {
+  await requireAdminAction();
+
+  const usages = await Promise.all(ids.map(async (id) => ({ id, usage: await getMorphPatternUsageCounts(id) })));
+  const inUse = usages.filter(({ usage }) => usage.entryCount > 0 || usage.overrideCount > 0);
+  if (inUse.length > 0) {
+    throw new Error(
+      `Cannot delete: pattern(s) ${inUse.map(({ id }) => id).join(", ")} still referenced by entries or overrides`,
+    );
+  }
+
+  const deleted = await Promise.all(ids.map((id) => deleteMorphPatternById(id)));
+  const successful = deleted.filter((pattern): pattern is NonNullable<typeof pattern> => pattern !== null);
+  if (successful.length < ids.length) {
+    const failedCount = ids.length - successful.length;
+    throw new Error(`Failed to delete ${failedCount} ${failedCount === 1 ? "pattern" : "patterns"}`);
+  }
+
+  revalidatePath("/admin/morph-patterns");
+}
+
 export interface PreviewMorphPatternInput {
   root: string;
   rules: MorphPatternRules;

@@ -116,3 +116,18 @@ export async function deleteLexicalEntryAction(id: number) {
   revalidateLexicalEntryPages(deleted);
   redirect("/");
 }
+
+export async function deleteLexicalEntriesAction(ids: number[]) {
+  await requireAdminAction();
+
+  const deleted = await Promise.all(ids.map((id) => deleteLexicalEntryById(id)));
+  const successful = deleted.filter((entry): entry is NonNullable<typeof entry> => entry !== undefined);
+
+  if (successful.length < ids.length) {
+    const failedCount = ids.length - successful.length;
+    throw new Error(`Failed to delete ${failedCount} lexical ${failedCount === 1 ? "entry" : "entries"}`);
+  }
+
+  revalidateLexicalEntryPages(...successful);
+  revalidatePath("/admin/entries");
+}

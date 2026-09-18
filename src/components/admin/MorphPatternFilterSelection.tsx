@@ -44,7 +44,7 @@ const MorphPatternFilterSelection: FC<MorphPatternFilterSelectionProps> = ({
     navigate({ formNumber, lexicalFilter: e.target.value as MorphPatternLexicalFilterValue });
   };
 
-  const selectClassName = "mb-4 border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700";
+  const selectClassName = "border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700";
 
   return (
     <div className="flex flex-wrap gap-3">

@@ -5,6 +5,7 @@ import MorphPatternFilterSelection from "~/components/admin/MorphPatternFilterSe
 import Pagination from "~/components/Pagination";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { MORPH_PATTERN_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
+import { deleteMorphPatternsAction } from "~/server/actions/morph-pattern";
 import {
   listMorphPatternsForAdmin,
   MorphPatternLexicalFilterOptions,
@@ -56,15 +57,21 @@ export default async function MorphPatternsPage({
       </div>
       <p className="mb-4 text-xs text-gray-600 sm:text-sm">{total} patterns</p>
 
-      <MorphPatternFilterSelection
-        formNumber={formNumber}
-        lexicalFilter={lexicalFilter}
-        lexicalFilterOptions={MorphPatternLexicalFilterOptions}
-      />
-
       <AdminTable
         columns={morphPatternColumns}
         emptyMessage="No patterns found."
+        toolbar={
+          <MorphPatternFilterSelection
+            formNumber={formNumber}
+            lexicalFilter={lexicalFilter}
+            lexicalFilterOptions={MorphPatternLexicalFilterOptions}
+          />
+        }
+        selection={{
+          entityName: "Pattern",
+          entityNamePlural: "Patterns",
+          onDeleteSelectedAction: deleteMorphPatternsAction,
+        }}
         rows={items.map((pattern) => ({
           key: pattern.id,
           cells: [
@@ -79,13 +86,14 @@ export default async function MorphPatternsPage({
               {pattern.isLexical && <AdminBadge color="purple">Lexical</AdminBadge>}
               {pattern.noAffix && <AdminBadge color="amber">No-affix</AdminBadge>}
             </div>,
-            <Link
-              key="edit"
-              href={`/admin/morph-patterns/${pattern.id}/edit`}
-              className="text-blue-600 hover:underline"
-            >
-              Edit
-            </Link>,
+            <div key="actions" className="flex gap-3">
+              <Link href={`/admin/morph-patterns/${pattern.id}/edit`} className="text-blue-600 hover:underline">
+                Edit
+              </Link>
+              <Link href={`/admin/morph-patterns/${pattern.id}/delete`} className="text-red-600 hover:underline">
+                Delete
+              </Link>
+            </div>,
           ],
         }))}
       />

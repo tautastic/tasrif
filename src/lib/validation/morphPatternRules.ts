@@ -25,7 +25,7 @@ export const IMPERFECT_MOOD_KEYS = [
 const PLACEHOLDER_PATTERN = /\{[^123]\}|\{\d{2,}\}/;
 
 const templateStringSchema = z.string().refine((value) => !PLACEHOLDER_PATTERN.test(value), {
-  message: "Only the {1}, {2}, {3} radical placeholders are allowed",
+  message: "Only the ف, ع, ل radical placeholders are allowed",
 });
 
 const buildPersonObjectSchema = <P extends Person>(persons: readonly P[]) =>

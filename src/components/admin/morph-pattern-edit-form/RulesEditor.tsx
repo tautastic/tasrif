@@ -12,6 +12,7 @@ import {
   STRING_KEYS,
 } from "~/lib/validation/morphPatternRules";
 import PersonFormsGrid from "./PersonFormsGrid";
+import { toDisplayTemplate, toRawTemplate } from "./radicalPlaceholders";
 import type { MorphPatternFormInput, MorphPatternFormValues } from "./schema";
 
 type RulesRecord = Record<string, string | Partial<Record<Person, string>> | undefined>;
@@ -70,8 +71,8 @@ const MoodSection = ({
           lang="ar"
           dir="rtl"
           className="field-control"
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
+          value={toDisplayTemplate(typeof value === "string" ? value : "")}
+          onChange={(e) => onChange(toRawTemplate(e.target.value))}
         />
       )}
     </div>
@@ -147,8 +148,8 @@ const RulesEditor = () => {
                     lang="ar"
                     dir="rtl"
                     className="field-control"
-                    value={rules[key] ?? ""}
-                    onChange={(e) => setKey(key, e.target.value)}
+                    value={toDisplayTemplate(rules[key] ?? "")}
+                    onChange={(e) => setKey(key, toRawTemplate(e.target.value))}
                   />
                 </Field>
               ))}
@@ -192,9 +193,9 @@ const RulesEditor = () => {
                   lang="ar"
                   dir="rtl"
                   className="field-control"
-                  placeholder="e.g. {1}ْ{2}ُ{3}"
-                  value={typeof rules.imperfect_stem === "string" ? rules.imperfect_stem : ""}
-                  onChange={(e) => setKey("imperfect_stem", e.target.value)}
+                  placeholder="e.g. فْعُل"
+                  value={toDisplayTemplate(typeof rules.imperfect_stem === "string" ? rules.imperfect_stem : "")}
+                  onChange={(e) => setKey("imperfect_stem", toRawTemplate(e.target.value))}
                 />
               ) : (
                 <div className="space-y-3">

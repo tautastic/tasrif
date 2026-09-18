@@ -1,4 +1,5 @@
 import type { Person } from "~/lib/validation/morphPatternRules";
+import { toDisplayTemplate, toRawTemplate } from "./radicalPlaceholders";
 
 export const PERSON_LABELS: Record<Person, string> = {
   first_person_singular: "1sg",
@@ -36,8 +37,8 @@ const PersonFormsGrid = ({ idPrefix, persons, value, onChange }: PersonFormsGrid
           lang="ar"
           dir="rtl"
           className="field-control"
-          value={value?.[person] ?? ""}
-          onChange={(e) => onChange({ ...value, [person]: e.target.value })}
+          value={toDisplayTemplate(value?.[person] ?? "")}
+          onChange={(e) => onChange({ ...value, [person]: toRawTemplate(e.target.value) })}
         />
       </div>
     ))}
