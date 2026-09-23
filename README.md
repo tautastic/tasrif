@@ -54,6 +54,10 @@ normalisation layer after template substitution. This corrects forms that would
 be wrong if the rules were followed mechanically. The result is a
 complete, readable conjugation table for each verb entry.
 
+## AI Disclaimer
+
+Claude Code has been used very sparingly in this project, mainly to help write the test suite.
+
 ## License
 
 Everything in this repository is licensed under the
