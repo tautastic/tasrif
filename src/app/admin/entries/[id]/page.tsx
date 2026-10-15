@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import EntryDetail from "~/components/entry/entry-page/EntryDetail";
 import RootInfoBox from "~/components/entry/entry-page/RootInfoBox";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { requireAdmin } from "~/server/auth/guard";
 import { getLexicalEntryByIdForAdmin } from "~/server/db/repository/lexical-entry/admin";
 
 export default async function AdminEntryPreviewPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const entryId = await parseIdOrNotFound(params);
   const preview = await getLexicalEntryByIdForAdmin(entryId);
 
@@ -27,7 +29,7 @@ export default async function AdminEntryPreviewPage({ params }: { params: Promis
       </div>
 
       <RootInfoBox rootInfo={rootInfo} />
-      <EntryDetail entry={entry} language={language} />
+      <EntryDetail entry={entry} language={language} isPrimary />
     </div>
   );
 }

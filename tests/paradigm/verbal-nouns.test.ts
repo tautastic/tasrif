@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PARADIGM_FIXTURES } from "../fixtures/paradigms.ts";
+import { APPENDIX, PARADIGM_FIXTURES } from "../fixtures/paradigms.ts";
 import { assertArabicEqual, findPattern, openDatabase, verbalNouns } from "../harness";
 
 const db = await openDatabase();
@@ -24,6 +24,16 @@ for (const fixture of PARADIGM_FIXTURES) {
       deviations.passive_participle ?? fixture.passiveParticiple,
       `${fixture.id} passive participle\n${fixture.source}`,
     );
+  });
+}
+
+const FORM_I_ACTIVE_PARTICIPLE_SOURCE = `${APPENDIX}: the form I overview gives فَاعِل as the active participle for every perfective vowel, and its vowel table lists حَسِبَ / يَحْسِبُ as the i ~ i example.`;
+
+for (const description of ["a ~ u", "a ~ a", "a ~ i", "i ~ a", "i ~ i"]) {
+  test(`the sound form I "${description}" active participle is the فَاعِل agent noun`, async () => {
+    const patternId = await patternIdFor(1, description);
+    const nouns = await verbalNouns(db, "حسب", patternId);
+    assertArabicEqual(nouns.active_participle, "حَاسِب", `${description}\n${FORM_I_ACTIVE_PARTICIPLE_SOURCE}`);
   });
 }
 

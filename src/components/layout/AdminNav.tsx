@@ -11,9 +11,11 @@ const AdminNav = () => {
   }
 
   return (
-    <Link href="/admin" className="text-blue-700 hover:underline">
-      Admin
-    </Link>
+    <nav className="flex flex-wrap items-center text-sm" aria-label="Site">
+      <Link href="/admin" className="text-blue-700 hover:underline">
+        Admin
+      </Link>
+    </nav>
   );
 };
 

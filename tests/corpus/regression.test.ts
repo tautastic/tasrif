@@ -87,8 +87,8 @@ if (!enabled) {
     const restored = Number(await db.scalar<string>("SELECT count(*)::text FROM lexical_entry"));
     if (restored === 0) {
       throw new Error(
-        `pg_restore recovered no lexical entries from ${dumpPath}. If the dump predates the current ` +
-          `migrations its columns will not line up with the schema under test.\n${stderr}`,
+        `pg_restore recovered no lexical entries from ${dumpPath}. If the dump predates the current schema ` +
+          `its columns will not line up with the schema under test.\n${stderr}`,
       );
     }
     if (stderr) {

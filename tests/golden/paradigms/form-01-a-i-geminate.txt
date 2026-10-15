@@ -7,7 +7,7 @@
 # no_affix        true
 # root            ⁨مدد⁩  [U+0645 MEEM | U+062F DAL | U+062F DAL]
 
-masdar                                                  ⁨مُدّ⁩  [U+0645 MEEM | U+064F DAMMA | U+062F DAL | U+0651 SHADDA]
+masdar                                                  ⁨مَدّ⁩  [U+0645 MEEM | U+064E FATHA | U+062F DAL | U+0651 SHADDA]
 active_participle                                       ⁨مَادّ⁩  [U+0645 MEEM | U+064E FATHA | U+0627 ALEF | U+062F DAL | U+0651 SHADDA]
 passive_participle                                      ⁨مَمْدُود⁩  [U+0645 MEEM | U+064E FATHA | U+0645 MEEM | U+0652 SUKUN | U+062F DAL | U+064F DAMMA | U+0648 WAW | U+062F DAL]
 

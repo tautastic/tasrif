@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   assertArabicEqual,
+  assertSqlState,
   type Db,
   findPattern,
   IMPERATIVE_PERSONS,
@@ -18,7 +19,9 @@ const soundFormI = await findPattern(db, 1, "a ~ u");
 const formII = await findPattern(db, 2, "");
 
 const conjugationCount = (scope: Db, entryId: number): Promise<string> =>
-  scope.scalar<string>("SELECT count(*)::text FROM conjugation WHERE lexical_entry_id = $1", [entryId]);
+  scope.scalar<string>("SELECT count(*)::text FROM conjugation WHERE lexical_entry_id = $1 AND voice = 'active'", [
+    entryId,
+  ]);
 
 const searchVector = (scope: Db, entryId: number): Promise<string | null> =>
   scope.scalar<string | null>("SELECT search_vector::text FROM lexical_entry WHERE id = $1", [entryId]);
@@ -170,11 +173,22 @@ test("clearing morph_pattern_id wipes the stems and every conjugation", async ()
   });
 });
 
-test("a root shorter than three characters wipes the derived data but keeps latin_root", async () => {
+test("a root shorter than three characters is rejected while a pattern is attached", async () => {
   await db.tx(async (tx) => {
     const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
 
-    await tx.exec("UPDATE lexical_entry SET root = $2 WHERE id = $1", [entryId, "كت"]);
+    const failure = await tx.failure("UPDATE lexical_entry SET root = $2 WHERE id = $1", [entryId, "كت"]);
+
+    assertSqlState(failure, "22023", /exactly 3 radicals/);
+    assertArabicEqual((await storedStems(tx, entryId)).masdar, "كَتْب", "the rejected update left the entry intact");
+  });
+});
+
+test("a root shorter than three characters is accepted without a pattern and keeps latin_root", async () => {
+  await db.tx(async (tx) => {
+    const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
+
+    await tx.exec("UPDATE lexical_entry SET morph_pattern_id = NULL, root = $2 WHERE id = $1", [entryId, "كت"]);
 
     const stems = await storedStems(tx, entryId);
     assert.equal(stems.masdar, null);

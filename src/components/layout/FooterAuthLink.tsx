@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useIsAdmin } from "~/hooks/useIsAdmin";
+import { useAdminStatus } from "~/hooks/useIsAdmin";
+
+const linkClassName = "text-gray-600 hover:text-gray-900 hover:underline";
 
 const FooterAuthLink = () => {
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useAdminStatus();
+
+  if (isAdmin === null) {
+    return (
+      <span className="invisible" aria-hidden="true">
+        Login
+      </span>
+    );
+  }
 
   if (!isAdmin) {
     return (
-      <Link href="/auth/login" className="text-gray-400 hover:text-gray-600 hover:underline">
+      <Link href="/auth/login" className={linkClassName}>
         Login
       </Link>
     );
@@ -16,7 +26,7 @@ const FooterAuthLink = () => {
 
   return (
     <form action="/api/auth/logout" method="POST">
-      <button type="submit" className="text-gray-400 hover:text-gray-600 hover:underline cursor-pointer">
+      <button type="submit" className={`${linkClassName} cursor-pointer`}>
         Logout
       </button>
     </form>

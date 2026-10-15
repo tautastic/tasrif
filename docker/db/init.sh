@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-shopt -s nullglob
 export LC_ALL=C
 
-sql_dir=/opt/tasrif/db
+sql_dir=${TASRIF_SQL_DIR:-/opt/tasrif/db}
 
 for var in APP_DB_USER APP_DB_NAME; do
   if ! [[ ${!var:-} =~ ^[a-z_][a-z0-9_]{0,62}$ ]]; then
@@ -35,41 +34,14 @@ host    all             all             ::1/128         trust
 host    "$APP_DB_NAME"  "$APP_DB_USER"  all             scram-sha-256
 EOF
 
-migrations=("$sql_dir"/drizzle/*/migration.sql)
-scripts=("$sql_dir"/*.sql)
-if [ ${#migrations[@]} -eq 0 ]; then
-  echo "No migrations found in $sql_dir/drizzle" >&2
-  exit 1
-fi
-
-journal="CREATE SCHEMA drizzle;
-CREATE TABLE drizzle.__drizzle_migrations (
-  id SERIAL PRIMARY KEY,
-  hash text NOT NULL,
-  created_at bigint,
-  name text,
-  applied_at timestamp with time zone DEFAULT now()
-);"
-for migration in "${migrations[@]}"; do
-  name=$(basename "$(dirname "$migration")")
-  if ! [[ $name =~ ^([0-9]{8})([0-9]{2})([0-9]{2})([0-9]{2})_[a-z0-9_]+$ ]]; then
-    echo "Unexpected migration folder name: $name" >&2
-    exit 1
-  fi
-  hash=$(sha256sum "$migration" | cut -d' ' -f1)
-  created_at=$(date -u -d "${BASH_REMATCH[1]} ${BASH_REMATCH[2]}:${BASH_REMATCH[3]}:${BASH_REMATCH[4]}" +%s)000
-  journal+="
-INSERT INTO drizzle.__drizzle_migrations (hash, created_at, name) VALUES ('$hash', $created_at, '$name');"
-done
-
-args=(--command="CREATE EXTENSION IF NOT EXISTS pg_trgm")
-for file in "${migrations[@]}"; do
-  args+=(--file="$file")
-done
-args+=(--command="$journal")
-for file in "${scripts[@]}"; do
-  args+=(--file="$file")
-done
-
 echo "Loading schema and data from $sql_dir"
-psql --no-psqlrc --set=ON_ERROR_STOP=1 --single-transaction --username="$APP_DB_USER" --dbname="$APP_DB_NAME" "${args[@]}"
+sql_files=("$sql_dir/schema.sql")
+for script in "$sql_dir"/[0-9]*.sql; do
+  sql_files+=("$script")
+done
+psql_files=()
+for file in "${sql_files[@]}"; do
+  psql_files+=(--file="$file")
+done
+PGUSER="$APP_DB_USER" PGDATABASE="$APP_DB_NAME" PGOPTIONS="-c client_min_messages=warning" \
+  psql --no-psqlrc --quiet --single-transaction --set=ON_ERROR_STOP=1 --output=/dev/null "${psql_files[@]}"

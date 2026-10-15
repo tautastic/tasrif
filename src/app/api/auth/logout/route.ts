@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { clearSessionCookie } from "~/server/auth";
+import { clearSessionCookie, revokeCurrentSession } from "~/server/auth";
 
-export function POST() {
+export async function POST() {
+  await revokeCurrentSession();
   const response = new NextResponse(null, {
     status: 303,
     headers: { Location: "/auth/login" },

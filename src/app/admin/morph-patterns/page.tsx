@@ -6,6 +6,7 @@ import Pagination from "~/components/Pagination";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { MORPH_PATTERN_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
 import { deleteMorphPatternsAction } from "~/server/actions/morph-pattern";
+import { requireAdmin } from "~/server/auth/guard";
 import {
   listMorphPatternsForAdmin,
   MorphPatternLexicalFilterOptions,
@@ -15,11 +16,14 @@ import {
 const isLexicalFilterValue = (value: string | undefined): value is MorphPatternLexicalFilterValue =>
   value !== undefined && (MorphPatternLexicalFilterOptions as readonly string[]).includes(value);
 
-const parseFormNumberParam = (value: string | undefined): number | undefined => {
-  if (value === undefined || !/^([1-9]|10)$/.test(value)) {
-    return undefined;
+const parseFormParam = (value: string | undefined): { formNumber: number; radicalCount: 3 | 4 } | undefined => {
+  if (value !== undefined && /^([1-9]|10)$/.test(value)) {
+    return { formNumber: Number(value), radicalCount: 3 };
   }
-  return Number(value);
+  if (value !== undefined && /^[1-4]q$/.test(value)) {
+    return { formNumber: Number(value.slice(0, 1)), radicalCount: 4 };
+  }
+  return undefined;
 };
 
 const morphPatternColumns: AdminTableColumn[] = [
@@ -35,13 +39,15 @@ export default async function MorphPatternsPage({
 }: {
   searchParams: Promise<{ page?: string; formNumber?: string; lexicalFilter?: string }>;
 }) {
+  await requireAdmin();
   const { page: pageParam, formNumber: formNumberParam, lexicalFilter: lexicalFilterParam } = await searchParams;
   const lexicalFilter = isLexicalFilterValue(lexicalFilterParam) ? lexicalFilterParam : "All";
-  const formNumber = parseFormNumberParam(formNumberParam);
+  const form = parseFormParam(formNumberParam);
   const page = parsePageParam(pageParam);
 
   const { items, total } = await listMorphPatternsForAdmin({
-    formNumber,
+    formNumber: form?.formNumber,
+    radicalCount: form?.radicalCount,
     lexicalFilter,
     page,
     limit: MORPH_PATTERN_LIST_PAGE_SIZE,
@@ -62,7 +68,8 @@ export default async function MorphPatternsPage({
         emptyMessage="No patterns found."
         toolbar={
           <MorphPatternFilterSelection
-            formNumber={formNumber}
+            formNumber={form?.formNumber}
+            radicalCount={form?.radicalCount}
             lexicalFilter={lexicalFilter}
             lexicalFilterOptions={MorphPatternLexicalFilterOptions}
           />
@@ -74,8 +81,12 @@ export default async function MorphPatternsPage({
         }}
         rows={items.map((pattern) => ({
           key: pattern.id,
+          label:
+            [formatMorphPatternFormNumber(pattern.formNumber, pattern.radicalCount), pattern.description]
+              .filter(Boolean)
+              .join(" ") || pattern.vocalicTemplate,
           cells: [
-            formatMorphPatternFormNumber(pattern.formNumber),
+            formatMorphPatternFormNumber(pattern.formNumber, pattern.radicalCount),
             <span key="template" lang="ar" dir="rtl">
               <Link href={`/admin/morph-patterns/${pattern.id}`} className="text-blue-600 hover:underline">
                 {pattern.vocalicTemplate}
@@ -103,7 +114,7 @@ export default async function MorphPatternsPage({
         totalPages={Math.ceil(total / MORPH_PATTERN_LIST_PAGE_SIZE)}
         basePath="/admin/morph-patterns"
         extraParams={{
-          ...(formNumber !== undefined ? { formNumber: String(formNumber) } : {}),
+          ...(form !== undefined ? { formNumber: `${form.formNumber}${form.radicalCount === 4 ? "q" : ""}` } : {}),
           ...(lexicalFilter !== "All" ? { lexicalFilter } : {}),
         }}
       />

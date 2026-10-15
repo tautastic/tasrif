@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
-import CancelButton from "~/components/admin/delete-entry/CancelButton";
+import DeleteForm from "~/components/admin/DeleteForm";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { deleteMorphPatternAction } from "~/server/actions/morph-pattern";
+import { requireAdmin } from "~/server/auth/guard";
 import { getMorphPatternById, getMorphPatternUsageCounts } from "~/server/db/repository/morph-pattern";
 
 export default async function DeleteMorphPatternPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const pattern = await getMorphPatternById(patternId);
 
@@ -27,7 +29,7 @@ export default async function DeleteMorphPatternPage({ params }: { params: Promi
           {pattern.vocalicTemplate}
         </div>
         <div className="text-sm text-gray-600">
-          Form {formatMorphPatternFormNumber(pattern.formNumber)}
+          Form {formatMorphPatternFormNumber(pattern.formNumber, pattern.radicalCount)}
           {pattern.description ? ` — ${pattern.description}` : ""}
         </div>
       </div>
@@ -41,14 +43,7 @@ export default async function DeleteMorphPatternPage({ params }: { params: Promi
         <p className="mb-6 text-sm text-gray-600">This action cannot be undone.</p>
       )}
 
-      <form action={deleteMorphPatternAction.bind(null, patternId)}>
-        <div className="flex justify-center space-x-4">
-          <button type="submit" disabled={inUse} className="btn-danger">
-            Delete
-          </button>
-          <CancelButton />
-        </div>
-      </form>
+      <DeleteForm action={deleteMorphPatternAction.bind(null, patternId)} disabled={inUse} />
     </div>
   );
 }

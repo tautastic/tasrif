@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
+import type { ActionResult } from "~/server/actions/result";
 
 export interface AdminTableColumn {
   header: string;
@@ -11,12 +12,13 @@ export interface AdminTableColumn {
 export interface AdminTableRow {
   key: string | number;
   cells: ReactNode[];
+  label?: string;
 }
 
 export interface AdminTableSelection {
   entityName: string;
   entityNamePlural: string;
-  onDeleteSelectedAction: (ids: number[]) => Promise<void>;
+  onDeleteSelectedAction: (ids: number[]) => Promise<ActionResult>;
 }
 
 interface AdminTableProps {
@@ -32,22 +34,27 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const tableId = useId();
+  const titleId = `${tableId}-dialog-title`;
+  const descriptionId = `${tableId}-dialog-description`;
 
   useEffect(() => {
     setSelectedKeys(new Set());
   }, [rows]);
 
   useEffect(() => {
-    if (!showConfirm) {
+    const dialog = dialogRef.current;
+    if (!dialog) {
       return;
     }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setShowConfirm(false);
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    if (showConfirm && !dialog.open) {
+      dialog.showModal();
+      cancelButtonRef.current?.focus();
+    } else if (!showConfirm && dialog.open) {
+      dialog.close();
+    }
   }, [showConfirm]);
 
   const allSelected = rows.length > 0 && rows.every((row) => selectedKeys.has(row.key));
@@ -70,6 +77,11 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
     });
   };
 
+  const openConfirm = () => {
+    setError(null);
+    setShowConfirm(true);
+  };
+
   const handleConfirmDelete = async () => {
     if (!selection) {
       return;
@@ -77,15 +89,41 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
     setIsDeleting(true);
     setError(null);
     try {
-      await selection.onDeleteSelectedAction(Array.from(selectedKeys, Number));
+      const result = await selection.onDeleteSelectedAction(Array.from(selectedKeys, Number));
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
       setSelectedKeys(new Set());
       setShowConfirm(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete selected rows.");
+    } catch {
+      setError("Failed to delete the selected rows. Please try again.");
     } finally {
       setIsDeleting(false);
     }
   };
+
+  const trapFocus = (event: KeyboardEvent<HTMLDialogElement>) => {
+    if (event.key !== "Tab") {
+      return;
+    }
+    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    if (!first || !last) {
+      return;
+    }
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  const selectionLabelIds = (rowKey: string | number) =>
+    [`${tableId}-select-${rowKey}`, `${tableId}-${rowKey}-cell-0`, `${tableId}-${rowKey}-cell-1`].join(" ");
 
   return (
     <div>
@@ -95,7 +133,7 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
           {selection && (
             <button
               type="button"
-              onClick={() => setShowConfirm(true)}
+              onClick={openConfirm}
               disabled={selectedCount === 0}
               className="border border-transparent bg-red-600 px-2 py-1 text-sm text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -104,13 +142,17 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
           )}
         </div>
       )}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && !showConfirm && (
+        <p role="alert" className="mb-4 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-xs text-gray-500 sm:text-sm">
             {selection && (
-              <th className="w-8 py-2 pr-2">
+              <th scope="col" className="w-8 py-2 pr-2">
                 <input
                   type="checkbox"
                   aria-label="Select all rows"
@@ -127,6 +169,7 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
             {columns.map((column, index) => (
               <th
                 key={column.header}
+                scope="col"
                 className={`py-2 font-medium ${index < columns.length - 1 ? "pr-4" : ""} ${column.hideBelowSm ? "hidden sm:table-cell" : ""} ${column.className ?? ""}`}
               >
                 {column.header}
@@ -140,8 +183,11 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
               {selection && (
                 <td className="py-2 pr-2">
                   <input
+                    id={`${tableId}-select-${row.key}`}
                     type="checkbox"
-                    aria-label={`Select row ${row.key}`}
+                    {...(row.label
+                      ? { "aria-label": `Select ${row.label}` }
+                      : { "aria-label": "Select", "aria-labelledby": selectionLabelIds(row.key) })}
                     checked={selectedKeys.has(row.key)}
                     onChange={() => toggleRow(row.key)}
                   />
@@ -150,6 +196,7 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
               {row.cells.map((cell, index) => (
                 <td
                   key={index}
+                  id={selection && index < 2 ? `${tableId}-${row.key}-cell-${index}` : undefined}
                   className={`py-2 ${index < row.cells.length - 1 ? "pr-4" : ""} ${columns[index]?.hideBelowSm ? "hidden sm:table-cell" : ""} ${columns[index]?.className ?? ""}`}
                 >
                   {cell}
@@ -167,34 +214,48 @@ const AdminTable = ({ columns, rows, emptyMessage, toolbar, selection }: AdminTa
         </tbody>
       </table>
 
-      {selection && showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
-          <button
-            type="button"
-            aria-label="Close dialog"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowConfirm(false)}
-          />
-          <div className="relative mx-4 w-full max-w-sm border border-gray-300 bg-white p-6 text-center">
-            <p className="mb-6">
-              Are you sure you want to delete {selectedCount}{" "}
-              {selectedCount === 1 ? selection.entityName : selection.entityNamePlural}?
+      {selection && (
+        <dialog
+          ref={dialogRef}
+          role="alertdialog"
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
+          onClose={() => setShowConfirm(false)}
+          onKeyDown={trapFocus}
+          onCancel={(event) => {
+            if (isDeleting) {
+              event.preventDefault();
+            }
+          }}
+          className="m-auto w-[calc(100%-2rem)] max-w-sm border border-gray-300 bg-white p-6 text-center backdrop:bg-black/50"
+        >
+          <h2 id={titleId} className="mb-2 text-lg font-semibold">
+            Delete {selectedCount === 1 ? selection.entityName : selection.entityNamePlural}?
+          </h2>
+          <p id={descriptionId} className="mb-6">
+            Are you sure you want to delete {selectedCount}{" "}
+            {selectedCount === 1 ? selection.entityName : selection.entityNamePlural}? This cannot be undone.
+          </p>
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-red-700">
+              {error}
             </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                type="button"
-                onClick={() => setShowConfirm(false)}
-                disabled={isDeleting}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button type="button" onClick={handleConfirmDelete} disabled={isDeleting} className="btn-danger">
-                {isDeleting ? "Deleting…" : "Delete"}
-              </button>
-            </div>
+          )}
+          <div className="flex justify-center space-x-4">
+            <button
+              ref={cancelButtonRef}
+              type="button"
+              onClick={() => setShowConfirm(false)}
+              disabled={isDeleting}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="button" onClick={handleConfirmDelete} disabled={isDeleting} className="btn-danger">
+              {isDeleting ? "Deleting…" : "Delete"}
+            </button>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

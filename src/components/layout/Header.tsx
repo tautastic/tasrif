@@ -10,9 +10,7 @@ const Header = () => {
           Tasrif
         </Link>
 
-        <nav className="flex flex-wrap items-center text-sm" aria-label="Site">
-          <AdminNav />
-        </nav>
+        <AdminNav />
 
         <div className="w-full sm:ml-auto sm:w-72">
           <EntrySearchForm />

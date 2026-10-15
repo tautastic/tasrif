@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { lookupSense, rememberSense } from "~/hooks/senseLookup";
 import { useDebouncedFetch } from "~/hooks/useDebouncedFetch";
 import {
   SENSE_SEARCH_DEFAULT_LIMIT,
@@ -42,6 +43,9 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
   const resolvedSenseId = useRef<number | null>(null);
   const selectOption = useCallback((option: SenseSearchOption | null) => {
     resolvedSenseId.current = option?.id ?? null;
+    if (option) {
+      rememberSense(option);
+    }
     setSelectedOption(option);
   }, []);
 
@@ -54,24 +58,17 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
       return;
     }
 
-    const controller = new AbortController();
-    resolvedSenseId.current = selectedSenseId;
+    let cancelled = false;
+    lookupSense(selectedSenseId).then((option) => {
+      if (!cancelled && option) {
+        resolvedSenseId.current = option.id;
+        setSelectedOption(option);
+      }
+    });
 
-    fetchSenses({ ids: String(selectedSenseId) }, controller.signal)
-      .then((data) => {
-        const [option] = data.items;
-        if (option) {
-          setSelectedOption(option);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!isAbortError(error)) {
-          resolvedSenseId.current = null;
-          console.error(error);
-        }
-      });
-
-    return () => controller.abort();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedSenseId, selectOption]);
 
   const isLoading = useDebouncedFetch({
@@ -123,7 +120,8 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
+        if (loadMoreControllerRef.current === controller) {
+          loadMoreControllerRef.current = null;
           setIsLoadingMore(false);
         }
       });
@@ -132,6 +130,8 @@ const useSenseSearch = (language: LanguageType, selectedSenseId: number): UseSen
   useEffect(() => {
     return () => {
       loadMoreControllerRef.current?.abort();
+      loadMoreControllerRef.current = null;
+      setIsLoadingMore(false);
     };
   }, [query, language]);
 

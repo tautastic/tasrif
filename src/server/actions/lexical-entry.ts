@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   type EntryCreateType,
@@ -8,126 +7,183 @@ import {
   entryCreateSchema,
   entryEditSchema,
 } from "~/components/admin/entry-edit-form/schema";
-import { isNonEmptyString } from "~/lib/validation";
-import { formatVerbFormChoiceLabel, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
-import { parseOrThrow } from "~/server/actions/shared";
+import { idListSchema, idSchema } from "~/lib/validation/ids";
+import {
+  formatVerbFormChoiceLabel,
+  type VerbFormChoice,
+  verbFormChoiceRadicalCount,
+} from "~/lib/validation/verbFormChoice";
+import { type ActionResult, fail, succeed } from "~/server/actions/result";
+import { invalidRootMessage, mapEntrySaveError } from "~/server/actions/save-errors";
+import { parseInput, revalidateEntryPaths, revalidatePublicPages } from "~/server/actions/shared";
 import { requireAdminAction } from "~/server/auth/guard";
-import { getPgErrorWithCode, isUniqueViolation } from "~/server/db/pg-error";
+import { getPgErrorWithCode } from "~/server/db/pg-error";
 import { createLexicalEntry, deleteLexicalEntryById, updateLexicalEntry } from "~/server/db/repository/lexical-entry";
-import { INVALID_ROOT_SQLSTATE, resolveVerbMorphPattern } from "~/server/db/repository/morph-pattern";
-import type { LanguageType } from "~/server/db/schema";
+import {
+  getEntryMorphPatternId,
+  INVALID_ROOT_SQLSTATE,
+  isMorphPatternChoiceAllowed,
+  resolveVerbMorphPattern,
+} from "~/server/db/repository/morph-pattern";
 
-interface RevalidateLexicalEntryPages {
-  root?: string | null;
-  normalizedText?: string | null;
-  language?: LanguageType | null;
+interface SavedEntry {
+  id: number;
+  slug: string;
+  isVerified: boolean;
 }
 
-const revalidateLexicalEntryPages = (...entries: RevalidateLexicalEntryPages[]) => {
-  entries.forEach((entry) => {
-    if (isNonEmptyString(entry.normalizedText)) {
-      revalidatePath(`/entry/${entry.normalizedText}`);
-    }
-    if (isNonEmptyString(entry.root)) {
-      revalidatePath(`/root/${entry.root}`);
-    }
-    if (isNonEmptyString(entry.language)) {
-      revalidatePath(`/lang/${entry.language}`);
-    }
-  });
+interface ResolvableEntry {
+  root: string | null;
+  verbFormChoice: VerbFormChoice | null;
+  chosenMorphPatternId?: number | null | undefined;
+}
+
+type ResolvedEntry<T extends ResolvableEntry> = Omit<T, "verbFormChoice" | "chosenMorphPatternId"> & {
+  morphPatternId: number | null;
 };
 
-const withResolvedMorphPattern = async <T extends { root: string | null; verbFormChoice: VerbFormChoice | null }>(
-  entry: T,
-): Promise<Omit<T, "verbFormChoice"> & { morphPatternId: number | null }> => {
-  const { verbFormChoice, ...rest } = entry;
-  if (!verbFormChoice) {
-    return { ...rest, morphPatternId: null };
-  }
-  if (!rest.root) {
-    throw new Error("Root is required to resolve a verb's morphological pattern");
+const noPatternMessage = (root: string, verbFormChoice: VerbFormChoice) =>
+  `No morphological pattern is available yet for root '${root}' in ${formatVerbFormChoiceLabel(verbFormChoice)}`;
+
+const chooseMorphPatternId = async (
+  root: string,
+  verbFormChoice: VerbFormChoice,
+  chosenId: number | null,
+  storedId: number | null,
+): Promise<ActionResult<number>> => {
+  if (chosenId !== null) {
+    return (await isMorphPatternChoiceAllowed(root, verbFormChoice, chosenId))
+      ? succeed(chosenId)
+      : fail(`The chosen pattern is not available for root '${root}' in ${formatVerbFormChoiceLabel(verbFormChoice)}`);
   }
 
-  let pattern: Awaited<ReturnType<typeof resolveVerbMorphPattern>>;
+  const pattern = await resolveVerbMorphPattern(root, verbFormChoice);
+  if (
+    storedId !== null &&
+    storedId !== pattern?.id &&
+    (await isMorphPatternChoiceAllowed(root, verbFormChoice, storedId))
+  ) {
+    return succeed(storedId);
+  }
+  return pattern ? succeed(pattern.id) : fail(noPatternMessage(root, verbFormChoice));
+};
+
+const withResolvedMorphPattern = async <T extends ResolvableEntry>(
+  entry: T,
+  entryId: number | null = null,
+): Promise<ActionResult<ResolvedEntry<T>>> => {
+  const { verbFormChoice, chosenMorphPatternId, ...rest } = entry;
+  if (!verbFormChoice) {
+    return succeed({ ...rest, morphPatternId: null });
+  }
+  if (!rest.root) {
+    return fail("Root is required to resolve a verb's morphological pattern");
+  }
+
+  let chosen: ActionResult<number>;
   try {
-    pattern = await resolveVerbMorphPattern(rest.root, verbFormChoice);
+    const storedId = entryId === null ? null : await getEntryMorphPatternId(entryId);
+    chosen = await chooseMorphPatternId(rest.root, verbFormChoice, chosenMorphPatternId ?? null, storedId);
   } catch (error) {
     if (!getPgErrorWithCode(error, INVALID_ROOT_SQLSTATE)) {
       throw error;
     }
-    throw new Error(`Root '${rest.root}' is not a valid triliteral root`);
+    return fail(invalidRootMessage(rest.root, verbFormChoiceRadicalCount(verbFormChoice)));
   }
 
-  if (!pattern) {
-    throw new Error(
-      `No morphological pattern is available yet for root '${rest.root}' in ${formatVerbFormChoiceLabel(verbFormChoice)}`,
-    );
-  }
-
-  return { ...rest, morphPatternId: pattern.id };
+  return chosen.ok ? succeed({ ...rest, morphPatternId: chosen.data }) : chosen;
 };
 
-export async function createLexicalEntryAction(data: EntryCreateType) {
+export async function createLexicalEntryAction(data: EntryCreateType): Promise<ActionResult<SavedEntry>> {
   await requireAdminAction();
-  const entry = parseOrThrow(entryCreateSchema, data, "entry data");
-  const resolved = await withResolvedMorphPattern(entry);
+  const parsed = parseInput(entryCreateSchema, data, "entry data");
+  if (!parsed.ok) {
+    return parsed;
+  }
+  const resolved = await withResolvedMorphPattern(parsed.data);
+  if (!resolved.ok) {
+    return resolved;
+  }
 
   try {
-    const created = await createLexicalEntry(resolved);
-    revalidateLexicalEntryPages(resolved, created);
-    return created;
+    const created = await createLexicalEntry(resolved.data);
+    revalidatePublicPages();
+    revalidateEntryPaths([created.slug]);
+    return succeed(created);
   } catch (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error("An entry with this language and text already exists");
-    }
-    throw error;
+    return mapEntrySaveError(
+      error,
+      resolved.data.root,
+      parsed.data.verbFormChoice ? verbFormChoiceRadicalCount(parsed.data.verbFormChoice) : 3,
+    );
   }
 }
 
-export async function updateLexicalEntryAction(data: EntryEditType) {
+export async function updateLexicalEntryAction(data: EntryEditType): Promise<ActionResult<SavedEntry>> {
   await requireAdminAction();
-  const entry = parseOrThrow(entryEditSchema, data, "entry data");
-  const resolved = await withResolvedMorphPattern(entry);
+  const parsed = parseInput(entryEditSchema, data, "entry data");
+  if (!parsed.ok) {
+    return parsed;
+  }
+  const resolved = await withResolvedMorphPattern(parsed.data, parsed.data.id);
+  if (!resolved.ok) {
+    return resolved;
+  }
 
   try {
-    const updated = await updateLexicalEntry(resolved);
+    const updated = await updateLexicalEntry(resolved.data);
     if (!updated) {
-      throw new Error(`Lexical entry with id '${entry.id}' no longer exists`);
+      return fail(`Lexical entry with id '${parsed.data.id}' no longer exists`);
     }
 
-    revalidateLexicalEntryPages(entry, updated);
-    return updated;
+    const { previousSlug, ...saved } = updated;
+    revalidatePublicPages();
+    revalidateEntryPaths([previousSlug, saved.slug]);
+    return succeed(saved);
   } catch (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error("An entry with this language and text already exists");
-    }
-    throw error;
+    return mapEntrySaveError(
+      error,
+      resolved.data.root,
+      parsed.data.verbFormChoice ? verbFormChoiceRadicalCount(parsed.data.verbFormChoice) : 3,
+    );
   }
 }
 
-export async function deleteLexicalEntryAction(id: number) {
+export async function deleteLexicalEntryAction(id: number): Promise<ActionResult> {
   await requireAdminAction();
-  const deleted = await deleteLexicalEntryById(id);
-
+  const parsedId = parseInput(idSchema, id, "entry id");
+  if (!parsedId.ok) {
+    return parsedId;
+  }
+  const deleted = await deleteLexicalEntryById(parsedId.data);
   if (!deleted) {
-    throw new Error(`Failed to delete lexical entry with id '${id}'`);
+    return fail(`Failed to delete lexical entry with id '${id}'`);
   }
 
-  revalidateLexicalEntryPages(deleted);
+  revalidatePublicPages();
+  revalidateEntryPaths([deleted.slug]);
   redirect("/");
 }
 
-export async function deleteLexicalEntriesAction(ids: number[]) {
+export async function deleteLexicalEntriesAction(ids: number[]): Promise<ActionResult> {
   await requireAdminAction();
-
-  const deleted = await Promise.all(ids.map((id) => deleteLexicalEntryById(id)));
-  const successful = deleted.filter((entry): entry is NonNullable<typeof entry> => entry !== undefined);
-
-  if (successful.length < ids.length) {
-    const failedCount = ids.length - successful.length;
-    throw new Error(`Failed to delete ${failedCount} lexical ${failedCount === 1 ? "entry" : "entries"}`);
+  const parsedIds = parseInput(idListSchema, ids, "entry ids");
+  if (!parsedIds.ok) {
+    return parsedIds;
   }
 
-  revalidateLexicalEntryPages(...successful);
-  revalidatePath("/admin/entries");
+  const deleted = await Promise.all(parsedIds.data.map((id) => deleteLexicalEntryById(id)));
+  const removed = deleted.filter((entry) => entry !== undefined);
+  const successCount = removed.length;
+
+  if (successCount > 0) {
+    revalidatePublicPages();
+    revalidateEntryPaths(removed.map((entry) => entry.slug));
+  }
+
+  const failedCount = parsedIds.data.length - successCount;
+  if (failedCount > 0) {
+    return fail(`Failed to delete ${failedCount} lexical ${failedCount === 1 ? "entry" : "entries"}`);
+  }
+  return succeed(undefined);
 }

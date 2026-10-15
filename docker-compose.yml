@@ -4,7 +4,7 @@ x-db-image: &db-image
   build:
     context: .
     dockerfile: db.Dockerfile
-  image: tasrif-db
+  image: ${DB_IMAGE:-tasrif-db}
 
 x-db-client-environment: &db-client-environment
   PGHOST: db
@@ -18,11 +18,20 @@ x-logging: &logging
     max-size: 10m
     max-file: "3"
 
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 services:
   web:
     image: ${WEB_IMAGE:-ghcr.io/tautastic/tasrif-web:latest}
     restart: unless-stopped
     init: true
+    <<: *hardening
+    mem_limit: ${WEB_MEM_LIMIT:-768m}
+    cpus: ${WEB_CPUS:-1.0}
     depends_on:
       db:
         condition: service_healthy
@@ -30,34 +39,67 @@ services:
       <<: *db-client-environment
       AUTH_PASSWORD: ${AUTH_PASSWORD:?AUTH_PASSWORD must be set in .env}
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set in .env}
+      SITE_URL: ${SITE_URL:-}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health', { signal: AbortSignal.timeout(4000) }).then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
     networks:
       - frontend
       - backend
     logging: *logging
 
   nginx:
-    image: nginx:stable-alpine
+    image: nginx:1.30-alpine
     restart: unless-stopped
+    mem_limit: ${NGINX_MEM_LIMIT:-256m}
+    cpus: ${NGINX_CPUS:-1.0}
     depends_on:
-      - web
+      web:
+        condition: service_healthy
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN must be set in .env}
+      PUBLIC_HTTPS_PORT: ${HTTPS_PORT:-443}
+      NGINX_RELOAD_INTERVAL: ${NGINX_RELOAD_INTERVAL:-12h}
+      NGINX_LOG_MAX_BYTES: ${NGINX_LOG_MAX_BYTES:-52428800}
+      NGINX_LOG_KEEP: ${NGINX_LOG_KEEP:-3}
+      NGINX_LOG_CHECK_SECONDS: ${NGINX_LOG_CHECK_SECONDS:-300}
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/docker-entrypoint.d/25-ipv6-listen.sh:/docker-entrypoint.d/25-ipv6-listen.sh:ro
+      - ./nginx/docker-entrypoint.d/98-rotate-logs.sh:/docker-entrypoint.d/98-rotate-logs.sh:ro
       - ./nginx/docker-entrypoint.d/99-reload-loop.sh:/docker-entrypoint.d/99-reload-loop.sh:ro
       - certbot-etc:/etc/letsencrypt:ro
       - certbot-www:/var/www/certbot:ro
-      - nginx-logs:/var/log/nginx
+      - nginx-logs:/var/log/nginx-shared
     ports:
       - ${HTTP_PORT:-80}:80
       - ${HTTPS_PORT:-443}:443
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1/ && nc -z 127.0.0.1 443"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 2s
     networks:
       - frontend
     logging: *logging
 
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v5.8.0
     restart: unless-stopped
+    mem_limit: ${CERTBOT_MEM_LIMIT:-256m}
+    cpus: ${CERTBOT_CPUS:-0.5}
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
@@ -68,9 +110,11 @@ services:
     logging: *logging
 
   fail2ban:
-    image: crazymax/fail2ban:latest
+    image: crazymax/fail2ban:1.1.1
     restart: unless-stopped
     network_mode: host
+    mem_limit: ${FAIL2BAN_MEM_LIMIT:-256m}
+    cpus: ${FAIL2BAN_CPUS:-0.5}
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -91,6 +135,8 @@ services:
   db:
     <<: *db-image
     restart: unless-stopped
+    mem_limit: ${DB_MEM_LIMIT:-1g}
+    cpus: ${DB_CPUS:-2.0}
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
       APP_DB_USER: ${PGUSER:?PGUSER must be set in .env}
@@ -111,26 +157,36 @@ services:
     logging: *logging
 
   backup:
-    <<: *db-image
+    <<: [*db-image, *hardening]
     entrypoint: ["db-backup", "schedule"]
     restart: unless-stopped
     init: true
+    mem_limit: ${BACKUP_MEM_LIMIT:-256m}
+    cpus: ${BACKUP_CPUS:-0.5}
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
     depends_on:
       db:
         condition: service_healthy
     environment:
       <<: *db-client-environment
-      BACKUP_KEEP: "7"
-      BACKUP_INTERVAL_SECONDS: "86400"
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+      BACKUP_UPLOAD_COMMAND: ${BACKUP_UPLOAD_COMMAND:-}
     volumes:
       - ${BACKUP_DIR:-./backups}:/backups
+    tmpfs:
+      - /var/lib/postgresql
     networks:
       - backend
     logging: *logging
 
 volumes:
   db-data:
-    name: tasrif-db-data
+    name: ${DB_VOLUME_NAME:-tasrif-db-data}
     external: true
   certbot-etc:
   certbot-var:

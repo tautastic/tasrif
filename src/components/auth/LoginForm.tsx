@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { resolveLoginRedirect } from "~/components/auth/redirectTarget";
+import { useAdminStatus } from "~/hooks/useIsAdmin";
 
-const LoginForm = () => {
+const LoginForm = ({ next }: { next?: string }) => {
   const router = useRouter();
+  const { refresh } = useAdminStatus();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +31,8 @@ const LoginForm = () => {
         return;
       }
 
-      router.push("/");
+      await refresh();
+      router.push(resolveLoginRedirect(next, document.referrer, window.location.origin));
       router.refresh();
     } catch {
       setError("Could not reach the server. Please try again.");
@@ -50,10 +54,16 @@ const LoginForm = () => {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="field-control"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "password-error" : undefined}
           required
         />
       </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && (
+        <p id="password-error" role="alert" className="text-red-700 text-sm">
+          {error}
+        </p>
+      )}
       <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
         {isSubmitting ? "Logging in..." : "Login"}
       </button>

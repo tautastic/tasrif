@@ -6,6 +6,7 @@ export const ENTRY_SEARCH_MAX_LIMIT = 20;
 export interface EntrySearchResult {
   id: number;
   text: string;
+  slug: string;
   normalizedText: string;
   language: LanguageType;
   root: string | null;

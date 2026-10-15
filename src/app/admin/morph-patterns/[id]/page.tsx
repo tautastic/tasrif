@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import PatternPreviewPanel from "~/components/admin/PatternPreviewPanel";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { requireAdmin } from "~/server/auth/guard";
 import { listOverridesForPattern } from "~/server/db/repository/lexical-pattern-override";
 import { getMorphPatternById, getMorphPatternUsageCounts } from "~/server/db/repository/morph-pattern";
 
 export default async function MorphPatternDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const pattern = await getMorphPatternById(patternId);
 
@@ -26,7 +28,7 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
           {pattern.vocalicTemplate}
         </h1>
         <span className="text-sm text-gray-600">
-          Form {formatMorphPatternFormNumber(pattern.formNumber)}
+          Form {formatMorphPatternFormNumber(pattern.formNumber, pattern.radicalCount)}
           {pattern.description ? ` — ${pattern.description}` : ""}
         </span>
         <Link href={`/admin/morph-patterns/${patternId}/edit`} className="text-sm text-blue-600 hover:underline">
@@ -39,9 +41,17 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         <div>
+          <dt className="text-gray-500">Code</dt>
+          <dd>
+            <code>{pattern.code}</code>
+          </dd>
+        </div>
+        <div>
           <dt className="text-gray-500">Radicals</dt>
           <dd>
-            {pattern.radical1Kind} / {pattern.radical2Kind} / {pattern.radical3Kind}
+            {pattern.radicalCount === 4
+              ? `four radicals, ${pattern.radical4Kind === "sound" ? "sound" : `last radical ${pattern.radical4Kind}`}`
+              : `${pattern.radical1Kind} / ${pattern.radical2Kind} / ${pattern.radical3Kind}`}
           </dd>
         </div>
         <div>
@@ -93,10 +103,21 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-xs text-gray-500">
-                <th className="py-2 pr-4 font-medium">Root</th>
-                <th className="py-2 pr-4 font-medium">Form</th>
-                <th className="py-2 pr-4 font-medium">Vowels</th>
-                <th className="py-2 font-medium">Actions</th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Root
+                </th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Form
+                </th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Vowels
+                </th>
+                <th scope="col" className="py-2 pr-4 font-medium">
+                  Variant
+                </th>
+                <th scope="col" className="py-2 font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-300">
@@ -109,6 +130,7 @@ export default async function MorphPatternDetailPage({ params }: { params: Promi
                   <td className="py-1.5 pr-4">
                     {override.perfectVowel ?? "—"} / {override.imperfectVowel ?? "—"}
                   </td>
+                  <td className="py-1.5 pr-4">{override.variant ?? "—"}</td>
                   <td className="py-1.5 whitespace-nowrap">
                     <Link
                       href={`/admin/morph-patterns/${patternId}/overrides/${override.id}/edit`}

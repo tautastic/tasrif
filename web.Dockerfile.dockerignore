@@ -1,0 +1,9 @@
+*
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!tsconfig.json
+!next.config.ts
+!postcss.config.mjs
+!public
+!src

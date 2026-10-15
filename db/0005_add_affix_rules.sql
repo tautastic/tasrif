@@ -169,4 +169,4 @@ INSERT INTO affix_rules (mood, person, form, prefix, suffix)
 SELECT mood, person, 10, prefix, suffix
 FROM affix_rules
 WHERE mood IN ('imperfect_indicative', 'imperfect_subjunctive', 'imperfect_jussive')
-  AND form = 1
+  AND form = 1;

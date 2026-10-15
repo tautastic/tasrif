@@ -249,13 +249,14 @@ test("an uncatalogued root shape returns NULL instead of raising", async () => {
 test("no two patterns share a resolution key", async () => {
   const duplicates = await db.rows<{ detail: string }>(
     `SELECT format(
-              'form %s / %s %s %s / geminate=%s / vowels %s~%s appears %s times',
-              form_number, radical1_kind, radical2_kind, radical3_kind, is_geminate,
+              'form %s / %s radicals / %s %s %s %s / geminate=%s / vowels %s~%s appears %s times',
+              form_number, radical_count, radical1_kind, radical2_kind, radical3_kind, radical4_kind, is_geminate,
               COALESCE(perfect_vowel::text, 'none'), COALESCE(imperfect_vowel::text, 'none'), count(*)
             ) AS detail
      FROM morph_pattern
      WHERE NOT is_lexical
-     GROUP BY form_number, radical1_kind, radical2_kind, radical3_kind, is_geminate, perfect_vowel, imperfect_vowel
+     GROUP BY form_number, radical_count, radical1_kind, radical2_kind, radical3_kind, radical4_kind, is_geminate,
+              perfect_vowel, imperfect_vowel
      HAVING count(*) > 1
      ORDER BY 1`,
   );
@@ -344,13 +345,15 @@ test("the coverage matrix matches its golden", async () => {
     form_number: number;
     perfect_vowel: string | null;
     imperfect_vowel: string | null;
+    variant: string | null;
     description: string;
     is_lexical: boolean;
   }>(
-    `SELECT o.root, o.form_number, o.perfect_vowel::text, o.imperfect_vowel::text, mp.description, mp.is_lexical
+    `SELECT o.root, o.form_number, o.perfect_vowel::text, o.imperfect_vowel::text, o.variant, mp.description,
+            mp.is_lexical
      FROM lexical_pattern_override o
      JOIN morph_pattern mp ON mp.id = o.morph_pattern_id
-     ORDER BY o.form_number, o.perfect_vowel, o.imperfect_vowel, o.root`,
+     ORDER BY o.form_number, o.perfect_vowel, o.imperfect_vowel, o.root, o.variant NULLS FIRST`,
   );
   if (overrides.length === 0) {
     lines.push("  (none)");
@@ -361,8 +364,9 @@ test("the coverage matrix matches its golden", async () => {
         ? `${override.perfect_vowel} ~ ${override.imperfect_vowel}`
         : "none";
     const marker = override.is_lexical ? " [is_lexical]" : "";
+    const variant = override.variant === null ? "" : ` variant ${override.variant}`;
     lines.push(
-      `  form ${override.form_number} ${vowels.padEnd(6)} "${override.description}"${marker}  ${override.root}`,
+      `  form ${override.form_number} ${vowels.padEnd(6)} "${override.description}"${marker}  ${override.root}${variant}`,
     );
   }
 

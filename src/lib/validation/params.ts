@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 
 const decodeSlug = (slug: string): string | null => {
-  if (!slug.includes("%")) {
-    return slug;
+  let decoded = slug;
+  if (slug.includes("%")) {
+    try {
+      decoded = decodeURIComponent(slug);
+    } catch {
+      return null;
+    }
   }
-  try {
-    return decodeURIComponent(slug);
-  } catch {
-    return null;
-  }
+  return decoded.includes("\u0000") ? null : decoded;
 };
 
 export const decodeSlugOrNotFound = async (params: Promise<{ slug: string }>): Promise<string> => {

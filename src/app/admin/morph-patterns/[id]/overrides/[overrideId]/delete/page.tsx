@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
-import CancelButton from "~/components/admin/delete-entry/CancelButton";
+import DeleteForm from "~/components/admin/DeleteForm";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { deleteOverrideAction } from "~/server/actions/lexical-pattern-override";
+import { requireAdmin } from "~/server/auth/guard";
 import { getOverrideById } from "~/server/db/repository/lexical-pattern-override";
 
 export default async function DeleteOverridePage({ params }: { params: Promise<{ id: string; overrideId: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const overrideId = await parseIdOrNotFound(params, "overrideId");
   const override = await getOverrideById(overrideId);
@@ -24,19 +26,15 @@ export default async function DeleteOverridePage({ params }: { params: Promise<{
         <div className="text-2xl text-red-700" lang="ar" dir="rtl">
           {override.root}
         </div>
-        <div className="text-sm text-gray-600">Form {formatMorphPatternFormNumber(override.formNumber)}</div>
+        <div className="text-sm text-gray-600">
+          Form {formatMorphPatternFormNumber(override.formNumber)}
+          {override.variant ? `, variant ${override.variant}` : ""}
+        </div>
       </div>
 
       <p className="mb-6 text-sm text-gray-600">This action cannot be undone.</p>
 
-      <form action={deleteOverrideAction.bind(null, patternId, overrideId)}>
-        <div className="flex justify-center space-x-4">
-          <button type="submit" className="btn-danger">
-            Delete
-          </button>
-          <CancelButton />
-        </div>
-      </form>
+      <DeleteForm action={deleteOverrideAction.bind(null, patternId, overrideId)} />
     </div>
   );
 }

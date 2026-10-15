@@ -19,7 +19,6 @@ export const conjugation = pgTable(
     form: text("form").notNull(),
   },
   (table) => [
-    index("idx_conjugation_entry").on(table.lexicalEntryId),
     index("idx_conjugation_mood").on(table.mood),
     unique("unique_conjugation_entry_voice_mood_person").on(
       table.lexicalEntryId,

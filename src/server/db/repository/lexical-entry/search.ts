@@ -1,40 +1,65 @@
-import { desc, sql } from "drizzle-orm";
+import { asc, desc, sql } from "drizzle-orm";
 import { db } from "~/server/db";
+import { plainTsQuery, textSearchConfigFor } from "~/server/db/repository/text-search";
 
-const MIN_FULL_TEXT_LENGTH = 3;
-const TRIGRAM_THRESHOLD = 0.2;
+const MAX_PREFIX_QUERY_LENGTH = 2;
+const SIMILARITY_THRESHOLD = 0.3;
+const WORD_SIMILARITY_THRESHOLD = 0.5;
 
-export const searchLexicalEntries = async (rawQuery: string, limit: number) => {
+export const searchLexicalEntries = async (rawQuery: string, limit: number, offset = 0) => {
   const query = rawQuery.trim();
   if (!query) {
     return [];
   }
-  return query.length < MIN_FULL_TEXT_LENGTH ? trigramSearch(query, limit) : fullTextSearch(query, limit);
+  return Array.from(query).length <= MAX_PREFIX_QUERY_LENGTH
+    ? prefixSearch(query, limit, offset)
+    : fuzzySearch(query, limit, offset);
 };
 
-const fullTextSearch = (query: string, limit: number) => {
-  const tsQuery = sql`plainto_tsquery('arabic', ${query})`;
+const normalizedQuery = (query: string) => sql`LOWER(REGEXP_REPLACE(${query}, '[[:punct:][:space:]ً-ٰٟؐ-ؚ]', '', 'g'))`;
+
+const prefixSearch = (query: string, limit: number, offset: number) => {
+  const normalized = normalizedQuery(query);
 
   return db.query.lexicalEntry.findMany({
-    where: { RAW: (entry) => sql`${entry.searchVector} @@ ${tsQuery} AND ${entry.isVerified} = true` },
-    orderBy: (entry) => [desc(sql`ts_rank(${entry.searchVector}, ${tsQuery})`)],
+    where: {
+      RAW: (entry) =>
+        sql`${entry.isVerified} = true AND ${normalized} <> '' AND ${entry.normalizedText} LIKE ${normalized} || '%'`,
+    },
+    orderBy: (entry) => [asc(sql`char_length(${entry.normalizedText})`), asc(entry.id)],
     columns: { searchVector: false },
     limit,
+    offset,
   });
 };
 
-const similarityExpr = (entry: { text: unknown; normalizedText: unknown }, query: string) => sql<number>`GREATEST(
-    similarity(${entry.text}, ${query}),
-similarity(${entry.normalizedText}, ${query})
-)`;
+const fuzzySearch = (query: string, limit: number, offset: number) => {
+  const normalized = normalizedQuery(query);
+  const tsQuery = plainTsQuery(textSearchConfigFor(query), query);
 
-const trigramSearch = (query: string, limit: number) => {
-  return db.query.lexicalEntry.findMany({
-    where: {
-      RAW: (entry) => sql`${similarityExpr(entry, query)} >= ${TRIGRAM_THRESHOLD} AND ${entry.isVerified} = true`,
-    },
-    orderBy: (entry) => [desc(similarityExpr(entry, query))],
-    columns: { searchVector: false },
-    limit,
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true),
+                 set_config('pg_trgm.word_similarity_threshold', ${String(WORD_SIMILARITY_THRESHOLD)}, true)`,
+    );
+
+    return tx.query.lexicalEntry.findMany({
+      where: {
+        RAW: (entry) => sql`${entry.isVerified} = true AND (
+          ${entry.searchVector} @@ ${tsQuery}
+          OR ${entry.normalizedText} % ${normalized}
+          OR ${normalized} <% ${entry.normalizedText}
+        )`,
+      },
+      orderBy: (entry) => [
+        desc(sql`${entry.normalizedText} = ${normalized}`),
+        desc(sql`ts_rank(${entry.searchVector}, ${tsQuery})`),
+        desc(sql`similarity(${entry.normalizedText}, ${normalized})`),
+        asc(entry.id),
+      ],
+      columns: { searchVector: false },
+      limit,
+      offset,
+    });
   });
 };

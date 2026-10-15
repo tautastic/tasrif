@@ -24,14 +24,19 @@ export const lexicalPatternOverride = pgTable(
     morphPatternId: integer("morph_pattern_id")
       .notNull()
       .references(() => morphPattern.id, { onDelete: "cascade" }),
+    variant: text("variant"),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     unique("unique_lexical_pattern_override_key")
-      .on(table.root, table.formNumber, table.perfectVowel, table.imperfectVowel)
+      .on(table.root, table.formNumber, table.perfectVowel, table.imperfectVowel, table.variant)
       .nullsNotDistinct(),
     index("idx_lexical_pattern_override_pattern").on(table.morphPatternId),
+    check(
+      "chk_lexical_pattern_override_variant",
+      sql`${table.variant} IS NULL OR (char_length(${table.variant}) <= 40 AND ${table.variant} ~ '^[a-z][a-z0-9]*(-[a-z0-9]+)*$')`,
+    ),
     check(
       "chk_lexical_pattern_override_form1_vowels",
       sql`(${table.formNumber} = 1) = (${table.perfectVowel} IS NOT NULL AND ${table.imperfectVowel} IS NOT NULL)`,

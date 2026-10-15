@@ -107,7 +107,7 @@ test("the schema inventory matches its golden", async () => {
   const section = (title: string, lines: string[]) => [`## ${title} (${lines.length})`, ...lines, ""].join("\n");
 
   const inventory = [
-    "# Schema inventory built from db/drizzle/*/migration.sql and db/*.sql",
+    "# Schema inventory built from db/schema.sql and db/*.sql",
     "#",
     "# This records what the repository builds, not what production happens to contain.",
     "# Adding or removing a function, trigger, enum, composite type or relation shows up",

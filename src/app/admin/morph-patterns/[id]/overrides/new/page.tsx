@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { LexicalPatternOverrideForm } from "~/components/admin/lexical-pattern-override-form";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { requireAdmin } from "~/server/auth/guard";
 import { getMorphPatternById } from "~/server/db/repository/morph-pattern";
 
 export default async function NewOverridePage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const pattern = await getMorphPatternById(patternId);
 
@@ -27,6 +29,7 @@ export default async function NewOverridePage({ params }: { params: Promise<{ id
           formNumber: pattern.formNumber,
           perfectVowel: pattern.perfectVowel,
           imperfectVowel: pattern.imperfectVowel,
+          variant: "",
           note: undefined,
         }}
       />

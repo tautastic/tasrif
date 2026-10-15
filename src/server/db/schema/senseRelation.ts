@@ -1,5 +1,5 @@
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import { check, integer, pgEnum, pgTable, serial, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { check, index, integer, pgEnum, pgTable, serial, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { sense } from "~/server/db/schema/sense";
 
 export const senseRelations = ["synonym", "antonym", "hyponym", "hypernym", "near_synonym"] as const;
@@ -24,6 +24,7 @@ export const senseRelation = pgTable(
   },
   (table) => [
     unique("unique_relation").on(table.senseId1, table.senseId2, table.relationType),
+    index("idx_sense_relation_sense_id_2").on(table.senseId2),
     check("sense_different", sql`sense_id_1 != sense_id_2`),
   ],
 );

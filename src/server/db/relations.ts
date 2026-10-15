@@ -7,6 +7,16 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.morphPattern.id,
       to: r.lexicalEntry.morphPatternId,
     }),
+    resolutions: r.many.morphPatternResolution({
+      from: r.morphPattern.id,
+      to: r.morphPatternResolution.morphPatternId,
+    }),
+  },
+  morphPatternResolution: {
+    morphPattern: r.one.morphPattern({
+      from: r.morphPatternResolution.morphPatternId,
+      to: r.morphPattern.id,
+    }),
   },
   lexicalEntry: {
     morphPattern: r.one.morphPattern({

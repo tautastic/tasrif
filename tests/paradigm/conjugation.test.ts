@@ -7,6 +7,7 @@ import {
   codepointsOf,
   conjugate,
   findPattern,
+  IMPERATIVE_PERSONS,
   MOODS,
   type Mood,
   openDatabase,
@@ -179,17 +180,52 @@ test("p_no_affix passes an object template through untouched", async () => {
   assertArabicEqual(paradigm.perfect?.first_person_singular ?? null, "قُلْتُ");
 });
 
+test("p_no_affix confines a single imperative template to the five second persons", async () => {
+  const paradigm = await generateRows("كتب", { imperative: "اُ{1}ْ{2}ُ{3}" }, 1, true);
+  const cells = paradigm.imperative ?? {};
+  assert.deepEqual(Object.keys(cells).sort(), [...IMPERATIVE_PERSONS].sort());
+  for (const person of IMPERATIVE_PERSONS) {
+    assertArabicEqual(cells[person] ?? null, "اُكْتُب", `person ${person}`);
+  }
+});
+
+test("p_no_affix drops non-second-person keys from an object imperative template", async () => {
+  const paradigm = await generateRows(
+    "كتب",
+    {
+      imperative: {
+        first_person_singular: "أَ{1}ْ{2}ُ{3}",
+        third_person_masculine_singular: "يَ{1}ْ{2}ُ{3}",
+        second_person_masculine_singular: "اُ{1}ْ{2}ُ{3}",
+      },
+    },
+    1,
+    true,
+  );
+  assert.deepEqual(Object.keys(paradigm.imperative ?? {}), ["second_person_masculine_singular"]);
+});
+
+test("p_no_affix keeps the first and third persons for the moods that have them", async () => {
+  const paradigm = await generateRows("كتب", { perfect: "{1}َ{2}َ{3}", imperfect_stem: "{1}ْ{2}ُ{3}" }, 1, true);
+  assert.equal(Object.keys(paradigm.perfect ?? {}).length, 13);
+  assert.equal(Object.keys(paradigm.imperfect_jussive ?? {}).length, 13);
+});
+
 test("an unknown rule key is ignored entirely", async () => {
   const paradigm = await generateRows("كتب", { perfect: "{1}َ{2}َ{3}", elative: "أَ{1}ْ{2}َ{3}" }, 1, false);
   assert.deepEqual(Object.keys(paradigm), ["perfect"]);
 });
 
 test("every seeded pattern yields the expected cell counts per mood", async () => {
-  const patterns = await db.rows<{ id: number; form_number: number; description: string; is_geminate: boolean }>(
-    "SELECT id, form_number, description, is_geminate FROM morph_pattern ORDER BY form_number, id",
-  );
+  const patterns = await db.rows<{
+    id: number;
+    form_number: number;
+    description: string;
+    is_geminate: boolean;
+    radical_count: number;
+  }>("SELECT id, form_number, description, is_geminate, radical_count FROM morph_pattern ORDER BY form_number, id");
   for (const pattern of patterns) {
-    const root = pattern.is_geminate ? "مدد" : "كتب";
+    const root = pattern.radical_count === 4 ? "دحرج" : pattern.is_geminate ? "مدد" : "كتب";
     const paradigm = await conjugate(db, root, pattern.id);
     const label = `form ${pattern.form_number} "${pattern.description}"`;
     assert.equal(Object.keys(paradigm.perfect ?? {}).length, 13, `${label} perfect`);

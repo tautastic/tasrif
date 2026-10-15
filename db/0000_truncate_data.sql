@@ -1,1 +1,0 @@
-TRUNCATE TABLE conjugation, sense_relation, translation_link, sense, lexical_entry, morph_pattern, affix_rules RESTART IDENTITY CASCADE;

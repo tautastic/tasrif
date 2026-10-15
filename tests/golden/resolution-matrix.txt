@@ -17,19 +17,24 @@ the derived forms.
 
 shape                         1au 1aa 1ai 1ia 1ii 1uu 2   3   4   5   6   7   8   9   10
 ----------------------------- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-assimilated-waw               -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-assimilated-waw-final-weak-ya -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-assimilated-ya                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-final-weak-waw                -   -   -   -   -   -   -   -   X   -   -   -   X   -   X
-final-weak-ya                 -   X   -   -   -   -   -   -   X   -   -   -   X   -   X
-geminate                      -   -   X   -   -   -   -   -   -   -   -   -   -   -   -
-hamzated-first                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-hamzated-second               -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-hamzated-second-final-weak-ya -   X   -   -   -   -   -   -   -   -   -   -   -   -   -
-hamzated-third                -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-hollow-waw                    X   -   -   -   -   -   -   -   -   -   -   -   -   -   X
-hollow-waw-final-weak-ya      -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-hollow-ya                     -   -   X   -   -   -   -   -   -   -   -   -   -   -   -
+assimilated-waw               -   X   X   X   X   X   X   X   X   X   X   -   X   -   X
+assimilated-waw-final-weak-ya -   -   X   -   X   -   X   X   X   X   X   -   X   -   X
+assimilated-ya                -   X   X   X   -   X   X   X   X   X   X   -   X   -   X
+final-weak-waw                X   X   -   X   -   X   X   X   X   X   X   X   X   -   X
+final-weak-ya                 -   X   X   X   -   -   X   X   X   X   X   X   X   -   X
+geminate                      X   -   X   X   -   X   X   X   X   X   X   X   X   -   X
+hamzated-first                X   X   X   X   -   X   X   X   X   X   X   X   X   -   X
+hamzated-first-final-weak-ya  -   -   X   -   -   -   X   X   X   X   -   -   -   -   X
+hamzated-first-hollow-waw     -   -   -   -   -   -   -   -   -   -   -   X   -   -   -
+hamzated-second               X   X   X   X   -   X   X   X   X   X   X   X   X   X   X
+hamzated-second-final-weak-ya -   X   -   -   -   -   -   X   -   -   X   X   X   -   -
+hamzated-third                X   X   X   X   -   X   X   X   X   X   X   X   X   -   X
+hollow-waw                    X   -   -   X   -   X   X   X   X   X   X   X   X   X   X
+hollow-waw-final-weak-ya      -   -   X   X   -   -   X   X   X   X   X   X   X   -   X
+hollow-waw-hamzated-third     X   -   -   -   -   -   -   X   X   X   X   -   X   -   X
+hollow-ya                     -   -   X   X   -   -   X   X   X   X   X   X   X   X   X
+hollow-ya-final-weak-ya       -   -   -   X   -   -   X   -   X   -   -   -   -   -   X
+hollow-ya-hamzated-third      -   -   X   X   -   -   X   X   X   X   X   -   -   -   -
 sound                         X   X   X   X   X   X   X   X   X   X   X   X   X   X   X
 
 Root used for each shape
@@ -40,36 +45,192 @@ Root used for each shape
   final-weak-waw                دعو
   final-weak-ya                 رمي
   geminate                      مدد
-  hamzated-first                أكل
+  hamzated-first                أمل
+  hamzated-first-final-weak-ya  أتي
+  hamzated-first-hollow-waw     أود
   hamzated-second               سأل
   hamzated-second-final-weak-ya نأي
   hamzated-third                قرأ
   hollow-waw                    قول
   hollow-waw-final-weak-ya      روي
+  hollow-waw-hamzated-third     سوء
   hollow-ya                     بيع
+  hollow-ya-final-weak-ya       حيي
+  hollow-ya-hamzated-third      جيء
   sound                         كتب
 
 Resolved pairs in detail
 ------------------------
-  assimilated-waw               (nothing resolves)
-  assimilated-waw-final-weak-ya (nothing resolves)
-  assimilated-ya                (nothing resolves)
+  assimilated-waw               form-1-a-a  form 1, "a ~ a, assimilated waw"
+  assimilated-waw               form-1-a-i  form 1, "a ~ i, assimilated waw"
+  assimilated-waw               form-1-i-a  form 1, "i ~ a, assimilated waw"
+  assimilated-waw               form-1-i-i  form 1, "i ~ i, assimilated waw"
+  assimilated-waw               form-1-u-u  form 1, "u ~ u, assimilated"
+  assimilated-waw               form-2      form 2, ""
+  assimilated-waw               form-3      form 3, ""
+  assimilated-waw               form-4      form 4, "assimilated"
+  assimilated-waw               form-5      form 5, ""
+  assimilated-waw               form-6      form 6, ""
+  assimilated-waw               form-8      form 8, "assimilated waw"
+  assimilated-waw               form-10     form 10, "assimilated waw"
+  assimilated-waw-final-weak-ya form-1-a-i  form 1, "a ~ i, assimilated waw, final-weak"
+  assimilated-waw-final-weak-ya form-1-i-i  form 1, "i ~ i, assimilated waw, final-weak"
+  assimilated-waw-final-weak-ya form-2      form 2, "final-weak"
+  assimilated-waw-final-weak-ya form-3      form 3, "final-weak"
+  assimilated-waw-final-weak-ya form-4      form 4, "assimilated waw, final-weak"
+  assimilated-waw-final-weak-ya form-5      form 5, "final-weak"
+  assimilated-waw-final-weak-ya form-6      form 6, "final-weak"
+  assimilated-waw-final-weak-ya form-8      form 8, "assimilated waw, final-weak"
+  assimilated-waw-final-weak-ya form-10     form 10, "assimilated waw, final-weak"
+  assimilated-ya                form-1-a-a  form 1, "a ~ a"
+  assimilated-ya                form-1-a-i  form 1, "a ~ i"
+  assimilated-ya                form-1-i-a  form 1, "i ~ a"
+  assimilated-ya                form-1-u-u  form 1, "u ~ u, assimilated"
+  assimilated-ya                form-2      form 2, ""
+  assimilated-ya                form-3      form 3, ""
+  assimilated-ya                form-4      form 4, "assimilated"
+  assimilated-ya                form-5      form 5, ""
+  assimilated-ya                form-6      form 6, ""
+  assimilated-ya                form-8      form 8, "assimilated waw"
+  assimilated-ya                form-10     form 10, ""
+  final-weak-waw                form-1-a-u  form 1, "a ~ u, final-weak waw"
+  final-weak-waw                form-1-a-a  form 1, "a ~ a, final-weak waw"
+  final-weak-waw                form-1-i-a  form 1, "i ~ a, final-weak waw"
+  final-weak-waw                form-1-u-u  form 1, "u ~ u, final-weak waw"
+  final-weak-waw                form-2      form 2, "final-weak"
+  final-weak-waw                form-3      form 3, "final-weak"
   final-weak-waw                form-4      form 4, "final-weak waw"
+  final-weak-waw                form-5      form 5, "final-weak"
+  final-weak-waw                form-6      form 6, "final-weak"
+  final-weak-waw                form-7      form 7, "final-weak"
   final-weak-waw                form-8      form 8, "final-weak waw"
   final-weak-waw                form-10     form 10, "final-weak waw"
   final-weak-ya                 form-1-a-a  form 1, "a ~ a, final-weak"
+  final-weak-ya                 form-1-a-i  form 1, "a ~ i, final-weak"
+  final-weak-ya                 form-1-i-a  form 1, "i ~ a, final-weak"
+  final-weak-ya                 form-2      form 2, "final-weak"
+  final-weak-ya                 form-3      form 3, "final-weak"
   final-weak-ya                 form-4      form 4, "final-weak ya"
+  final-weak-ya                 form-5      form 5, "final-weak"
+  final-weak-ya                 form-6      form 6, "final-weak"
+  final-weak-ya                 form-7      form 7, "final-weak"
   final-weak-ya                 form-8      form 8, "final-weak ya"
   final-weak-ya                 form-10     form 10, "final-weak ya"
+  geminate                      form-1-a-u  form 1, "a ~ u, geminate"
   geminate                      form-1-a-i  form 1, "a ~ i, geminate"
-  hamzated-first                (nothing resolves)
-  hamzated-second               (nothing resolves)
+  geminate                      form-1-i-a  form 1, "i ~ a, geminate"
+  geminate                      form-1-u-u  form 1, "u ~ u, geminate"
+  geminate                      form-2      form 2, ""
+  geminate                      form-3      form 3, "geminate"
+  geminate                      form-4      form 4, "geminate"
+  geminate                      form-5      form 5, ""
+  geminate                      form-6      form 6, "geminate"
+  geminate                      form-7      form 7, "geminate"
+  geminate                      form-8      form 8, "geminate"
+  geminate                      form-10     form 10, "geminate"
+  hamzated-first                form-1-a-u  form 1, "a ~ u"
+  hamzated-first                form-1-a-a  form 1, "a ~ a"
+  hamzated-first                form-1-a-i  form 1, "a ~ i"
+  hamzated-first                form-1-i-a  form 1, "i ~ a"
+  hamzated-first                form-1-u-u  form 1, "u ~ u"
+  hamzated-first                form-2      form 2, ""
+  hamzated-first                form-3      form 3, ""
+  hamzated-first                form-4      form 4, ""
+  hamzated-first                form-5      form 5, ""
+  hamzated-first                form-6      form 6, ""
+  hamzated-first                form-7      form 7, ""
+  hamzated-first                form-8      form 8, ""
+  hamzated-first                form-10     form 10, "hamzated first"
+  hamzated-first-final-weak-ya  form-1-a-i  form 1, "a ~ i, final-weak"
+  hamzated-first-final-weak-ya  form-2      form 2, "final-weak"
+  hamzated-first-final-weak-ya  form-3      form 3, "final-weak"
+  hamzated-first-final-weak-ya  form-4      form 4, "final-weak ya"
+  hamzated-first-final-weak-ya  form-5      form 5, "final-weak"
+  hamzated-first-final-weak-ya  form-10     form 10, "final-weak ya"
+  hamzated-first-hollow-waw     form-7      form 7, "hollow"
+  hamzated-second               form-1-a-u  form 1, "a ~ u"
+  hamzated-second               form-1-a-a  form 1, "a ~ a"
+  hamzated-second               form-1-a-i  form 1, "a ~ i"
+  hamzated-second               form-1-i-a  form 1, "i ~ a"
+  hamzated-second               form-1-u-u  form 1, "u ~ u"
+  hamzated-second               form-2      form 2, ""
+  hamzated-second               form-3      form 3, ""
+  hamzated-second               form-4      form 4, ""
+  hamzated-second               form-5      form 5, "hamzated second"
+  hamzated-second               form-6      form 6, ""
+  hamzated-second               form-7      form 7, ""
+  hamzated-second               form-8      form 8, ""
+  hamzated-second               form-9      form 9, ""
+  hamzated-second               form-10     form 10, ""
   hamzated-second-final-weak-ya form-1-a-a  form 1, "a ~ a, final-weak, hamzated middle"
-  hamzated-third                (nothing resolves)
+  hamzated-second-final-weak-ya form-3      form 3, "final-weak"
+  hamzated-second-final-weak-ya form-6      form 6, "final-weak"
+  hamzated-second-final-weak-ya form-7      form 7, "final-weak"
+  hamzated-second-final-weak-ya form-8      form 8, "final-weak ya"
+  hamzated-third                form-1-a-u  form 1, "a ~ u"
+  hamzated-third                form-1-a-a  form 1, "a ~ a, hamzated third"
+  hamzated-third                form-1-a-i  form 1, "a ~ i"
+  hamzated-third                form-1-i-a  form 1, "i ~ a"
+  hamzated-third                form-1-u-u  form 1, "u ~ u"
+  hamzated-third                form-2      form 2, ""
+  hamzated-third                form-3      form 3, ""
+  hamzated-third                form-4      form 4, ""
+  hamzated-third                form-5      form 5, "hamzated third"
+  hamzated-third                form-6      form 6, "hamzated third"
+  hamzated-third                form-7      form 7, ""
+  hamzated-third                form-8      form 8, ""
+  hamzated-third                form-10     form 10, ""
   hollow-waw                    form-1-a-u  form 1, "a ~ u, hollow waw"
+  hollow-waw                    form-1-i-a  form 1, "i ~ a, hollow waw"
+  hollow-waw                    form-1-u-u  form 1, "u ~ u, hollow waw"
+  hollow-waw                    form-2      form 2, ""
+  hollow-waw                    form-3      form 3, ""
+  hollow-waw                    form-4      form 4, "hollow"
+  hollow-waw                    form-5      form 5, ""
+  hollow-waw                    form-6      form 6, ""
+  hollow-waw                    form-7      form 7, "hollow"
+  hollow-waw                    form-8      form 8, "hollow"
+  hollow-waw                    form-9      form 9, ""
   hollow-waw                    form-10     form 10, "hollow waw"
-  hollow-waw-final-weak-ya      (nothing resolves)
+  hollow-waw-final-weak-ya      form-1-a-i  form 1, "a ~ i, hollow waw, final-weak"
+  hollow-waw-final-weak-ya      form-1-i-a  form 1, "i ~ a, hollow waw, final-weak"
+  hollow-waw-final-weak-ya      form-2      form 2, "final-weak"
+  hollow-waw-final-weak-ya      form-3      form 3, "final-weak"
+  hollow-waw-final-weak-ya      form-4      form 4, "final-weak ya"
+  hollow-waw-final-weak-ya      form-5      form 5, "final-weak"
+  hollow-waw-final-weak-ya      form-6      form 6, "final-weak"
+  hollow-waw-final-weak-ya      form-7      form 7, "final-weak"
+  hollow-waw-final-weak-ya      form-8      form 8, "final-weak ya"
+  hollow-waw-final-weak-ya      form-10     form 10, "final-weak ya"
+  hollow-waw-hamzated-third     form-1-a-u  form 1, "a ~ u, hollow waw, hamzated third"
+  hollow-waw-hamzated-third     form-3      form 3, ""
+  hollow-waw-hamzated-third     form-4      form 4, "hollow"
+  hollow-waw-hamzated-third     form-5      form 5, ""
+  hollow-waw-hamzated-third     form-6      form 6, ""
+  hollow-waw-hamzated-third     form-8      form 8, "hollow"
+  hollow-waw-hamzated-third     form-10     form 10, "hollow waw"
   hollow-ya                     form-1-a-i  form 1, "a ~ i, hollow ya"
+  hollow-ya                     form-1-i-a  form 1, "i ~ a, hollow ya"
+  hollow-ya                     form-2      form 2, ""
+  hollow-ya                     form-3      form 3, ""
+  hollow-ya                     form-4      form 4, "hollow"
+  hollow-ya                     form-5      form 5, ""
+  hollow-ya                     form-6      form 6, ""
+  hollow-ya                     form-7      form 7, "hollow"
+  hollow-ya                     form-8      form 8, "hollow"
+  hollow-ya                     form-9      form 9, ""
+  hollow-ya                     form-10     form 10, "hollow waw"
+  hollow-ya-final-weak-ya       form-1-i-a  form 1, "i ~ a, hollow ya, final-weak"
+  hollow-ya-final-weak-ya       form-2      form 2, "hollow ya, final-weak"
+  hollow-ya-final-weak-ya       form-4      form 4, "hollow ya, final-weak"
+  hollow-ya-final-weak-ya       form-10     form 10, "hollow ya, final-weak"
+  hollow-ya-hamzated-third      form-1-a-i  form 1, "a ~ i, hollow ya, hamzated third"
+  hollow-ya-hamzated-third      form-1-i-a  form 1, "i ~ a, hollow ya, hamzated third"
+  hollow-ya-hamzated-third      form-2      form 2, ""
+  hollow-ya-hamzated-third      form-3      form 3, ""
+  hollow-ya-hamzated-third      form-4      form 4, "hollow"
+  hollow-ya-hamzated-third      form-5      form 5, ""
+  hollow-ya-hamzated-third      form-6      form 6, ""
   sound                         form-1-a-u  form 1, "a ~ u"
   sound                         form-1-a-a  form 1, "a ~ a"
   sound                         form-1-a-i  form 1, "a ~ i"
@@ -91,4 +252,32 @@ Lexical overrides
 
 Roots whose pattern is chosen by lexical_pattern_override rather than by root shape.
 
+  form 1 a ~ a  "a ~ a, final-weak, hamzated first" [is_lexical]  أبي
   form 1 a ~ a  "a ~ a, final-weak, hamzated middle, hamza elided" [is_lexical]  رأي
+  form 1 a ~ i  "a ~ i, hollow waw, final-weak, hamzated first" [is_lexical]  أوي
+  form 1 a ~ i  "quadriliteral"  دحرج
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  ءخذ
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  ءكل
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  ءمر
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  أخذ
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  أكل
+  form 1 a ~ u  "a ~ u, hamza elided in the imperative" [is_lexical]  أمر
+  form 1 i ~ a  "i ~ a, hollow waw, strong inflection" [is_lexical]  حور
+  form 1 i ~ a  "i ~ a, hollow waw, strong inflection" [is_lexical]  حول
+  form 1 i ~ a  "i ~ a, hollow ya, final-weak" [is_lexical]  حيي
+  form 1 i ~ a  "i ~ a, hollow waw, strong inflection" [is_lexical]  عور
+  form 1 i ~ a  "i ~ a, hollow waw, strong inflection" [is_lexical]  غيد
+  form 1 i ~ a  "i ~ a, hollow waw, strong inflection" [is_lexical]  هيف
+  form 1 i ~ a  "i ~ a, assimilated waw, waw elided" [is_lexical]  وسع
+  form 2 none   "quadriliteral"  دحرج
+  form 3 none   "quadriliteral"  حرجم
+  form 3 none   "quadriliteral final-weak"  سلقي
+  form 4 none   "final-weak, hamzated middle, hamza elided" [is_lexical]  رءي
+  form 4 none   "final-weak, hamzated middle, hamza elided" [is_lexical]  رأي
+  form 4 none   "quadriliteral"  قشعر
+  form 8 none   "hamza assimilated" [is_lexical]  ءخذ
+  form 8 none   "hamza assimilated" [is_lexical]  أخذ
+  form 8 none   "hollow, strong inflection" [is_lexical]  جور
+  form 8 none   "hollow, strong inflection" [is_lexical]  زوج
+  form 10 none   "hollow, strong inflection" [is_lexical]  جوب variant interrogate
+  form 10 none   "hollow, strong inflection" [is_lexical]  حوذ

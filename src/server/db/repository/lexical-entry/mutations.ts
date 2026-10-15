@@ -21,6 +21,14 @@ export const createLexicalEntry = (input: PersistableEntry) => {
 export const updateLexicalEntry = (input: PersistableEntry & { id: number }) => {
   const { id, ...values } = input;
   return db.transaction(async (tx) => {
+    const [previous] = await tx
+      .select({ slug: lexicalEntry.slug })
+      .from(lexicalEntry)
+      .where(eq(lexicalEntry.id, id))
+      .for("update");
+    if (!previous) {
+      return null;
+    }
     const [updated] = await tx
       .update(lexicalEntry)
       .set(values)
@@ -30,7 +38,7 @@ export const updateLexicalEntry = (input: PersistableEntry & { id: number }) => 
       return null;
     }
     await syncSenses(tx, updated.id, input.language, input.senses);
-    return updated;
+    return { ...updated, previousSlug: previous.slug };
   });
 };
 

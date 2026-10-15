@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { LexicalPatternOverrideForm } from "~/components/admin/lexical-pattern-override-form";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { requireAdmin } from "~/server/auth/guard";
 import { getOverrideById } from "~/server/db/repository/lexical-pattern-override";
 import { getMorphPatternById } from "~/server/db/repository/morph-pattern";
 
 export default async function EditOverridePage({ params }: { params: Promise<{ id: string; overrideId: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const overrideId = await parseIdOrNotFound(params, "overrideId");
   const [pattern, override] = await Promise.all([getMorphPatternById(patternId), getOverrideById(overrideId)]);
@@ -30,6 +32,7 @@ export default async function EditOverridePage({ params }: { params: Promise<{ i
           formNumber: override.formNumber,
           perfectVowel: override.perfectVowel,
           imperfectVowel: override.imperfectVowel,
+          variant: override.variant ?? "",
           note: override.note ?? undefined,
         }}
       />

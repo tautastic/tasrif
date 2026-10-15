@@ -19,12 +19,9 @@ const sortedNames = async (dir: string): Promise<string[]> => {
 };
 
 export const collectSqlSources = async (): Promise<SqlSource[]> => {
-  const paths: string[] = [];
-  for (const dir of await sortedNames(join(DB_DIR, "drizzle"))) {
-    paths.push(join(DB_DIR, "drizzle", dir, "migration.sql"));
-  }
+  const paths = [join(DB_DIR, "schema.sql")];
   for (const name of await sortedNames(DB_DIR)) {
-    if (name.endsWith(".sql")) {
+    if (/^\d{4}_.+\.sql$/.test(name)) {
       paths.push(join(DB_DIR, name));
     }
   }
@@ -68,7 +65,6 @@ const waitForServer = async (server: ServerConfig): Promise<Db> => {
 };
 
 const loadSchema = async (db: Db, sources: SqlSource[]): Promise<void> => {
-  await db.exec("CREATE EXTENSION IF NOT EXISTS pg_trgm");
   for (const source of sources) {
     try {
       await db.exec(source.sql);

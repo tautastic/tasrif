@@ -7,7 +7,14 @@ const db = await openDatabase();
 const MOOD_KEYS = ["perfect", "imperative", "imperfect_indicative", "imperfect_subjunctive", "imperfect_jussive"];
 const STEM_KEY = "imperfect_stem";
 const STRING_KEYS = ["masdar", "active_participle", "passive_participle"];
-const ALLOWED_KEYS = [...STRING_KEYS, ...MOOD_KEYS, STEM_KEY];
+const PASSIVE_KEYS = [
+  "passive_perfect",
+  "passive_imperfect_stem",
+  "passive_imperfect_indicative",
+  "passive_imperfect_subjunctive",
+  "passive_imperfect_jussive",
+];
+const ALLOWED_KEYS = [...STRING_KEYS, ...MOOD_KEYS, STEM_KEY, ...PASSIVE_KEYS];
 const SUPPORTED_FORM_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const toJsonParam = (values: readonly string[] | readonly number[]) => JSON.stringify(values);
@@ -61,20 +68,25 @@ test("no pattern combines imperfect_stem with an explicit imperfect mood", async
   assertNoRows(rows, "both branches would fire and the winner would depend on jsonb key order");
 });
 
-test("templates reference only the three radical placeholders", async () => {
+test("templates reference only the radical placeholders their pattern has", async () => {
   const rows = await db.rows<{ form_number: number; description: string; key: string; template: string }>(
     `WITH templates AS (
-       SELECT mp.form_number, mp.description, k AS key,
+       SELECT mp.form_number, mp.description, mp.radical_count, k AS key,
               CASE WHEN jsonb_typeof(mp.rules -> k) = 'object'
                    THEN (SELECT string_agg(value, ' ') FROM jsonb_each_text(mp.rules -> k))
                    ELSE mp.rules ->> k END AS template
        FROM morph_pattern mp, LATERAL jsonb_object_keys(mp.rules) k
      )
      SELECT form_number, description, key, template FROM templates
-     WHERE template ~ '\\{[^123]\\}' OR template ~ '\\{[0-9]{2,}\\}'
+     WHERE (radical_count = 3 AND template ~ '\\{[^123]\\}')
+        OR (radical_count = 4 AND template ~ '\\{[^1234]\\}')
+        OR template ~ '\\{[0-9]{2,}\\}'
      ORDER BY form_number, key`,
   );
-  assertNoRows(rows, "only {1} {2} {3} are substituted by replace_root_placeholders");
+  assertNoRows(
+    rows,
+    "only {1} {2} {3}, and {4} in a quadriliteral pattern, are substituted by replace_root_placeholders",
+  );
 });
 
 test("verbal noun keys are always plain strings", async () => {
@@ -216,5 +228,107 @@ test("every lexical pattern is reachable through at least one override", async (
   assertNoRows(
     rows,
     "resolve_morph_pattern_id skips lexical patterns, so one with no override row can never reach an entry",
+  );
+});
+
+test("every shape-resolvable pattern resolves its own shape and no lexical pattern resolves any", async () => {
+  const missing = await db.rows<{ code: string }>(
+    `SELECT mp.code FROM morph_pattern mp
+     WHERE NOT mp.is_lexical
+       AND NOT EXISTS (
+         SELECT 1 FROM morph_pattern_resolution r
+         WHERE r.morph_pattern_id = mp.id
+           AND (r.radical1_kind, r.radical2_kind, r.radical3_kind, r.radical4_kind, r.is_geminate)
+             = (mp.radical1_kind, mp.radical2_kind, mp.radical3_kind, mp.radical4_kind, mp.is_geminate)
+       )
+     ORDER BY mp.code`,
+  );
+  assertNoRows(missing, "a pattern whose radical kinds describe a shape it does not resolve can never reach an entry");
+
+  const lexical = await db.rows<{ code: string }>(
+    `SELECT DISTINCT mp.code FROM morph_pattern mp JOIN morph_pattern_resolution r ON r.morph_pattern_id = mp.id
+     WHERE mp.is_lexical ORDER BY mp.code`,
+  );
+  assertNoRows(lexical, "a lexical pattern describes one verb and is reached only through lexical_pattern_override");
+});
+
+test("every resolution row carries the form, radical count and vowels of its pattern", async () => {
+  const rows = await db.rows<{ code: string }>(
+    `SELECT mp.code FROM morph_pattern_resolution r JOIN morph_pattern mp ON mp.id = r.morph_pattern_id
+     WHERE (r.form_number, r.radical_count, r.perfect_vowel, r.imperfect_vowel)
+       IS DISTINCT FROM (mp.form_number, mp.radical_count, mp.perfect_vowel, mp.imperfect_vowel)
+     ORDER BY mp.code`,
+  );
+  assertNoRows(rows, "the verb form picker would hand out a pattern of a different form, radical count or vowel class");
+});
+
+test("a pattern is quadriliteral exactly when its rules use the fourth radical", async () => {
+  const rows = await db.rows<{ code: string }>(
+    `SELECT code FROM morph_pattern
+     WHERE (radical_count = 4) <> (rules_radical_count(rules) = 4) OR radical_count NOT IN (3, 4)
+     ORDER BY code`,
+  );
+  assertNoRows(rows, "the generators read the radical count from the placeholders, the resolver from the column");
+});
+
+test("no pattern for four radicals is shaped by weak letters and every one of them has an own shape row", async () => {
+  const shaped = await db.rows<{ code: string }>(
+    `SELECT code FROM morph_pattern
+     WHERE radical_count = 4
+       AND (radical1_kind, radical2_kind, radical3_kind, is_geminate) <> ('sound', 'sound', 'sound', FALSE)
+     ORDER BY code`,
+  );
+  assertNoRows(shaped, "a weak letter of the first three radicals is a consonant in every quadriliteral form");
+
+  const unresolved = await db.rows<{ code: string }>(
+    `SELECT mp.code FROM morph_pattern mp
+     WHERE mp.radical_count = 4 AND NOT mp.is_lexical
+       AND NOT EXISTS (SELECT 1 FROM morph_pattern_resolution r WHERE r.morph_pattern_id = mp.id AND r.radical_count = 4)
+     ORDER BY mp.code`,
+  );
+  assertNoRows(unresolved, "a shape-resolved quadriliteral pattern must be reachable by radical count");
+});
+
+test("only a quadriliteral pattern has a weak fourth radical, and a hamza is never one", async () => {
+  const patternRows = await db.rows<{ code: string }>(
+    `SELECT code FROM morph_pattern
+     WHERE radical4_kind = 'hamza' OR (radical_count = 3 AND radical4_kind <> 'sound')
+     ORDER BY code`,
+  );
+  assertNoRows(
+    patternRows,
+    "a triliteral root has no fourth letter, and a hamza at the end is spelled as a sound letter",
+  );
+
+  const resolutionRows = await db.rows<{ code: string }>(
+    `SELECT mp.code FROM morph_pattern_resolution r JOIN morph_pattern mp ON mp.id = r.morph_pattern_id
+     WHERE r.radical4_kind = 'hamza' OR (r.radical_count = 3 AND r.radical4_kind <> 'sound')
+     ORDER BY mp.code`,
+  );
+  assertNoRows(resolutionRows, "a resolution row with a weak fourth radical can never be reached by a triliteral root");
+});
+
+test("every hamza radical of every shape a pattern resolves is spelled out in each of its rules", async () => {
+  const rows = await db.rows<{ code: string; key: string; slot: number }>(
+    `WITH hamza_slots AS (
+       SELECT DISTINCT r.morph_pattern_id AS id, s.slot
+       FROM morph_pattern_resolution r,
+            LATERAL (VALUES (1, r.radical1_kind), (2, r.radical2_kind), (3, r.radical3_kind)) AS s(slot, kind)
+       WHERE s.kind = 'hamza'
+     ), templates AS (
+       SELECT mp.id, mp.code, k AS key,
+              CASE WHEN jsonb_typeof(mp.rules -> k) = 'object'
+                   THEN (SELECT string_agg(value, ' ') FROM jsonb_each_text(mp.rules -> k))
+                   ELSE mp.rules ->> k END AS template
+       FROM morph_pattern mp, LATERAL jsonb_object_keys(mp.rules) k
+     )
+     SELECT t.code, t.key, h.slot
+     FROM hamza_slots h JOIN templates t ON t.id = h.id
+     WHERE POSITION('{' || h.slot || '}' IN t.template) = 0
+     ORDER BY t.code, h.slot, t.key`,
+  );
+  assertNoRows(
+    rows,
+    "a root reaching a pattern through a shape with a hamza radical would lose that hamza in the forms that omit it",
   );
 });

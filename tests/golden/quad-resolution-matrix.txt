@@ -1,0 +1,23 @@
+resolve_morph_pattern_id coverage matrix for four radicals
+==========================================================
+
+Which (root shape, quadriliteral verb form choice) pairs resolve to a morph_pattern row.
+A weak letter before the last radical is a consonant, so every such root takes the sound pattern;
+a root whose last radical is و or ي is final-weak: a ya has a pattern in form 3q only, from its conjugation tables,
+and a waw has none until a table supplies one.
+
+Columns are the choices declared in src/lib/validation/verbFormChoice.ts as quadriliteralVerbFormChoices.
+
+shape                 root    1q                           2q                           3q                           4q
+--------------------- ------- ---------------------------- ---------------------------- ---------------------------- ----------------------------
+sound                 دحرج    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+reduplicated          زلزل    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+glide-second          سيطر    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+glide-third           هرول    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+waw-first             وسوس    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+hamza-first           أسلم    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+hamza-other           طمأن    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+third-equals-fourth   جلبب    f1-a-i-quadriliteral         f2-quadriliteral             f3-quadriliteral             f4-quadriliteral
+final-weak-ya         سلقي    -                            -                            f3-quadriliteral-final-weak  -
+final-weak-ya         غردي    -                            -                            f3-quadriliteral-final-weak  -
+final-weak-waw        سلقو    -                            -                            -                            -

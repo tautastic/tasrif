@@ -1,12 +1,32 @@
 import type { ChangeEvent } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import AsyncSenseSelect from "~/components/admin/entry-edit-form/AsyncSenseSelect";
+import ContextTagsInput from "~/components/admin/entry-edit-form/ContextTagsInput";
 import SelectField from "~/components/ui/SelectField";
 import TextAreaField from "~/components/ui/TextAreaField";
 import TextField from "~/components/ui/TextField";
 import { formatPartOfSpeechType, formatSenseRelationType } from "~/lib/formatting";
 import { type LanguageType, posTypes, senseRelationTypeEnum } from "~/server/db/schema";
 import type { EntryFormInput, EntryFormValues } from "./schema";
+
+const TARGET_SENSE_ERROR = "Choose a target sense.";
+const STRENGTH_ERROR = "Enter a whole number from 1 to 10.";
+
+const firstMessage = (node: unknown): string | undefined => {
+  if (!node || typeof node !== "object") {
+    return undefined;
+  }
+  if ("message" in node && typeof node.message === "string") {
+    return node.message;
+  }
+  for (const child of Object.values(node)) {
+    const message = firstMessage(child);
+    if (message) {
+      return message;
+    }
+  }
+  return undefined;
+};
 
 interface SenseEditorProps {
   senseIndex: number;
@@ -32,6 +52,10 @@ const SenseEditor = ({
     control,
     formState: { errors },
   } = useFormContext<EntryFormInput, unknown, EntryFormValues>();
+
+  const senseErrors = errors.senses?.[senseIndex];
+  const translationErrors = senseErrors?.translations;
+  const relationErrors = senseErrors?.relatedSenses;
 
   const translationsFieldArray = useFieldArray({
     control,
@@ -66,7 +90,7 @@ const SenseEditor = ({
         >
           ↓
         </button>
-        <button type="button" onClick={onRemove} className="ml-1 text-red-600 hover:text-red-800 text-sm">
+        <button type="button" onClick={onRemove} className="ml-1 text-red-700 hover:text-red-900 text-sm">
           Remove
         </button>
       </legend>
@@ -76,9 +100,11 @@ const SenseEditor = ({
           id={`sense-${senseIndex}-pos`}
           label="Part of Speech"
           registration={register(`senses.${senseIndex}.pos`)}
-          error={errors.senses?.[senseIndex]?.pos?.message}
+          error={senseErrors?.pos?.message}
         >
-          <option className="hidden"></option>
+          <option value="" disabled>
+            Select a part of speech
+          </option>
           {posTypes.map((pos) => (
             <option key={pos} value={pos}>
               {formatPartOfSpeechType(pos)}
@@ -99,7 +125,22 @@ const SenseEditor = ({
                 onBlur: field.onBlur,
                 value: field.value?.join("\n") ?? "",
               }}
-              error={errors.senses?.[senseIndex]?.definitions?.message}
+              error={senseErrors?.definitions?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name={`senses.${senseIndex}.contextTags`}
+          control={control}
+          render={({ field }) => (
+            <ContextTagsInput
+              id={`sense-${senseIndex}-tags`}
+              label="Context tags"
+              tags={field.value ?? []}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={firstMessage(senseErrors?.contextTags)}
             />
           )}
         />
@@ -118,7 +159,7 @@ const SenseEditor = ({
                 onBlur: field.onBlur,
                 value: field.value?.join("\n") ?? "",
               }}
-              error={undefined}
+              error={senseErrors?.examples?.message}
             />
           )}
         />
@@ -140,7 +181,7 @@ const SenseEditor = ({
                 <button
                   type="button"
                   onClick={() => translationsFieldArray.remove(translationIndex)}
-                  className="ml-2 text-red-600 hover:text-red-800 text-sm"
+                  className="ml-2 text-red-700 hover:text-red-900 text-sm"
                 >
                   Remove
                 </button>
@@ -164,6 +205,8 @@ const SenseEditor = ({
                         value={Number(field.value ?? 0)}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
+                        inputRef={field.ref}
+                        error={translationErrors?.[translationIndex]?.targetSenseId ? TARGET_SENSE_ERROR : undefined}
                         placeholder="Search target sense"
                       />
                     )}
@@ -174,14 +217,14 @@ const SenseEditor = ({
                   id={`translation-domain-${senseIndex}-${translationIndex}`}
                   label="Domain (optional)"
                   registration={register(`senses.${senseIndex}.translations.${translationIndex}.domain` as const)}
-                  error={undefined}
+                  error={translationErrors?.[translationIndex]?.domain?.message}
                 />
 
                 <TextField
                   id={`translation-note-${senseIndex}-${translationIndex}`}
                   label="Note (optional)"
                   registration={register(`senses.${senseIndex}.translations.${translationIndex}.note` as const)}
-                  error={undefined}
+                  error={translationErrors?.[translationIndex]?.note?.message}
                 />
               </div>
             </fieldset>
@@ -212,7 +255,7 @@ const SenseEditor = ({
                 <button
                   type="button"
                   onClick={() => relationsFieldArray.remove(relationIndex)}
-                  className="ml-2 text-red-600 hover:text-red-800 text-sm"
+                  className="ml-2 text-red-700 hover:text-red-900 text-sm"
                 >
                   Remove
                 </button>
@@ -236,6 +279,8 @@ const SenseEditor = ({
                         value={Number(field.value ?? 0)}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
+                        inputRef={field.ref}
+                        error={relationErrors?.[relationIndex]?.targetSenseId ? TARGET_SENSE_ERROR : undefined}
                         placeholder="Search target sense"
                       />
                     )}
@@ -246,7 +291,7 @@ const SenseEditor = ({
                   id={`relation-type-${senseIndex}-${relationIndex}`}
                   label="Relation Type"
                   registration={register(`senses.${senseIndex}.relatedSenses.${relationIndex}.relationType` as const)}
-                  error={undefined}
+                  error={relationErrors?.[relationIndex]?.relationType?.message}
                 >
                   {senseRelationTypeEnum.enumValues.map((type) => (
                     <option key={type} value={type}>
@@ -259,7 +304,7 @@ const SenseEditor = ({
                   id={`relation-context-${senseIndex}-${relationIndex}`}
                   label="Context Note (optional)"
                   registration={register(`senses.${senseIndex}.relatedSenses.${relationIndex}.contextNote` as const)}
-                  error={undefined}
+                  error={relationErrors?.[relationIndex]?.contextNote?.message}
                 />
 
                 <TextField
@@ -271,7 +316,7 @@ const SenseEditor = ({
                   registration={register(`senses.${senseIndex}.relatedSenses.${relationIndex}.strength` as const, {
                     valueAsNumber: true,
                   })}
-                  error={undefined}
+                  error={relationErrors?.[relationIndex]?.strength ? STRENGTH_ERROR : undefined}
                 />
               </div>
             </fieldset>
@@ -309,6 +354,7 @@ const SensesFields = () => {
       pos: null,
       senseNumber: maxSenseNumber + 1,
       definitions: [],
+      contextTags: [],
       examples: [],
       translations: [],
       relatedSenses: [],
@@ -359,7 +405,11 @@ const SensesFields = () => {
         />
       ))}
 
-      {errors.senses?.message && <p className="text-red-600 text-sm mt-1">{errors.senses.message}</p>}
+      {errors.senses?.message && (
+        <p role="alert" className="text-red-700 text-sm mt-1">
+          {errors.senses.message}
+        </p>
+      )}
     </div>
   );
 };

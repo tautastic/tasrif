@@ -38,13 +38,16 @@ export type Paradigm = Partial<Record<Mood, Partial<Record<Person, string>>>>;
 
 export interface PatternRow {
   id: number;
+  code: string;
   form_number: number;
+  radical_count: number;
   description: string;
   vocalic_template: string;
   no_affix: boolean;
   radical1_kind: string;
   radical2_kind: string;
   radical3_kind: string;
+  radical4_kind: string;
   is_geminate: boolean;
   perfect_vowel: string | null;
   imperfect_vowel: string | null;
@@ -56,8 +59,8 @@ export interface VerbalNouns {
   passive_participle: string | null;
 }
 
-const PATTERN_COLUMNS = `id, form_number, description, vocalic_template, no_affix,
-  radical1_kind::text, radical2_kind::text, radical3_kind::text, is_geminate,
+const PATTERN_COLUMNS = `id, code, form_number, radical_count, description, vocalic_template, no_affix,
+  radical1_kind::text, radical2_kind::text, radical3_kind::text, radical4_kind::text, is_geminate,
   perfect_vowel::text, imperfect_vowel::text`;
 
 export const listPatterns = (db: Db): Promise<PatternRow[]> =>
@@ -68,6 +71,9 @@ export const findPattern = (db: Db, formNumber: number, description: string): Pr
     formNumber,
     description,
   ]);
+
+export const findPatternByCode = (db: Db, code: string): Promise<PatternRow> =>
+  db.one<PatternRow>(`SELECT ${PATTERN_COLUMNS} FROM morph_pattern WHERE code = $1`, [code]);
 
 export const conjugate = async (
   db: Db,
@@ -135,7 +141,7 @@ export const insertEntry = (db: Db, input: EntryInput): Promise<number> =>
 
 export const storedParadigm = async (db: Db, entryId: number): Promise<Paradigm> => {
   const rows = await db.rows<{ mood: Mood; person: Person; form: string }>(
-    "SELECT mood::text AS mood, person::text AS person, form FROM conjugation WHERE lexical_entry_id = $1",
+    "SELECT mood::text AS mood, person::text AS person, form FROM conjugation WHERE lexical_entry_id = $1 AND voice = 'active'",
     [entryId],
   );
   const paradigm: Paradigm = {};

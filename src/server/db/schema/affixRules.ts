@@ -35,8 +35,8 @@ export const affixRules = pgTable(
     mood: affixMoodEnum("mood").notNull(),
     person: personTypeEnum("person").notNull(),
     form: integer("form").notNull().default(1),
-    prefix: text("prefix").default(""),
-    suffix: text("suffix").default(""),
+    prefix: text("prefix").notNull().default(""),
+    suffix: text("suffix").notNull().default(""),
   },
   (table) => [unique("unique_affix_rule").on(table.mood, table.person, table.form)],
 );

@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
-import CancelButton from "~/components/admin/delete-entry/CancelButton";
+import DeleteForm from "~/components/admin/DeleteForm";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { deleteLexicalEntryAction } from "~/server/actions/lexical-entry";
+import { requireAdmin } from "~/server/auth/guard";
 import { getLexicalEntrySummary } from "~/server/db/repository/lexical-entry";
 
 export default async function DeleteEntryPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const entryId = await parseIdOrNotFound(params);
   const entry = await getLexicalEntrySummary(entryId);
 
@@ -26,14 +28,7 @@ export default async function DeleteEntryPage({ params }: { params: Promise<{ id
 
       <p className="mb-6 text-sm text-gray-600">This action cannot be undone.</p>
 
-      <form action={deleteLexicalEntryAction.bind(null, entryId)}>
-        <div className="flex justify-center space-x-4">
-          <button type="submit" className="btn-danger">
-            Delete
-          </button>
-          <CancelButton />
-        </div>
-      </form>
+      <DeleteForm action={deleteLexicalEntryAction.bind(null, entryId)} />
     </div>
   );
 }

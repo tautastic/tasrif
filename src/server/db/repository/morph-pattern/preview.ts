@@ -29,6 +29,20 @@ export const previewConjugation = async ({
   return result.rows;
 };
 
+export const previewPassiveConjugation = async ({
+  root,
+  rules,
+  formNumber,
+  noAffix,
+}: PreviewInput): Promise<PreviewParadigmCell[]> => {
+  const result = await db.execute<PreviewParadigmCell>(sql`
+    SELECT pr.mood::text AS mood, kv.key AS person, kv.value AS form
+    FROM generate_passive_rows(${root}, ${JSON.stringify(rules)}::jsonb, ${formNumber}, '{}'::jsonb, ${noAffix}) pr,
+         LATERAL jsonb_each_text(pr.person_forms) kv
+  `);
+  return result.rows;
+};
+
 export type PreviewVerbalNouns = {
   masdar: string | null;
   active_participle: string | null;

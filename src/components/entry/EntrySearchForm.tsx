@@ -1,11 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent, type MouseEvent, useEffect, useState } from "react";
 import { useDebouncedFetch } from "~/hooks/useDebouncedFetch";
 import type { EntrySearchResponse, EntrySearchResult } from "~/lib/api/entry-search";
+import { entryPath, formatCount } from "~/lib/formatting";
 
-const MIN_QUERY_LENGTH = 1;
+const MIN_QUERY_LENGTH = 2;
+const LISTBOX_ID = "entry-search-results";
+
+const optionId = (index: number) => `entry-search-option-${index}`;
+
+const preventFocusLoss = (event: MouseEvent<HTMLElement>) => event.preventDefault();
+
+const isModifiedClick = (event: MouseEvent<HTMLElement>) =>
+  event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 
 const fetchEntries = async (query: string, signal: AbortSignal): Promise<EntrySearchResult[]> => {
   const response = await fetch(`/api/entries/search?query=${encodeURIComponent(query)}`, { signal });
@@ -18,15 +28,17 @@ const fetchEntries = async (query: string, signal: AbortSignal): Promise<EntrySe
 
 const EntrySearchForm = () => {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<EntrySearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
   const trimmedQuery = query.trim();
-  const showDropdown = isOpen && trimmedQuery.length >= MIN_QUERY_LENGTH;
+  const canSearch = trimmedQuery.length >= MIN_QUERY_LENGTH;
+  const showListbox = isOpen && canSearch && results.length > 0;
+  const showMessage = isOpen && canSearch && results.length === 0;
+  const optionCount = results.length + 1;
+  const searchHref = `/search?${new URLSearchParams({ q: trimmedQuery })}`;
 
   const isLoading = useDebouncedFetch({
     query,
@@ -46,127 +58,158 @@ const EntrySearchForm = () => {
   });
 
   useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setActiveIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, []);
+    if (activeIndex >= 0) {
+      document.getElementById(optionId(activeIndex))?.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex]);
 
-  const reset = () => {
-    setQuery("");
-    setResults([]);
+  const close = () => {
     setIsOpen(false);
     setActiveIndex(-1);
   };
 
-  const navigateTo = (result: EntrySearchResult) => {
-    reset();
-    router.push(`/entry/${result.normalizedText}`);
+  const reset = () => {
+    setQuery("");
+    setResults([]);
+    close();
+  };
+
+  const handleLinkClick = (event: MouseEvent<HTMLElement>) => {
+    if (!isModifiedClick(event)) {
+      reset();
+    }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = showListbox ? results[activeIndex] : undefined;
+    if (target) {
+      reset();
+      router.push(entryPath(target.slug));
+      return;
+    }
+    if (trimmedQuery) {
+      reset();
+      router.push(searchHref);
+    }
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
-      setIsOpen(false);
-      setActiveIndex(-1);
-      inputRef.current?.blur();
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      if (results.length === 0) {
-        return;
-      }
-      setIsOpen(true);
-      setActiveIndex((index) => (index + 1 >= results.length ? 0 : index + 1));
-      return;
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      if (results.length === 0) {
-        return;
-      }
-      setIsOpen(true);
-      setActiveIndex((index) => (index - 1 < 0 ? results.length - 1 : index - 1));
-      return;
-    }
-
-    if (event.key === "Enter") {
-      const target = results[activeIndex];
-      if (target) {
+      if (isOpen && canSearch) {
         event.preventDefault();
-        navigateTo(target);
+        close();
+      } else if (query) {
+        event.preventDefault();
+        setQuery("");
       }
+      return;
     }
+
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+      return;
+    }
+
+    event.preventDefault();
+    if (!canSearch || results.length === 0) {
+      return;
+    }
+    if (!showListbox) {
+      setIsOpen(true);
+      return;
+    }
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    setActiveIndex((index) =>
+      index === -1 && step === -1 ? optionCount - 1 : (index + step + optionCount) % optionCount,
+    );
   };
 
+  const optionClassName = (index: number) =>
+    `block cursor-pointer px-4 py-2 text-sm hover:bg-gray-50 ${index === activeIndex ? "bg-gray-100" : ""}`;
+
+  let statusMessage = "";
+  if (showMessage) {
+    statusMessage = isLoading ? "Searching…" : "No entries found.";
+  } else if (showListbox) {
+    statusMessage = `${formatCount(results.length, "suggestion", "suggestions")} available.`;
+  }
+
   return (
-    <div ref={containerRef} className="relative w-full">
-      <search className="w-full">
-        <form onSubmit={(event) => event.preventDefault()} className="flex w-full">
+    <div className="relative w-full">
+      <search className="w-full" aria-label="Site search">
+        <form action="/search" method="get" onSubmit={handleSubmit} className="flex w-full">
           <input
-            ref={inputRef}
             type="search"
+            name="q"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
               setIsOpen(true);
             }}
             onFocus={() => setIsOpen(true)}
+            onBlur={close}
             onKeyDown={handleKeyDown}
             placeholder="Search Dictionary"
             aria-label="Search Dictionary"
-            lang="ar"
+            dir="auto"
             role="combobox"
-            aria-expanded={showDropdown}
-            aria-controls="entry-search-results"
+            aria-expanded={showListbox}
+            aria-controls={showListbox ? LISTBOX_ID : undefined}
             aria-autocomplete="list"
-            aria-activedescendant={
-              activeIndex >= 0 && results[activeIndex] ? `entry-search-option-${results[activeIndex].id}` : undefined
-            }
+            aria-activedescendant={showListbox && activeIndex >= 0 ? optionId(activeIndex) : undefined}
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="search"
             className="w-full border text-sm border-gray-300 px-4 h-min py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </form>
       </search>
 
-      {showDropdown && (
-        <div
-          id="entry-search-results"
-          role="listbox"
-          className="absolute left-0 right-0 z-30 mt-1 max-h-80 overflow-y-auto border border-gray-200 bg-white shadow-lg"
-        >
-          {isLoading && results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-gray-500">Searching...</p>
-          ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-gray-500">No entries found.</p>
-          ) : (
-            <div className="divide-y divide-gray-100">
+      <div className="sr-only" role="status" aria-live="polite">
+        {statusMessage}
+      </div>
+
+      {(showListbox || showMessage) && (
+        <div className="absolute left-0 right-0 z-30 mt-1 max-h-80 overflow-y-auto border border-gray-200 bg-white shadow-lg">
+          {showMessage && (
+            <p className="px-4 py-3 text-sm text-gray-600" aria-hidden="true">
+              {isLoading ? "Searching..." : "No entries found."}
+            </p>
+          )}
+          {showListbox && (
+            <div id={LISTBOX_ID} role="listbox" aria-label="Search suggestions" className="divide-y divide-gray-100">
               {results.map((result, index) => (
-                <div
+                <Link
                   key={result.id}
-                  id={`entry-search-option-${result.id}`}
+                  id={optionId(index)}
                   role="option"
-                  tabIndex={-1}
                   aria-selected={index === activeIndex}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    navigateTo(result);
-                  }}
+                  tabIndex={-1}
+                  prefetch={false}
+                  href={entryPath(result.slug)}
+                  onClick={handleLinkClick}
+                  onMouseDown={preventFocusLoss}
                   onMouseEnter={() => setActiveIndex(index)}
                   lang={result.language}
-                  className={`cursor-pointer px-4 py-2 text-sm hover:bg-gray-50 ${
-                    index === activeIndex ? "bg-gray-50" : ""
-                  }`}
+                  className={optionClassName(index)}
                 >
                   {result.text}
-                </div>
+                </Link>
               ))}
+              <Link
+                id={optionId(results.length)}
+                role="option"
+                aria-selected={activeIndex === results.length}
+                tabIndex={-1}
+                prefetch={false}
+                href={searchHref}
+                onClick={handleLinkClick}
+                onMouseDown={preventFocusLoss}
+                onMouseEnter={() => setActiveIndex(results.length)}
+                className={`${optionClassName(results.length)} text-blue-700`}
+              >
+                See all results for “{trimmedQuery}”
+              </Link>
             </div>
           )}
         </div>

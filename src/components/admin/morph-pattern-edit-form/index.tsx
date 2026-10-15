@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import FormCancelButton from "~/components/ui/FormCancelButton";
+import FormError from "~/components/ui/FormError";
 import { createMorphPatternAction, updateMorphPatternAction } from "~/server/actions/morph-pattern";
 import BasicFields from "./BasicFields";
 import RulesEditor from "./RulesEditor";
@@ -27,14 +29,19 @@ const MorphPatternEditForm = (props: MorphPatternEditFormProps) => {
   const { isSubmitting } = methods.formState;
 
   const onSubmit = async (values: MorphPatternFormValues) => {
+    setServerError(null);
     try {
-      const saved =
+      const result =
         props.mode === "edit"
           ? await updateMorphPatternAction({ ...values, id: props.pattern.id })
           : await createMorphPatternAction(values);
-      router.push(`/admin/morph-patterns/${saved.id}`);
-    } catch (error) {
-      setServerError(error instanceof Error ? error.message : "Failed to save pattern.");
+      if (!result.ok) {
+        setServerError(result.error);
+        return;
+      }
+      router.push(`/admin/morph-patterns/${result.data.id}`);
+    } catch {
+      setServerError("Failed to save pattern. Please try again.");
     }
   };
 
@@ -45,15 +52,15 @@ const MorphPatternEditForm = (props: MorphPatternEditFormProps) => {
         <RulesEditor />
         <TemplatePreview />
 
-        {serverError && <p className="text-red-600">{serverError}</p>}
+        <FormError message={serverError} />
 
         <div className="flex space-x-4">
           <button type="submit" disabled={isSubmitting} className="btn-primary">
             {isSubmitting ? "Saving..." : props.mode === "edit" ? "Save Changes" : "Create Pattern"}
           </button>
-          <button type="button" onClick={() => router.back()} className="btn-secondary">
-            Cancel
-          </button>
+          <FormCancelButton
+            fallbackHref={props.mode === "edit" ? `/admin/morph-patterns/${props.pattern.id}` : "/admin/morph-patterns"}
+          />
         </div>
       </form>
     </FormProvider>

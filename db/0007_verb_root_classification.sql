@@ -200,7 +200,7 @@ SELECT form_number, vocalic_template, 'final-weak waw', rules, no_affix,
 FROM morph_pattern
 WHERE form_number = 4
   AND description = 'final-weak ya'
-ON CONFLICT (form_number, description) DO NOTHING;
+ON CONFLICT ON CONSTRAINT unique_form_number_description DO NOTHING;
 
 UPDATE morph_pattern
 SET radical3_kind = 'ya',
@@ -227,7 +227,7 @@ SELECT form_number, vocalic_template, 'final-weak waw', rules, no_affix,
 FROM morph_pattern
 WHERE form_number = 10
   AND description = 'final-weak ya'
-ON CONFLICT (form_number, description) DO NOTHING;
+ON CONFLICT ON CONSTRAINT unique_form_number_description DO NOTHING;
 
 UPDATE morph_pattern
 SET radical2_kind = 'waw',

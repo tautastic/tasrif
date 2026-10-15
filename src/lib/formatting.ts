@@ -28,6 +28,8 @@ const POS_LABELS: Record<PartOfSpeechType, string> = {
   idiom: "Idiom",
 };
 
+const ARABIC_SCRIPT = /[\u0600-\u06FF]/;
+
 const ROMAN_NUMERALS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
 
 export const formatLanguageName = (language: LanguageType): string => LANGUAGE_LABELS[language];
@@ -36,5 +38,14 @@ export const formatPartOfSpeechType = (pos: PartOfSpeechType): string => POS_LAB
 
 export const formatRoot = (root: string): string => [...root].join("-");
 
-export const formatMorphPatternFormNumber = (formNumber: number): string =>
-  ROMAN_NUMERALS[formNumber - 1] ?? String(formNumber);
+export const formatMorphPatternFormNumber = (formNumber: number, radicalCount = 3): string =>
+  `${ROMAN_NUMERALS[formNumber - 1] ?? String(formNumber)}${radicalCount === 4 ? "q" : ""}`;
+
+export const detectScriptLanguage = (text: string): LanguageType => (ARABIC_SCRIPT.test(text) ? "ar" : "en");
+
+export const formatCount = (count: number, singular: string, plural: string): string =>
+  `${count} ${count === 1 ? singular : plural}`;
+
+export const entryPath = (slug: string): string => `/entry/${encodeURIComponent(slug)}`;
+
+export const rootPath = (root: string): string => `/root/${encodeURIComponent(root)}`;

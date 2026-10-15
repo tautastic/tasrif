@@ -14,6 +14,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import type { MorphologyOverrides } from "~/lib/validation/morphology";
+import { derivedByInsertTrigger } from "~/server/db/schema/derivedByTrigger";
 import { morphPattern } from "~/server/db/schema/morphPattern";
 
 const tsVector = customType<{ data: string; driverData: string }>({
@@ -40,6 +41,7 @@ export const lexicalEntry = pgTable(
         sql`LOWER(REGEXP_REPLACE(text, '[[:punct:][:space:]\u064B-\u065F\u0670\u0610-\u061A]', '', 'g'))`,
       )
       .notNull(),
+    slug: text("slug").notNull().$defaultFn(derivedByInsertTrigger),
     root: varchar("root", { length: 10 }),
     latinRoot: varchar("latin_root", { length: 20 }),
     morphPatternId: integer("morph_pattern_id").references(() => morphPattern.id, { onDelete: "set null" }),
@@ -57,6 +59,10 @@ export const lexicalEntry = pgTable(
     index("idx_lexical_entry_latin_root").on(table.latinRoot),
     index("idx_lexical_entry_pattern").on(table.morphPatternId),
     index("idx_lexical_entry_text_trgm").using("gin", sql`${table.text} gin_trgm_ops`),
+    index("idx_lexical_entry_slug").on(table.slug),
+    index("idx_lexical_entry_normalized_text").on(table.normalizedText),
+    index("idx_lexical_entry_normalized_text_prefix").using("btree", sql`${table.normalizedText} text_pattern_ops`),
+    index("idx_lexical_entry_normalized_text_trgm").using("gin", sql`${table.normalizedText} gin_trgm_ops`),
     index("idx_lexical_entry_search_vector").using("gin", table.searchVector),
     index("idx_lexical_entry_language_created_at").on(table.language, sql`${table.createdAt} DESC`),
   ],

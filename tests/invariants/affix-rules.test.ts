@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { IMPERATIVE_PERSONS, MOODS, openDatabase, PERSONS } from "../harness";
+import {
+  assertArabicEqual,
+  assertSqlState,
+  findPattern,
+  IMPERATIVE_PERSONS,
+  MOODS,
+  openDatabase,
+  PERSONS,
+} from "../harness";
 
 const db = await openDatabase();
 
@@ -137,4 +145,92 @@ test("prefixes differ from form I exactly where the vowel class differs", async 
       `form ${row.form} should differ from form I in every imperfect cell`,
     );
   }
+});
+
+test("prefix and suffix are NOT NULL and default to the empty string", async () => {
+  const columns = await db.rows<{ column_name: string; is_nullable: string; column_default: string | null }>(
+    `SELECT column_name, is_nullable, column_default FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'affix_rules' AND column_name IN ('prefix', 'suffix')
+     ORDER BY column_name`,
+  );
+  assert.deepEqual(
+    columns.map((column) => [column.column_name, column.is_nullable, column.column_default]),
+    [
+      ["prefix", "NO", "''::text"],
+      ["suffix", "NO", "''::text"],
+    ],
+  );
+});
+
+test("a NULL affix cannot be stored", async () => {
+  await db.tx(async (tx) => {
+    const prefix = await tx.failure(
+      `INSERT INTO affix_rules (mood, person, form, prefix, suffix)
+       VALUES ('perfect', 'first_person_singular', 99, NULL, '')`,
+    );
+    assertSqlState(prefix, "23502");
+
+    const suffix = await tx.failure(
+      `INSERT INTO affix_rules (mood, person, form, prefix, suffix)
+       VALUES ('perfect', 'first_person_singular', 99, '', NULL)`,
+    );
+    assertSqlState(suffix, "23502");
+  });
+});
+
+test("a missing affix is treated as empty instead of voiding the whole mood", async () => {
+  const pattern = await findPattern(db, 1, "a ~ u");
+  await db.tx(async (tx) => {
+    await tx.exec("ALTER TABLE affix_rules ALTER COLUMN prefix DROP NOT NULL");
+    await tx.exec("ALTER TABLE affix_rules ALTER COLUMN suffix DROP NOT NULL");
+    await tx.exec(
+      `UPDATE affix_rules SET prefix = NULL
+       WHERE mood = 'imperfect_indicative' AND person = 'first_person_singular' AND form = 1`,
+    );
+    await tx.exec(
+      `UPDATE affix_rules SET suffix = NULL
+       WHERE mood = 'perfect' AND person = 'first_person_singular' AND form = 0`,
+    );
+
+    const rows = await tx.rows<{ mood: string; person: string; form: string }>(
+      `SELECT cr.mood::text AS mood, kv.key AS person, kv.value AS form
+       FROM morph_pattern mp,
+            LATERAL generate_conjugation_rows($1, mp.rules, mp.form_number, '{}'::jsonb, mp.no_affix) cr,
+            LATERAL jsonb_each_text(cr.person_forms) kv
+       WHERE mp.id = $2`,
+      ["كتب", pattern.id],
+    );
+    const countFor = (mood: string) => rows.filter((row) => row.mood === mood).length;
+    assert.equal(countFor("perfect"), 13);
+    assert.equal(countFor("imperfect_indicative"), 13);
+
+    const cellFor = (mood: string, person: string) =>
+      rows.find((row) => row.mood === mood && row.person === person)?.form ?? null;
+    assertArabicEqual(cellFor("imperfect_indicative", "first_person_singular"), "كْتُبُ", "prefix treated as empty");
+    assertArabicEqual(cellFor("perfect", "first_person_singular"), "كَتَب", "suffix treated as empty");
+  });
+});
+
+test("forms III and IV repeat the form II imperfect affixes row for row", async () => {
+  const rows = await db.rows<{ form: number; mood: string; person: string; detail: string }>(
+    `SELECT copy.form, base.mood::text AS mood, base.person::text AS person,
+            CASE WHEN alias.id IS NULL THEN 'missing' ELSE 'differs' END AS detail
+     FROM affix_rules base
+     CROSS JOIN (VALUES (3), (4)) AS copy(form)
+     LEFT JOIN affix_rules alias
+       ON alias.form = copy.form AND alias.mood = base.mood AND alias.person = base.person
+     WHERE base.form = 2
+       AND (alias.id IS NULL OR alias.prefix IS DISTINCT FROM base.prefix OR alias.suffix IS DISTINCT FROM base.suffix)
+     UNION ALL
+     SELECT extra.form, extra.mood::text, extra.person::text, 'extra'
+     FROM affix_rules extra
+     WHERE extra.form IN (3, 4)
+       AND NOT EXISTS (SELECT 1 FROM affix_rules base
+                       WHERE base.form = 2 AND base.mood = extra.mood AND base.person = extra.person)
+     ORDER BY 1, 2, 3`,
+  );
+  assertNoRows(
+    rows,
+    "forms II, III and IV share the damma imperfect prefixes; the duplicated rows of forms III and IV must stay copies of form II",
+  );
 });

@@ -4,19 +4,18 @@ import { formatMorphPatternFormNumber } from "~/lib/formatting";
 
 interface FormReferenceProps {
   formNumber: number;
+  radicalCount?: number;
   formDescription?: string;
 }
 
-const FormReference: FC<FormReferenceProps> = ({ formNumber, formDescription }) => {
-  const numeral = formatMorphPatternFormNumber(formNumber);
+const FormReference: FC<FormReferenceProps> = ({ formNumber, radicalCount = 3, formDescription }) => {
+  const numeral = formatMorphPatternFormNumber(formNumber, radicalCount);
   const description = formDescription?.trim();
+  const anchor = radicalCount === 4 ? "" : `#Form_${numeral}`;
 
   return (
     <span className="whitespace-nowrap">
-      <Link
-        href={`/appendix/arabic-verbs#Form_${numeral}`}
-        className="text-blue-600 hover:underline focus-visible:underline focus-visible:outline-none"
-      >
+      <Link href={`/appendix/arabic-verbs${anchor}`} className="text-blue-600 underline hover:text-blue-800">
         Form {numeral}
       </Link>
       {description ? `, ${description}` : null}

@@ -6,7 +6,7 @@ import type { LanguageType } from "~/server/db/schema";
 interface PaginatedEntryListEntry {
   id: number;
   text: string;
-  normalizedText: string;
+  slug: string;
 }
 
 interface PaginatedEntryListProps {

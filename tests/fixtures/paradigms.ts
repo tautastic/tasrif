@@ -33,8 +33,9 @@ const SHADDA = "\u0651";
 const ALEF = "\u0627";
 const NOON = "\u0646";
 
-const APPENDIX = "Wiktionary, Appendix:Arabic verbs (vendored at src/content/appendix/arabic-verbs.json, CC BY-SA 4.0)";
-const WRIGHT = "W. Wright, A Grammar of the Arabic Language, vol. I, paradigms of the triliteral verb";
+export const APPENDIX =
+  "Wiktionary, Appendix:Arabic verbs (vendored at src/content/appendix/arabic-verbs.json, CC BY-SA 4.0)";
+export const WRIGHT = "W. Wright, A Grammar of the Arabic Language, vol. I, paradigms of the triliteral verb";
 
 export const PARADIGM_FIXTURES: ParadigmFixture[] = [
   {

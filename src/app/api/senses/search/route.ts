@@ -11,6 +11,8 @@ import { requireAdminApi } from "~/server/auth/guard";
 import { getSensesByIds, searchSenses } from "~/server/db/repository/sense";
 import { languageOptions } from "~/server/db/schema";
 
+const SENSE_SEARCH_MAX_QUERY_LENGTH = 100;
+
 const parseIdList = (value: string): number[] => {
   const ids = value
     .split(",")
@@ -21,7 +23,7 @@ const parseIdList = (value: string): number[] => {
 };
 
 const searchQuerySchema = z.object({
-  query: z.string().trim().default(""),
+  query: z.string().trim().max(SENSE_SEARCH_MAX_QUERY_LENGTH).default(""),
   language: z.enum(languageOptions).optional(),
   page: z.coerce.number().int().positive().catch(1),
   limit: z.coerce.number().int().positive().max(SENSE_SEARCH_MAX_LIMIT).catch(SENSE_SEARCH_DEFAULT_LIMIT),

@@ -1,10 +1,24 @@
+import type { AlternativeFormsByCell, AlternativeNounsByKind } from "~/lib/alternative-forms";
 import { db } from "~/server/db";
 import { morphPattern } from "~/server/db/schema";
+import { type EntryAlternatives, getEntryAlternatives } from "./alternatives";
 import { countEntriesWithRoot, entryMorphPatternSummaryColumns, senseWithTranslationsAndRelations } from "./shared";
 
-export const getLexicalEntryByNormalizedText = async (normalizedText: string) => {
+const withAlternatives = (
+  alternatives: EntryAlternatives | undefined,
+): {
+  alternatives?: AlternativeFormsByCell;
+  passiveAlternatives?: AlternativeFormsByCell;
+  alternativeNouns?: AlternativeNounsByKind;
+} => ({
+  ...(alternatives?.forms ? { alternatives: alternatives.forms } : {}),
+  ...(alternatives?.passiveForms ? { passiveAlternatives: alternatives.passiveForms } : {}),
+  ...(alternatives?.nouns ? { alternativeNouns: alternatives.nouns } : {}),
+});
+
+export const getLexicalEntryBySlug = async (slug: string) => {
   const entries = await db.query.lexicalEntry.findMany({
-    where: { normalizedText, isVerified: true },
+    where: { slug, isVerified: true },
     columns: { searchVector: false },
     with: {
       morphPattern: { columns: entryMorphPatternSummaryColumns },
@@ -31,18 +45,27 @@ export const getLexicalEntryByNormalizedText = async (normalizedText: string) =>
     return null;
   }
 
+  const [rootCount, alternatives] = await Promise.all([
+    countEntriesWithRoot(first.root),
+    getEntryAlternatives(entries.filter((entry) => entry.morphPatternId !== null).map((entry) => entry.id)),
+  ]);
+
   return {
+    slug: first.slug,
     language: first.language,
     rootInfo: {
       arabic: first.root,
       latin: first.latinRoot,
-      count: await countEntriesWithRoot(first.root),
+      count: rootCount,
     },
-    entries,
+    entries: entries.map((entry) => ({ ...entry, ...withAlternatives(alternatives.get(entry.id)) })),
   };
 };
 
-export type EntryPageData = NonNullable<Awaited<ReturnType<typeof getLexicalEntryByNormalizedText>>>;
-export type EntryPageEntry = EntryPageData["entries"][number];
+export type EntryPageData = NonNullable<Awaited<ReturnType<typeof getLexicalEntryBySlug>>>;
+type EntryPageRow = EntryPageData["entries"][number];
+export type EntryPageEntry = Omit<EntryPageRow, "morphPattern"> & {
+  morphPattern: { formNumber: number; radicalCount?: number; description: string } | null;
+};
 export type EntryPageSense = EntryPageEntry["senses"][number];
 export type EntryRootInfo = EntryPageData["rootInfo"];

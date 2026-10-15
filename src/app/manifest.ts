@@ -6,16 +6,16 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     name: "Tasrif",
     short_name: "Tasrif",
-    lang: "en-US",
+    lang: "en",
     display_override: ["minimal-ui"],
     display: "standalone",
-    theme_color: "#fff",
+    theme_color: "#1c1917",
     background_color: "#fff",
     description: "Arabic morphological engine and English–Arabic dictionary",
     icons: [
       {
         src: "/favicon.ico",
-        sizes: "16x16",
+        sizes: "16x16 32x32",
         type: "image/x-icon",
         purpose: "any",
       },
@@ -42,6 +42,18 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
+      },
+      {
+        src: "/maskable-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/maskable-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
       {
         src: "/apple-touch-icon.png",

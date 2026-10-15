@@ -1,7 +1,9 @@
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import FocusFirstInvalidField from "~/components/ui/FocusFirstInvalidField";
 import SelectField from "~/components/ui/SelectField";
 import TextAreaField from "~/components/ui/TextAreaField";
 import TextField from "~/components/ui/TextField";
+import UnsavedChangesGuard from "~/components/ui/UnsavedChangesGuard";
 import { formatMorphPatternFormNumber } from "~/lib/formatting";
 import { shortVowelEnum } from "~/server/db/schema";
 import type { OverrideFormInput, OverrideFormValues } from "./schema";
@@ -19,78 +21,93 @@ const BasicFields = () => {
   const isFormOne = Number(formNumber) === 1;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <TextField
-        id="root"
-        label="Root (Arabic)"
-        lang="ar"
-        dir="rtl"
-        registration={register("root")}
-        error={errors.root?.message}
-      />
+    <>
+      <UnsavedChangesGuard />
+      <FocusFirstInvalidField />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <TextField
+          id="root"
+          label="Root (Arabic)"
+          lang="ar"
+          dir="rtl"
+          registration={register("root")}
+          error={errors.root?.message}
+        />
 
-      <Controller
-        name="formNumber"
-        control={control}
-        render={({ field }) => (
-          <SelectField
-            id="formNumber"
-            label="Form"
-            error={errors.formNumber?.message}
-            registration={{
-              ...field,
-              value: field.value ?? "",
-              onChange: (e) => {
-                const next = Number(e.target.value);
-                field.onChange(next);
-                if (next !== 1) {
-                  setValue("perfectVowel", null);
-                  setValue("imperfectVowel", null);
-                }
-              },
-            }}
-          >
-            {FORM_NUMBERS.map((n) => (
-              <option key={n} value={n}>
-                Form {formatMorphPatternFormNumber(n)}
-              </option>
-            ))}
-          </SelectField>
-        )}
-      />
-
-      {(["perfectVowel", "imperfectVowel"] as const).map((name) => (
         <Controller
-          key={name}
-          name={name}
+          name="formNumber"
           control={control}
           render={({ field }) => (
             <SelectField
-              id={name}
-              label={name === "perfectVowel" ? "Perfect vowel" : "Imperfect vowel"}
-              disabled={!isFormOne}
+              id="formNumber"
+              label="Form"
+              error={errors.formNumber?.message}
               registration={{
                 ...field,
-                onChange: (e) => field.onChange(e.target.value === "" ? null : e.target.value),
                 value: field.value ?? "",
+                onChange: (e) => {
+                  const next = Number(e.target.value);
+                  field.onChange(next);
+                  if (next !== 1) {
+                    setValue("perfectVowel", null);
+                    setValue("imperfectVowel", null);
+                  }
+                },
               }}
-              error={errors[name]?.message}
             >
-              <option value="">—</option>
-              {shortVowelEnum.enumValues.map((vowel) => (
-                <option key={vowel} value={vowel}>
-                  {vowel}
+              {FORM_NUMBERS.map((n) => (
+                <option key={n} value={n}>
+                  Form {formatMorphPatternFormNumber(n)}
                 </option>
               ))}
             </SelectField>
           )}
         />
-      ))}
 
-      <div className="sm:col-span-2">
-        <TextAreaField id="note" label="Note" registration={register("note")} error={errors.note?.message} />
+        {(["perfectVowel", "imperfectVowel"] as const).map((name) => (
+          <Controller
+            key={name}
+            name={name}
+            control={control}
+            render={({ field }) => (
+              <SelectField
+                id={name}
+                label={name === "perfectVowel" ? "Perfect vowel" : "Imperfect vowel"}
+                disabled={!isFormOne}
+                registration={{
+                  ...field,
+                  onChange: (e) => field.onChange(e.target.value === "" ? null : e.target.value),
+                  value: field.value ?? "",
+                }}
+                error={errors[name]?.message}
+              >
+                <option value="">—</option>
+                {shortVowelEnum.enumValues.map((vowel) => (
+                  <option key={vowel} value={vowel}>
+                    {vowel}
+                  </option>
+                ))}
+              </SelectField>
+            )}
+          />
+        ))}
+
+        <div className="sm:col-span-2">
+          <TextField
+            id="variant"
+            label="Variant (optional)"
+            hint="Leave empty for the default pattern of this root, form and vowels. A name such as interrogate adds a second choice for the same root and form to the entry form."
+            autoComplete="off"
+            registration={register("variant")}
+            error={errors.variant?.message}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <TextAreaField id="note" label="Note" registration={register("note")} error={errors.note?.message} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

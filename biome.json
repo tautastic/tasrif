@@ -3,6 +3,8 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
+      "./e2e/**",
+      "!**/.artifacts",
       "./src/**",
       "./tests/**",
       "./biome.json",
@@ -11,6 +13,7 @@
       "./drizzle.config.ts",
       "./next.config.ts",
       "./package.json",
+      "./playwright.config.ts",
       "./postcss.config.mjs",
       "./tsconfig.json",
       "./web.Dockerfile"
@@ -19,7 +22,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "a11y": {
         "useMediaCaption": "off"
       },
@@ -41,6 +44,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["./e2e/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noEmptyPattern": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,

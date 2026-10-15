@@ -1,5 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { integer, pgTable, serial, smallint, text, unique, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, smallint, text, unique, varchar } from "drizzle-orm/pg-core";
 import { sense } from "~/server/db/schema/sense";
 
 export const translationLink = pgTable(
@@ -16,7 +16,10 @@ export const translationLink = pgTable(
     domain: varchar("domain", { length: 50 }),
     note: text("note"),
   },
-  (table) => [unique("unique_translation").on(table.enSenseId, table.arSenseId)],
+  (table) => [
+    unique("unique_translation").on(table.enSenseId, table.arSenseId),
+    index("idx_translation_link_ar_sense_id").on(table.arSenseId),
+  ],
 );
 
 export type TranslationLinkSelect = InferSelectModel<typeof translationLink>;

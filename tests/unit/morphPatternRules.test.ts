@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { morphPatternRulesSchema } from "../../src/lib/validation/morphPatternRules.ts";
+import {
+  morphPatternRulesSchema,
+  rulesRadicalCount,
+  ruleTemplates,
+  usesFourthRadical,
+} from "../../src/lib/validation/morphPatternRules.ts";
 
 const FORM_I_A_U_RULES = {
   masdar: "{1}َ{2}ْ{3}",
@@ -55,9 +60,36 @@ test("rejects an unknown top-level key", () => {
   assert.equal(result.success, false);
 });
 
-test("rejects a placeholder outside {1} {2} {3}", () => {
-  const result = morphPatternRulesSchema.safeParse({ perfect: "{1}َ{4}َ{3}" });
+test("rejects a placeholder outside {1} {2} {3} {4}", () => {
+  const result = morphPatternRulesSchema.safeParse({ perfect: "{1}َ{5}َ{3}" });
   assert.equal(result.success, false);
+});
+
+test("accepts the fourth placeholder in a verbal noun, a string mood and a per-person mood", () => {
+  assert.equal(morphPatternRulesSchema.safeParse({ masdar: "{1}َ{2}ْ{3}َ{4}َة", perfect: "{1}َ{2}ْ{3}َ{4}" }).success, true);
+  assert.equal(
+    morphPatternRulesSchema.safeParse({
+      perfect: { ...HOLLOW_WAW_PERFECT, first_person_singular: "{1}{2}{3}{4}ْتُ" },
+    }).success,
+    true,
+  );
+});
+
+test("the radical count of a rule set is four exactly when some template uses the fourth radical", () => {
+  assert.equal(rulesRadicalCount(FORM_I_A_U_RULES), 3);
+  assert.equal(rulesRadicalCount({ perfect: "{1}َ{2}َ{3}" }), 3);
+  assert.equal(rulesRadicalCount({ masdar: "{1}َ{2}ْ{3}َ{4}َة" }), 4);
+  assert.equal(rulesRadicalCount({ imperative: { ...IMPERATIVE_5, second_person_dual: "{4}" } }), 4);
+  assert.equal(usesFourthRadical({}), false);
+});
+
+test("ruleTemplates lists every string and per-person template with its path", () => {
+  const found = ruleTemplates({ masdar: "m", imperative: IMPERATIVE_5, imperfect_stem: "s" });
+  assert.deepEqual(found, [
+    { path: ["masdar"], template: "m" },
+    ...Object.entries(IMPERATIVE_5).map(([person, template]) => ({ path: ["imperative", person], template })),
+    { path: ["imperfect_stem"], template: "s" },
+  ]);
 });
 
 test("rejects a multi-digit placeholder", () => {
@@ -101,4 +133,77 @@ test("rejects an empty rules object — no mood or stem to ever generate a parad
 test("accepts imperfect_stem alone without any explicit imperfect mood", () => {
   const result = morphPatternRulesSchema.safeParse({ perfect: "{1}َ{2}َ{3}", imperfect_stem: "{1}ْ{2}ُ{3}" });
   assert.equal(result.success, true);
+});
+
+const PASSIVE_FORM_I_RULES = {
+  ...FORM_I_A_U_RULES,
+  passive_perfect: "{1}ُ{2}ِ{3}",
+  passive_imperfect_stem: "{1}ْ{2}َ{3}",
+};
+
+test("accepts the passive perfect and passive imperfect stem next to the active keys", () => {
+  assert.equal(morphPatternRulesSchema.safeParse(PASSIVE_FORM_I_RULES).success, true);
+});
+
+test("accepts a per-person passive perfect and per-person passive imperfect moods", () => {
+  const result = morphPatternRulesSchema.safeParse({
+    perfect: "{1}َ{2}َ{3}",
+    passive_perfect: HOLLOW_WAW_PERFECT,
+    passive_imperfect_indicative: HOLLOW_WAW_PERFECT,
+    passive_imperfect_subjunctive: HOLLOW_WAW_PERFECT,
+    passive_imperfect_jussive: HOLLOW_WAW_PERFECT,
+  });
+  assert.equal(result.success, true);
+});
+
+test("rejects a passive imperative: the jussive is used instead (Wright 101)", () => {
+  const result = morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_imperative: "{1}ُ{2}َ{3}" });
+  assert.equal(result.success, false);
+});
+
+test("rejects passive_imperfect_stem combined with an explicit passive imperfect mood", () => {
+  const result = morphPatternRulesSchema.safeParse({
+    ...PASSIVE_FORM_I_RULES,
+    passive_imperfect_jussive: "{1}ُ{2}ُ{3}",
+  });
+  assert.equal(result.success, false);
+});
+
+test("applies the placeholder rules to the passive templates", () => {
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_perfect: "{1}ُ{5}ِ{3}" }).success,
+    false,
+  );
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_perfect: "{1}ُ{2}ِ{3" }).success,
+    false,
+  );
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_imperfect_stem: "\\{1}ْ{2}َ{3}" }).success,
+    false,
+  );
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_perfect: "ع".repeat(201) }).success,
+    false,
+  );
+});
+
+test("rejects a passive perfect object that uses the 5 imperative persons or misses a person", () => {
+  const { third_person_masculine_singular: _drop, ...incomplete } = HOLLOW_WAW_PERFECT;
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_perfect: incomplete }).success,
+    false,
+  );
+  assert.equal(
+    morphPatternRulesSchema.safeParse({ ...PASSIVE_FORM_I_RULES, passive_perfect: IMPERATIVE_5 }).success,
+    false,
+  );
+});
+
+test("rejects rules that carry only passive keys: there is no active paradigm to attach them to", () => {
+  const result = morphPatternRulesSchema.safeParse({
+    passive_perfect: "{1}ُ{2}ِ{3}",
+    passive_imperfect_stem: "{1}ْ{2}َ{3}",
+  });
+  assert.equal(result.success, false);
 });

@@ -25,23 +25,30 @@ const buildHref = (basePath: string, page: number, extraParams: Record<string, s
 
 const StepLink = ({
   label,
+  rel,
   page,
   basePath,
   extraParams,
   disabled,
 }: {
   label: string;
+  rel: "prev" | "next";
   page: number;
   basePath: string;
   extraParams: Record<string, string>;
   disabled: boolean;
 }) =>
   disabled ? (
-    <span className={`${linkClassName} opacity-50`} aria-disabled="true">
+    <span className={`${linkClassName} text-gray-600 bg-gray-100`} aria-disabled="true">
       {label}
     </span>
   ) : (
-    <Link href={buildHref(basePath, page, extraParams)} className={`${linkClassName} hover:bg-gray-50`}>
+    <Link
+      href={buildHref(basePath, page, extraParams)}
+      rel={rel}
+      aria-label={`${label} page`}
+      className={`${linkClassName} hover:bg-gray-50`}
+    >
       {label}
     </Link>
   );
@@ -55,6 +62,7 @@ const Pagination = ({ currentPage, totalPages, basePath, extraParams = {} }: Pag
     <nav className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 mt-6" aria-label="Pagination">
       <StepLink
         label="Previous"
+        rel="prev"
         page={currentPage - 1}
         basePath={basePath}
         extraParams={extraParams}
@@ -66,6 +74,7 @@ const Pagination = ({ currentPage, totalPages, basePath, extraParams = {} }: Pag
           key={page}
           href={buildHref(basePath, page, extraParams)}
           className={`${linkClassName} ${page === currentPage ? "bg-blue-600 text-white" : "hover:bg-gray-50"}`}
+          aria-label={`Page ${page}`}
           aria-current={page === currentPage ? "page" : undefined}
         >
           {page}
@@ -74,6 +83,7 @@ const Pagination = ({ currentPage, totalPages, basePath, extraParams = {} }: Pag
 
       <StepLink
         label="Next"
+        rel="next"
         page={currentPage + 1}
         basePath={basePath}
         extraParams={extraParams}

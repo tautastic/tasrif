@@ -1,28 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 
-export const useIsAdmin = (): boolean => {
-  const [isAdmin, setIsAdmin] = useState(false);
+export interface AdminStatus {
+  isAdmin: boolean | null;
+  refresh: () => Promise<void>;
+}
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/status")
-      .then((response) => response.json())
-      .then((data: { isAdmin: boolean }) => {
-        if (!cancelled) {
-          setIsAdmin(data.isAdmin);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsAdmin(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+export const AdminStatusContext = createContext<AdminStatus>({ isAdmin: null, refresh: () => Promise.resolve() });
 
-  return isAdmin;
-};
+export const useAdminStatus = (): AdminStatus => useContext(AdminStatusContext);
+
+export const useIsAdmin = (): boolean => useAdminStatus().isAdmin === true;

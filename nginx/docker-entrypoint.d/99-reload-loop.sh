@@ -1,9 +1,11 @@
 #!/bin/sh
 set -e
 
+interval=${NGINX_RELOAD_INTERVAL:-12h}
+
 (
   while :; do
-    sleep 12h
+    sleep "$interval"
     nginx -s reload
   done
 ) &

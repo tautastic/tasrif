@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { MorphPatternEditForm } from "~/components/admin/morph-pattern-edit-form";
 import { parseIdOrNotFound } from "~/lib/validation/params";
+import { requireAdmin } from "~/server/auth/guard";
 import { getMorphPatternById } from "~/server/db/repository/morph-pattern";
 
 export default async function EditMorphPatternPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const patternId = await parseIdOrNotFound(params);
   const pattern = await getMorphPatternById(patternId);
 
@@ -19,6 +21,7 @@ export default async function EditMorphPatternPage({ params }: { params: Promise
         pattern={{
           id: pattern.id,
           formNumber: pattern.formNumber,
+          radicalCount: pattern.radicalCount,
           vocalicTemplate: pattern.vocalicTemplate,
           description: pattern.description,
           rules: pattern.rules,
@@ -27,6 +30,7 @@ export default async function EditMorphPatternPage({ params }: { params: Promise
           radical1Kind: pattern.radical1Kind,
           radical2Kind: pattern.radical2Kind,
           radical3Kind: pattern.radical3Kind,
+          radical4Kind: pattern.radical4Kind,
           isGeminate: pattern.isGeminate,
           perfectVowel: pattern.perfectVowel,
           imperfectVowel: pattern.imperfectVowel,

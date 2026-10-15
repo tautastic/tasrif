@@ -8,6 +8,7 @@ db.sqlite
 /backups
 /.next/
 /out/
+/e2e/.artifacts/
 next-env.d.ts
 /build
 .DS_Store

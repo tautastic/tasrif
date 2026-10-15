@@ -1,0 +1,117 @@
+# Derived data of a fixed corpus, one line per entry: text, pattern code, conjugation rows, digest.
+# The digest covers masdar, both participles, search_vector and every conjugation row.
+# Built by tests/integration/derived-equivalence.test.ts; regenerate with UPDATE_GOLDENS=1 only when
+# generated output is meant to change, and say why in the commit.
+
+running quickly	-	0	e01a455166241a5ce052
+to write	-	0	ac51fb2b7412daf51d53
+أكل f1-a-a	f1-a-a	109	d960325591b02e774e27
+أكل f1-a-u	f1-a-u	109	7ecfba35a1db5352ff2f
+أكل f10	f10	109	6080eef9aeabac07aeda
+أكل f2	f2	109	c60e12ca1d2104903eb0
+أكل f4	f4	109	896938d613dda09afc37
+بدون جذر f2	f2	0	bbd86301900a510871a6
+بيع f1-a-i-hollow-ya	f1-a-i-hollow-ya	109	657f7fa8124aef8f57bf
+ثبت f8	f8	109	91e822d954e8e421aac2
+درس f8	f8	109	7179e1f39d80ac79a02b
+دعو f10-final-weak-waw	f10-final-weak-waw	109	9979e0b3f461865e8851
+دعو f4-final-weak-waw	f4-final-weak-waw	109	dacd72349e1ea478d592
+دعو f8-final-weak-waw	f8-final-weak-waw	109	311c668e77b3a7b5fff9
+ذكر f8	f8	109	c7d5b8db37e95ac985cd
+رأي f1-a-a-final-weak-hamzated-middle-hamza-elided	f1-a-a-final-weak-hamzated-middle-hamza-elided	109	f3fa6e4d5ad0f7789033
+رمي f1-a-a-final-weak	f1-a-a-final-weak	109	3cb3a3cca1893f56f15d
+رمي f10-final-weak-ya	f10-final-weak-ya	109	422f19a65374e26887c6
+رمي f4-final-weak-ya	f4-final-weak-ya	109	265a7199bcc2e2c3510b
+رمي f8-final-weak-ya	f8-final-weak-ya	109	31083997ee42adfaf60f
+رمي f8-final-weak-ya active	f8-final-weak-ya	109	690f0233d338b48fef56
+رمي f8-final-weak-ya all	f8-final-weak-ya	57	e501a02639de01e0621a
+رمي f8-final-weak-ya masdar	f8-final-weak-ya	109	fb842e789603701916a8
+رمي f8-final-weak-ya no-passive	f8-final-weak-ya	57	3c0c3b275450f48fd4c1
+رمي f8-final-weak-ya passive	f8-final-weak-ya	109	593efda9aec057ce64e7
+زهر f8	f8	109	4355ba58bc7f0308137d
+سأل f1-a-a	f1-a-a	109	780afed893c738cc16bb
+سأل f1-a-u	f1-a-u	109	5749fcfc91b8bdf38899
+سأل f10	f10	109	7283c7be5a5924cd31d9
+سأل f2	f2	109	2f82d5160147c9ea7304
+سأل f4	f4	109	c16c8d990e44cca9de34
+سكن f1-a-a	f1-a-a	109	07b685a1a2a10310e811
+سكن f1-a-i	f1-a-i	109	9e2e20c021856da51748
+سكن f1-a-u	f1-a-u	109	1b1215d4d4a85ebcc74d
+سكن f1-i-a	f1-i-a	109	87f94233a9e0e3eafd0f
+سكن f1-i-i	f1-i-i	109	06e5906532f709493d00
+سكن f1-u-u	f1-u-u	57	4baa1ecc59ca9a7cedd1
+سكن f10	f10	109	db02eee5033aab50583f
+سكن f2	f2	109	f24214ab02cb7ad53854
+سكن f3	f3	109	3094df4f5ba7d5a94d92
+سكن f4	f4	109	6102ec5368e702745651
+سكن f5	f5	109	d5726be9460bf2ca1dd7
+سكن f6	f6	109	ff48d35d4e1b17c84ae0
+سكن f7	f7	57	25be67f313e0b460c4c6
+سكن f8	f8	109	a3166810c2aa090fc213
+سكن f9	f9	57	9c24bc8d6dd700251d49
+صبر f8	f8	109	be9b8fbc5ec7df252188
+ضرب f1-a-a	f1-a-a	109	404c5ea5ec151346a7c6
+ضرب f1-a-i	f1-a-i	109	2fbb3f69f16f05c88079
+ضرب f1-a-u	f1-a-u	109	4ab7ff8f15845847b419
+ضرب f1-i-a	f1-i-a	109	97bfdcce557370d036a6
+ضرب f1-i-i	f1-i-i	109	63332790e8d5c80bde3a
+ضرب f1-u-u	f1-u-u	57	be95b2d1ef0771fcc6df
+ضرب f10	f10	109	714865d5d031fa2bb355
+ضرب f2	f2	109	df0e1a122e45a4364571
+ضرب f3	f3	109	86abd6936d9c93791724
+ضرب f4	f4	109	6c28fbc7b439f58e30dc
+ضرب f5	f5	109	601f5381515bec18e35b
+ضرب f6	f6	109	4af677deee421ce93e55
+ضرب f7	f7	57	ccf56e2d92750c100a47
+ضرب f8	f8	109	8558dd3c6ce18603021b
+ضرب f9	f9	57	f95370ee01d49062749b
+طلب f8	f8	109	e3348089f19b6a6e3a38
+ظلم f8	f8	109	e46c314974ab3404b9ce
+قرأ f1-a-a	f1-a-a	109	76d27a9e381086a96d98
+قرأ f1-a-u	f1-a-u	109	f6d4d63bd99910416396
+قرأ f10	f10	109	fcd4a080432dfe341c9b
+قرأ f2	f2	109	5c1965c30a5d64d0b0c3
+قرأ f4	f4	109	40263bc7f7c2a57cad16
+قول f1-a-u-hollow-waw	f1-a-u-hollow-waw	109	9725700cb6c2ac4e7794
+قول f10-hollow-waw	f10-hollow-waw	109	19d5ebae80bf98c8d886
+كتب f1-a-a	f1-a-a	109	1e6e778cbf8bfdbb15fd
+كتب f1-a-i	f1-a-i	109	d2569896734f3c5175b0
+كتب f1-a-u	f1-a-u	109	0f3dae49bd76f1e4d11b
+كتب f1-a-u active	f1-a-u	109	c790b6c944b1033ed727
+كتب f1-a-u all	f1-a-u	57	6b725a22ffcbaf3d5a69
+كتب f1-a-u masdar	f1-a-u	109	785da6fa8f75aaa8524c
+كتب f1-a-u no-passive	f1-a-u	57	65251bfc9b508f98f7e0
+كتب f1-a-u passive	f1-a-u	109	4fd27f4a89c104c3eaf1
+كتب f1-i-a	f1-i-a	109	d800c4fd627085483d6b
+كتب f1-i-i	f1-i-i	109	1104a8e74b017c7994bd
+كتب f1-u-u	f1-u-u	57	3ede577be707a9466551
+كتب f10	f10	109	2d419821333b26050f86
+كتب f2	f2	109	da87f6b2c962c901828c
+كتب f3	f3	109	4e6e63c0f9cb2df0bec0
+كتب f4	f4	109	6fbaf24dd262b4c49947
+كتب f5	f5	109	e602c783a3153f956431
+كتب f6	f6	109	c40f45959f56466f0249
+كتب f7	f7	57	0e05acfe5880980a1e74
+كتب f8	f8	109	e810df285c614fc88562
+كتب f9	f9	57	d4910bef0a9349cde9da
+كِتَاب	-	0	fa18a911222dd23b1c54
+مدد f1-a-a	f1-a-a	109	69bf21b5177c3a9321e8
+مدد f1-a-i-geminate	f1-a-i-geminate	109	602de94240792ce73e80
+مدد f1-a-u	f1-a-u	109	dfe01da4f2e0a2da3d1c
+مدد f10	f10	109	e2078db9b5e8a1e54037
+مدد f2	f2	109	d95c97f456dadb196dbc
+مدد f4	f4	109	fe1ff93993629f566773
+نأي f1-a-a-final-weak-hamzated-middle	f1-a-a-final-weak-hamzated-middle	109	01a6b36214017920e3e7
+وصل f8	f8	109	2ad0fb481b17c8658e42
+وعد f1-a-a	f1-a-a	109	257d0a821decf272cfda
+وعد f1-a-u	f1-a-u	109	98ce5f0e1c7f5a4d6224
+وعد f10	f10	109	0409ad50c7b702f4545e
+وعد f2	f2	109	b7e1a92c4259f2afb5b5
+وعد f4	f4	109	14f690ccd551793bc9ef
+يسر f1-a-a	f1-a-a	109	58814927ac2e8abbff47
+يسر f1-a-u	f1-a-u	109	21dc5cfe2f6ead5c25b8
+يسر f10	f10	109	234aa4bd70db9440387d
+يسر f2	f2	109	53a94dd3172e8be81236
+يسر f4	f4	109	2d5f051b6649114676fb
+
+total 8e92d1734a62559b246d4e993aff240de395b91ba368f13f3a29dc8128a3bce9

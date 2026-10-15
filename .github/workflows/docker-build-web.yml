@@ -1,22 +1,13 @@
 name: Build and push nextjs image
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - src/**
-      - public/**
-      - web.Dockerfile
-      - .dockerignore
-      - package.json
-      - pnpm-lock.yaml
-      - pnpm-workspace.yaml
-      - next.config.js
-      - postcss.config.mjs
-      - tsconfig.json
-      - drizzle.config.ts
-      - .github/workflows/docker-build-web.yml
   workflow_dispatch: {}
 
 env:
@@ -25,14 +16,61 @@ env:
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  group: publish-web-image
+  cancel-in-progress: false
 
 jobs:
-  build-and-push:
+  gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+
+    steps:
+      - name: Require a successful CI run for the commit
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = workflow_run ]; then
+            if [ "$RUN_CONCLUSION" != success ] || [ "$RUN_EVENT" != push ]; then
+              echo "CI did not succeed on a push to main for $RUN_SHA" >&2
+              exit 1
+            fi
+            sha=$RUN_SHA
+          else
+            sha=$GITHUB_SHA
+            passed=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&status=success&event=push" --jq '.total_count')
+            if [ "$passed" -lt 1 ]; then
+              echo "No successful CI run on a push for $sha" >&2
+              exit 1
+            fi
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,7 +89,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=sha,format=long
+            type=raw,value=sha-${{ needs.gate.outputs.sha }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -61,5 +99,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: SITE_URL=${{ vars.SITE_URL || 'https://tasrif.xyz' }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web

@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { QUAD_SWEEP_SHAPES } from "../fixtures/quad-sweep-roots.ts";
 import { ROOT_SAMPLES, representativeRootFor } from "../fixtures/roots.ts";
 import { describeArabic, IMPERATIVE_PERSONS, listPatterns, openDatabase, PERSONS } from "../harness";
 
 const db = await openDatabase();
 
-const ROOTS = [...new Set(ROOT_SAMPLES.map((sample) => sample.root))];
+const QUAD_REPRESENTATIVE_ROOT = "دحرج";
+
+const ROOTS = [
+  ...new Set([...ROOT_SAMPLES.map((sample) => sample.root), ...QUAD_SWEEP_SHAPES.flatMap((shape) => shape.roots)]),
+];
 const ROOT_ARRAY = `{${ROOTS.join(",")}}`;
 
 const CROSS_PRODUCT = `
@@ -14,7 +19,7 @@ const CROSS_PRODUCT = `
          SELECT mp.form_number, mp.description, r.root, cr.mood::text AS mood,
                 kv.key AS person, kv.value AS form
          FROM morph_pattern mp
-         CROSS JOIN roots r,
+         JOIN roots r ON mp.radical_count = char_length(r.root),
               LATERAL generate_conjugation_rows(r.root, mp.rules, mp.form_number, '{}'::jsonb, mp.no_affix) cr,
               LATERAL jsonb_each_text(cr.person_forms) kv
        )`;
@@ -105,14 +110,23 @@ test("generated forms contain only Arabic characters", async () => {
 
 test("every pattern generates a complete paradigm for a root of its own shape", async () => {
   const patterns = await listPatterns(db);
+  const radicalCounts = new Map(
+    (await db.rows<{ id: number; radical_count: number }>("SELECT id, radical_count FROM morph_pattern")).map((row) => [
+      row.id,
+      row.radical_count,
+    ]),
+  );
   const pairs = patterns.map((pattern) => ({
     id: pattern.id,
-    root: representativeRootFor(
-      pattern.radical1_kind,
-      pattern.radical2_kind,
-      pattern.radical3_kind,
-      pattern.is_geminate,
-    ),
+    root:
+      radicalCounts.get(pattern.id) === 4
+        ? QUAD_REPRESENTATIVE_ROOT
+        : representativeRootFor(
+            pattern.radical1_kind,
+            pattern.radical2_kind,
+            pattern.radical3_kind,
+            pattern.is_geminate,
+          ),
   }));
 
   const counts = await db.rows<{ id: number; form_number: number; description: string; mood: string; cells: number }>(

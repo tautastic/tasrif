@@ -4,11 +4,17 @@ import { type LanguageType, lexicalEntry, morphPattern } from "~/server/db/schem
 
 const DEFAULT_LIMIT = 10;
 
+const shuffle = <T>(items: readonly T[]): T[] =>
+  items
+    .map((item) => ({ item, order: Math.random() }))
+    .sort((a, b) => a.order - b.order)
+    .map(({ item }) => item);
+
 export const getLexicalEntriesByRoot = async ({ root, page, limit }: { root: string; page: number; limit: number }) => {
   const [items, total] = await Promise.all([
     db.query.lexicalEntry.findMany({
       where: { root, isVerified: true },
-      columns: { id: true, normalizedText: true, text: true },
+      columns: { id: true, slug: true, text: true },
       orderBy: (entry) => [asc(entry.id)],
       limit,
       offset: (page - 1) * limit,
@@ -34,18 +40,32 @@ export const getRandomLexicalEntries = async (limit: number = DEFAULT_LIMIT) => 
     return sampled;
   }
 
-  return db.query.lexicalEntry.findMany({
-    where: { isVerified: true },
-    orderBy: () => [sql`RANDOM()`],
+  const startId = sql`(SELECT floor(random() * (max(id) + 1))::int FROM lexical_entry)`;
+  const fromStartId = await db.query.lexicalEntry.findMany({
+    where: { isVerified: true, RAW: (entry) => sql`${entry.id} >= ${startId}` },
+    orderBy: (entry) => [asc(entry.id)],
     columns: { searchVector: false },
     limit,
   });
+
+  if (fromStartId.length >= limit) {
+    return shuffle(fromStartId);
+  }
+
+  const fromBeginning = await db.query.lexicalEntry.findMany({
+    where: { isVerified: true },
+    orderBy: (entry) => [asc(entry.id)],
+    columns: { searchVector: false },
+    limit,
+  });
+  const taken = new Set(fromStartId.map((entry) => entry.id));
+  return shuffle([...fromStartId, ...fromBeginning.filter((entry) => !taken.has(entry.id))].slice(0, limit));
 };
 
 export const getRecentLexicalEntries = (limit: number = DEFAULT_LIMIT) => {
   return db.query.lexicalEntry.findMany({
     where: { isVerified: true },
-    orderBy: (entry) => [desc(entry.createdAt)],
+    orderBy: (entry) => [desc(entry.createdAt), desc(entry.id)],
     columns: { searchVector: false },
     limit,
   });
@@ -63,7 +83,7 @@ export const getLexicalEntriesByLanguage = async ({
   const [items, total] = await Promise.all([
     db.query.lexicalEntry.findMany({
       where: { language, isVerified: true },
-      orderBy: (entry) => [desc(entry.createdAt)],
+      orderBy: (entry) => [desc(entry.createdAt), desc(entry.id)],
       columns: { searchVector: false },
       limit,
       offset: (page - 1) * limit,
@@ -76,16 +96,18 @@ export const getLexicalEntriesByLanguage = async ({
 
 export const getLexicalEntriesByFormNumber = async ({
   formNumber,
+  radicalCount = 3,
   page,
   limit,
 }: {
   formNumber: number;
+  radicalCount?: number;
   page: number;
   limit: number;
 }) => {
   const [items, total] = await Promise.all([
     db.query.lexicalEntry.findMany({
-      where: { morphPattern: { formNumber }, isVerified: true },
+      where: { morphPattern: { formNumber, radicalCount }, isVerified: true },
       orderBy: (entry) => [asc(entry.id)],
       limit,
       offset: (page - 1) * limit,
@@ -94,7 +116,8 @@ export const getLexicalEntriesByFormNumber = async ({
     db.$count(
       lexicalEntry,
       sql`${lexicalEntry.morphPatternId} IN (
-        SELECT ${morphPattern.id} FROM ${morphPattern} WHERE ${morphPattern.formNumber} = ${formNumber}
+        SELECT ${morphPattern.id} FROM ${morphPattern}
+        WHERE ${morphPattern.formNumber} = ${formNumber} AND ${morphPattern.radicalCount} = ${radicalCount}
         ) AND ${lexicalEntry.isVerified} = true`,
     ),
   ]);

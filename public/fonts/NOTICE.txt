@@ -1,0 +1,5 @@
+noto-naskh-arabic-v44-arabic.woff2
+
+Noto Naskh Arabic (Arabic subset, version 2.021), Copyright 2022 The Noto Project Authors (https://github.com/notofonts/arabic).
+Licensed under the SIL Open Font License, Version 1.1. The complete license text is in OFL.txt in this directory
+and at https://openfontlicense.org.

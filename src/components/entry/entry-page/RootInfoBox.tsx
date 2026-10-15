@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatRoot } from "~/lib/formatting";
+import { formatCount, formatRoot, rootPath } from "~/lib/formatting";
 import type { EntryRootInfo } from "~/server/db/repository/lexical-entry";
 
 interface RootInfoBoxProps {
@@ -16,11 +16,11 @@ const RootInfoBox = ({ rootInfo }: RootInfoBoxProps) => {
       <table className="w-full max-w-80 border-collapse border border-[#b4b4b4] inline-table text-base">
         <tbody>
           <tr>
-            <th className="border border-[#b4b4b4] px-3 py-1 font-medium bg-[#ddefd3] text-center">
+            <th scope="col" className="border border-[#b4b4b4] px-3 py-1 font-medium bg-[#ddefd3] text-center">
               <a
-                className="text-blue-600 hover:underline"
+                className="text-blue-800 hover:underline"
                 href="https://en.wikipedia.org/wiki/Semitic_root"
-                title="w:Semitic root"
+                title="Semitic root (Wikipedia)"
               >
                 Root
               </a>
@@ -29,7 +29,7 @@ const RootInfoBox = ({ rootInfo }: RootInfoBoxProps) => {
           <tr>
             <td className="border border-[#b4b4b4] px-3 py-1 text-center bg-[#f8fbf5]">
               <span className="mr-1" lang="ar">
-                <Link href={`/root/${rootInfo.arabic}`} className="text-blue-700 hover:underline">
+                <Link href={rootPath(rootInfo.arabic)} className="text-blue-700 hover:underline">
                   {formatRoot(rootInfo.arabic)}
                 </Link>
               </span>
@@ -38,8 +38,8 @@ const RootInfoBox = ({ rootInfo }: RootInfoBoxProps) => {
           </tr>
           <tr>
             <td className="border border-[#b4b4b4] px-3 py-1 text-center bg-[#f8fbf5]">
-              <Link href={`/root/${rootInfo.arabic}`} className="text-blue-600 hover:underline">
-                {rootInfo.count} terms
+              <Link href={rootPath(rootInfo.arabic)} className="text-blue-700 hover:underline">
+                {formatCount(rootInfo.count, "term", "terms")}
               </Link>
             </td>
           </tr>

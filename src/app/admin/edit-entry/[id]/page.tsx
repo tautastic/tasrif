@@ -4,9 +4,11 @@ import { EntryEditForm } from "~/components/admin/entry-edit-form";
 import { parseMorphologyOverrides } from "~/lib/validation/morphology";
 import { parseIdOrNotFound } from "~/lib/validation/params";
 import { findVerbFormChoice } from "~/lib/validation/verbFormChoice";
+import { requireAdmin } from "~/server/auth/guard";
 import { getLexicalEntryForEdit } from "~/server/db/repository/lexical-entry";
 
 export default async function EditEntryPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const entryId = await parseIdOrNotFound(params);
   const rawEntry = await getLexicalEntryForEdit(entryId);
 

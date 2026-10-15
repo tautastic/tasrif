@@ -4,6 +4,7 @@ import {
   assertArabicEqual,
   type Db,
   findPattern,
+  IMPERATIVE_PERSONS,
   insertEntry,
   openDatabase,
   storedParadigm,
@@ -16,14 +17,13 @@ const formII = await findPattern(db, 2, "");
 const formIII = await findPattern(db, 3, "");
 
 const conjugationCount = (scope: Db, entryId: number): Promise<string> =>
-  scope.scalar<string>("SELECT count(*)::text FROM conjugation WHERE lexical_entry_id = $1", [entryId]);
-
-const maxConjugationId = (scope: Db, entryId: number): Promise<string> =>
-  scope.scalar<string>("SELECT COALESCE(max(id), 0)::text FROM conjugation WHERE lexical_entry_id = $1", [entryId]);
+  scope.scalar<string>("SELECT count(*)::text FROM conjugation WHERE lexical_entry_id = $1 AND voice = 'active'", [
+    entryId,
+  ]);
 
 const countByMood = (scope: Db, entryId: number): Promise<{ mood: string; total: string }[]> =>
   scope.rows<{ mood: string; total: string }>(
-    "SELECT mood::text AS mood, count(*)::text AS total FROM conjugation WHERE lexical_entry_id = $1 GROUP BY 1 ORDER BY 1",
+    "SELECT mood::text AS mood, count(*)::text AS total FROM conjugation WHERE lexical_entry_id = $1 AND voice = 'active' GROUP BY 1 ORDER BY 1",
     [entryId],
   );
 
@@ -44,18 +44,47 @@ test("regenerate_derived_stems_for_entry is idempotent", async () => {
   });
 });
 
-test("regeneration replaces the conjugation rows instead of merging them", async () => {
+test("regeneration keeps unchanged conjugation rows, repairs altered ones and removes stale ones", async () => {
   await db.tx(async (tx) => {
     const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
-    const before = Number(await maxConjugationId(tx, entryId));
+    const before = await tx.rows<{ id: number; mood: string; person: string }>(
+      "SELECT id, mood::text AS mood, person::text AS person FROM conjugation WHERE lexical_entry_id = $1 ORDER BY id",
+      [entryId],
+    );
+    await tx.exec(
+      `UPDATE conjugation SET form = 'corrupted'
+       WHERE lexical_entry_id = $1 AND mood = 'perfect' AND person = 'first_person_singular'`,
+      [entryId],
+    );
+    await tx.exec(
+      `DELETE FROM conjugation
+       WHERE lexical_entry_id = $1 AND mood = 'perfect' AND person = 'third_person_masculine_singular'`,
+      [entryId],
+    );
+    await tx.exec(
+      `INSERT INTO conjugation (lexical_entry_id, voice, mood, person, form)
+       VALUES ($1, 'active', 'imperative', 'third_person_masculine_singular', 'stale')`,
+      [entryId],
+    );
 
     await regenerate(tx, entryId);
 
-    assert.ok(
-      Number(await maxConjugationId(tx, entryId)) > before,
-      "expected freshly inserted rows, which proves the DELETE ran and the unique constraint held",
-    );
     assert.equal(await conjugationCount(tx, entryId), "57");
+    const after = await tx.rows<{ id: number; mood: string; person: string }>(
+      "SELECT id, mood::text AS mood, person::text AS person FROM conjugation WHERE lexical_entry_id = $1 ORDER BY id",
+      [entryId],
+    );
+    const untouched = (row: { mood: string; person: string }) =>
+      !(row.mood === "perfect" && row.person === "third_person_masculine_singular");
+    assert.deepEqual(
+      after.filter(untouched).map((row) => row.id),
+      before.filter(untouched).map((row) => row.id),
+      "rows whose form did not need to change keep their ids",
+    );
+    const paradigm = await storedParadigm(tx, entryId);
+    assertArabicEqual(paradigm.perfect?.first_person_singular ?? null, "كَتَبْتُ", "altered row repaired");
+    assertArabicEqual(paradigm.perfect?.third_person_masculine_singular ?? null, "كَتَبَ", "deleted row restored");
+    assert.equal(paradigm.imperative?.third_person_masculine_singular, undefined, "stale row removed");
   });
 });
 
@@ -126,12 +155,23 @@ test("changing only no_affix propagates to the stored conjugations", async () =>
     await tx.exec("UPDATE morph_pattern SET no_affix = true WHERE id = $1", [soundFormI.id]);
     assert.equal(
       await conjugationCount(tx, entryId),
-      "65",
+      "57",
       "trg_refresh_derived_stems_after_pattern_update fires on UPDATE OF rules, form_number, no_affix",
+    );
+    const paradigm = await storedParadigm(tx, entryId);
+    assertArabicEqual(
+      paradigm.perfect?.first_person_singular ?? null,
+      "كَتَب",
+      "no_affix repeats the bare stem for every person",
+    );
+    assert.deepEqual(
+      Object.keys(paradigm.imperative ?? {}).sort(),
+      [...IMPERATIVE_PERSONS].sort(),
+      "a bare imperative template stays confined to the second persons",
     );
 
     await regenerate(tx, entryId);
-    assert.equal(await conjugationCount(tx, entryId), "65", "an explicit regeneration agrees with the trigger");
+    assert.equal(await conjugationCount(tx, entryId), "57", "an explicit regeneration agrees with the trigger");
   });
 });
 
@@ -147,10 +187,11 @@ test("a pattern whose rules are a JSON null clears the entry instead of raising"
   });
 });
 
-test("regenerating an entry whose root became too short clears its derived data", async () => {
+test("regenerating a legacy entry whose root is too short clears its derived data", async () => {
   await db.tx(async (tx) => {
     const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
 
+    await tx.exec("ALTER TABLE lexical_entry DISABLE TRIGGER trg_normalize_lexical_entry_root");
     await tx.exec("UPDATE lexical_entry SET root = 'كت' WHERE id = $1", [entryId]);
     await regenerate(tx, entryId);
 
@@ -159,5 +200,31 @@ test("regenerating an entry whose root became too short clears its derived data"
     assert.equal(stems.active_participle, null);
     assert.equal(stems.passive_participle, null);
     assert.equal(await conjugationCount(tx, entryId), "0");
+  });
+});
+
+test("regenerating a legacy entry with a four-letter root clears its derived data instead of truncating the root", async () => {
+  await db.tx(async (tx) => {
+    const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
+
+    await tx.exec("ALTER TABLE lexical_entry DISABLE TRIGGER trg_normalize_lexical_entry_root");
+    await tx.exec("UPDATE lexical_entry SET root = 'ترجم' WHERE id = $1", [entryId]);
+    await regenerate(tx, entryId);
+
+    assert.equal((await storedStems(tx, entryId)).masdar, null);
+    assert.equal(await conjugationCount(tx, entryId), "0");
+  });
+});
+
+test("regenerating a legacy entry whose stored root still carries noise generates from the cleaned root", async () => {
+  await db.tx(async (tx) => {
+    const entryId = await insertEntry(tx, { text: "كَتَبَ", root: "كتب", morphPatternId: soundFormI.id });
+
+    await tx.exec("ALTER TABLE lexical_entry DISABLE TRIGGER trg_normalize_lexical_entry_root");
+    await tx.exec("UPDATE lexical_entry SET root = 'ك ت ب' WHERE id = $1", [entryId]);
+    await regenerate(tx, entryId);
+
+    assertArabicEqual((await storedStems(tx, entryId)).masdar, "كَتْب", "masdar from the cleaned root");
+    assert.equal(await conjugationCount(tx, entryId), "57");
   });
 });

@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminPassword, setSessionCookie } from "~/server/auth";
+import { getClientIp } from "~/server/auth/client-ip";
 import { getRateLimitStatus, registerFailedAttempt, registerSuccessfulAttempt } from "~/server/auth/rate-limit";
 
 const loginBodySchema = z.object({ password: z.string().min(1) });
 
-const getClientIp = (request: Request): string => {
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",").at(0)?.trim();
-  if (forwardedFor) {
-    return forwardedFor;
-  }
-  return request.headers.get("x-real-ip") ?? "unknown";
-};
-
 export async function POST(request: Request) {
-  const clientIp = getClientIp(request);
+  const clientIp = getClientIp(request.headers);
   const rateLimitStatus = getRateLimitStatus(clientIp);
 
   if (rateLimitStatus.limited) {

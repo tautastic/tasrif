@@ -6,6 +6,7 @@ import Pagination from "~/components/Pagination";
 import { formatMorphPatternFormNumber, formatPartOfSpeechType, formatRoot } from "~/lib/formatting";
 import { ENTRY_LIST_PAGE_SIZE, parsePageParam } from "~/lib/pagination";
 import { deleteLexicalEntriesAction } from "~/server/actions/lexical-entry";
+import { requireAdmin } from "~/server/auth/guard";
 import {
   AdminEntryFilterOptions,
   type AdminEntryFilterValue,
@@ -29,6 +30,7 @@ export default async function AdminEntriesPage({
 }: {
   searchParams: Promise<{ page?: string; filter?: string }>;
 }) {
+  await requireAdmin();
   const { page: pageParam, filter: filterParam } = await searchParams;
   const filter = isAdminEntryFilter(filterParam) ? filterParam : "All";
   const page = parsePageParam(pageParam);
@@ -53,6 +55,7 @@ export default async function AdminEntriesPage({
 
           return {
             key: entry.id,
+            label: entry.text,
             cells: [
               <div key="text">
                 <Link
@@ -89,7 +92,9 @@ export default async function AdminEntriesPage({
                 "—"
               ),
               <span key="form" className="text-xs text-gray-600">
-                {entry.morphPattern ? formatMorphPatternFormNumber(entry.morphPattern.formNumber) : "—"}
+                {entry.morphPattern
+                  ? formatMorphPatternFormNumber(entry.morphPattern.formNumber, entry.morphPattern.radicalCount)
+                  : "—"}
               </span>,
               entry.isVerified ? (
                 <AdminBadge key="status" color="emerald">

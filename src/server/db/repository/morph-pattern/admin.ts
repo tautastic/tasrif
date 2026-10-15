@@ -5,6 +5,7 @@ import {
   lexicalPatternOverride,
   type MorphPatternInsert,
   morphPattern,
+  morphPatternResolution,
   type RadicalKind,
   type ShortVowel,
 } from "~/server/db/schema";
@@ -16,11 +17,13 @@ export type MorphPatternLexicalFilterValue = (typeof MorphPatternLexicalFilterOp
 
 export const listMorphPatternsForAdmin = async ({
   formNumber,
+  radicalCount,
   lexicalFilter,
   page,
   limit,
 }: {
   formNumber?: number;
+  radicalCount?: number;
   lexicalFilter: MorphPatternLexicalFilterValue;
   page: number;
   limit: number;
@@ -28,6 +31,9 @@ export const listMorphPatternsForAdmin = async ({
   const conditions: SQL[] = [];
   if (formNumber !== undefined) {
     conditions.push(eq(morphPattern.formNumber, formNumber));
+  }
+  if (radicalCount !== undefined) {
+    conditions.push(eq(morphPattern.radicalCount, radicalCount));
   }
   if (lexicalFilter !== "All") {
     conditions.push(eq(morphPattern.isLexical, lexicalFilter === "Lexical"));
@@ -39,6 +45,7 @@ export const listMorphPatternsForAdmin = async ({
       .select({
         id: morphPattern.id,
         formNumber: morphPattern.formNumber,
+        radicalCount: morphPattern.radicalCount,
         vocalicTemplate: morphPattern.vocalicTemplate,
         description: morphPattern.description,
         noAffix: morphPattern.noAffix,
@@ -68,14 +75,18 @@ export const getMorphPatternUsageCounts = async (id: number) => {
   return { entryCount: entryRow?.total ?? 0, overrideCount: overrideRow?.total ?? 0 };
 };
 
-const vowelCondition = (column: typeof morphPattern.perfectVowel, value: ShortVowel | null): SQL =>
-  value === null ? isNull(column) : eq(column, value);
+const vowelCondition = (
+  column: typeof morphPatternResolution.perfectVowel | typeof morphPatternResolution.imperfectVowel,
+  value: ShortVowel | null,
+): SQL => (value === null ? isNull(column) : eq(column, value));
 
 export interface MatchingKey {
   formNumber: number;
+  radicalCount?: number;
   radical1Kind: RadicalKind;
   radical2Kind: RadicalKind;
   radical3Kind: RadicalKind;
+  radical4Kind?: RadicalKind;
   isGeminate: boolean;
   perfectVowel: ShortVowel | null;
   imperfectVowel: ShortVowel | null;
@@ -83,23 +94,26 @@ export interface MatchingKey {
 
 export const findAmbiguousPattern = async (key: MatchingKey, excludeId?: number) => {
   const conditions = [
-    eq(morphPattern.isLexical, false),
-    eq(morphPattern.formNumber, key.formNumber),
-    eq(morphPattern.radical1Kind, key.radical1Kind),
-    eq(morphPattern.radical2Kind, key.radical2Kind),
-    eq(morphPattern.radical3Kind, key.radical3Kind),
-    eq(morphPattern.isGeminate, key.isGeminate),
-    vowelCondition(morphPattern.perfectVowel, key.perfectVowel),
-    vowelCondition(morphPattern.imperfectVowel, key.imperfectVowel),
+    eq(morphPatternResolution.formNumber, key.formNumber),
+    eq(morphPatternResolution.radicalCount, key.radicalCount ?? 3),
+    eq(morphPatternResolution.radical1Kind, key.radical1Kind),
+    eq(morphPatternResolution.radical2Kind, key.radical2Kind),
+    eq(morphPatternResolution.radical3Kind, key.radical3Kind),
+    eq(morphPatternResolution.radical4Kind, key.radical4Kind ?? "sound"),
+    eq(morphPatternResolution.isGeminate, key.isGeminate),
+    vowelCondition(morphPatternResolution.perfectVowel, key.perfectVowel),
+    vowelCondition(morphPatternResolution.imperfectVowel, key.imperfectVowel),
   ];
   if (excludeId !== undefined) {
-    conditions.push(ne(morphPattern.id, excludeId));
+    conditions.push(ne(morphPatternResolution.morphPatternId, excludeId));
   }
 
   const [match] = await db
     .select({ id: morphPattern.id, description: morphPattern.description })
-    .from(morphPattern)
+    .from(morphPatternResolution)
+    .innerJoin(morphPattern, eq(morphPattern.id, morphPatternResolution.morphPatternId))
     .where(and(...conditions))
+    .orderBy(asc(morphPatternResolution.id))
     .limit(1);
 
   return match ?? null;

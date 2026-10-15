@@ -57,6 +57,11 @@ const SHAPE_EXPECTATIONS: Record<string, Classification> = {
   "hamzated-second-final-weak-ya": { radical1: "sound", radical2: "hamza", radical3: "ya", is_geminate: false },
   "hollow-waw-final-weak-ya": { radical1: "sound", radical2: "waw", radical3: "ya", is_geminate: false },
   "assimilated-waw-final-weak-ya": { radical1: "waw", radical2: "sound", radical3: "ya", is_geminate: false },
+  "hamzated-first-final-weak-ya": { radical1: "hamza", radical2: "sound", radical3: "ya", is_geminate: false },
+  "hollow-ya-final-weak-ya": { radical1: "sound", radical2: "ya", radical3: "ya", is_geminate: false },
+  "hollow-ya-hamzated-third": { radical1: "sound", radical2: "ya", radical3: "hamza", is_geminate: false },
+  "hollow-waw-hamzated-third": { radical1: "sound", radical2: "waw", radical3: "hamza", is_geminate: false },
+  "hamzated-first-hollow-waw": { radical1: "hamza", radical2: "waw", radical3: "sound", is_geminate: false },
 };
 
 test("classify_root_radical maps waw and ya to their own kinds", async () => {

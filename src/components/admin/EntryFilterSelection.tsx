@@ -13,6 +13,7 @@ const EntryFilterSelection: FC<{ value: string; options: readonly string[] }> = 
 
   return (
     <select
+      aria-label="Filter entries by status"
       value={value}
       onChange={handleChange}
       className="border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700"

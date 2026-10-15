@@ -23,7 +23,7 @@ SELECT form_number,
 FROM morph_pattern
 WHERE form_number = 1
   AND description = 'a ~ a, final-weak'
-ON CONFLICT (form_number, description) DO NOTHING;
+ON CONFLICT ON CONSTRAINT unique_form_number_description DO NOTHING;
 
 INSERT INTO lexical_pattern_override (root, form_number, perfect_vowel, imperfect_vowel, morph_pattern_id, note)
 SELECT strip_root_noise('رأي'),

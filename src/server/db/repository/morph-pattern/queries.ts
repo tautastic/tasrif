@@ -1,33 +1,48 @@
 import { and, asc, count, eq, sql } from "drizzle-orm";
-import { resolveVerbFormChoice, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
+import { type RadicalCount, resolveVerbFormChoice, type VerbFormChoice } from "~/lib/validation/verbFormChoice";
 import { db } from "~/server/db";
-import { getPgErrorWithCode } from "~/server/db/pg-error";
+import { getPgErrorWithCode, INVALID_ROOT_SQLSTATE } from "~/server/db/pg-error";
 import { lexicalEntry, morphPattern } from "~/server/db/schema";
 
-export const getVerbFormsWithCounts = async () => {
+export interface VerbFormTotal {
+  formNumber: number;
+  radicalCount?: 4;
+  total: number;
+}
+
+export const getVerbFormsWithCounts = async (): Promise<VerbFormTotal[]> => {
   const rows = await db
     .select({
       formNumber: morphPattern.formNumber,
+      radicalCount: morphPattern.radicalCount,
       total: count(lexicalEntry.id),
     })
     .from(morphPattern)
     .leftJoin(lexicalEntry, and(eq(lexicalEntry.morphPatternId, morphPattern.id), eq(lexicalEntry.isVerified, true)))
-    .groupBy(morphPattern.formNumber)
-    .orderBy(asc(morphPattern.formNumber));
+    .groupBy(morphPattern.radicalCount, morphPattern.formNumber)
+    .orderBy(asc(morphPattern.radicalCount), asc(morphPattern.formNumber));
 
-  return rows.filter((row) => row.total > 0);
+  return rows
+    .filter((row) => row.total > 0)
+    .map(({ formNumber, radicalCount, total }) =>
+      radicalCount === 4 ? { formNumber, radicalCount, total } : { formNumber, total },
+    );
 };
 
-export const INVALID_ROOT_SQLSTATE = "22023";
+export { INVALID_ROOT_SQLSTATE };
 
 export interface RootClassification {
   labels: string[] | null;
   rootError: string | null;
 }
 
-export const describeVerbRoot = async (root: string): Promise<RootClassification> => {
+export const describeVerbRoot = async (root: string, radicalCount: RadicalCount = 3): Promise<RootClassification> => {
   try {
-    const result = await db.execute<{ describe_root: string[] }>(sql`SELECT describe_root(${root}) AS describe_root`);
+    const result = await db.execute<{ describe_root: string[] }>(
+      radicalCount === 4
+        ? sql`SELECT describe_quadriliteral_root(${root}) AS describe_root`
+        : sql`SELECT describe_root(${root}) AS describe_root`,
+    );
     return { labels: result.rows[0]?.describe_root ?? null, rootError: null };
   } catch (error) {
     const invalidRootCause = getPgErrorWithCode(error, INVALID_ROOT_SQLSTATE);
@@ -48,12 +63,12 @@ export const resolveVerbMorphPattern = async (
   root: string,
   choice: VerbFormChoice,
 ): Promise<ResolvedMorphPattern | null> => {
-  const { formNumber, perfectVowel, imperfectVowel } = resolveVerbFormChoice(choice);
+  const { formNumber, perfectVowel, imperfectVowel, radicalCount } = resolveVerbFormChoice(choice);
 
   const result = await db.execute<{ id: number; description: string; vocalic_template: string }>(sql`
     SELECT id, description, vocalic_template
     FROM morph_pattern
-    WHERE id = resolve_morph_pattern_id(${root}, ${formNumber}, ${perfectVowel}, ${imperfectVowel})
+    WHERE id = resolve_morph_pattern_id(${root}, ${formNumber}, ${perfectVowel}, ${imperfectVowel}, ${radicalCount})
   `);
 
   const row = result.rows[0];

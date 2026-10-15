@@ -1,23 +1,29 @@
-# Schema inventory built from db/drizzle/*/migration.sql and db/*.sql
+# Schema inventory built from db/schema.sql and db/*.sql
 #
 # This records what the repository builds, not what production happens to contain.
 # Adding or removing a function, trigger, enum, composite type or relation shows up
 # here as a reviewable diff; regenerate with UPDATE_GOLDENS=1.
 
-## relations (10)
+## relations (15)
 r affix_rules
 r conjugation
+r entry_slug_redirect
 r lexical_entry
+v lexical_entry_derived_status
 r lexical_pattern_override
 r morph_pattern
+r morph_pattern_alternative
+r morph_pattern_alternative_noun
+r morph_pattern_resolution
 r sense
 r sense_relation
 v sense_relation_normalized
 v sense_translation_normalized
 r translation_link
 
-## enums (8)
+## enums (9)
 affix_mood: perfect, imperative, imperfect_indicative, imperfect_subjunctive, imperfect_jussive
+alternative_noun_kind: masdar, active_participle, passive_participle
 lang_type: ar, en
 person_type: first_person_singular, second_person_masculine_singular, second_person_feminine_singular, third_person_masculine_singular, third_person_feminine_singular, second_person_dual, third_person_masculine_dual, third_person_feminine_dual, first_person_plural, second_person_masculine_plural, second_person_feminine_plural, third_person_masculine_plural, third_person_feminine_plural
 pos_type: noun, verb, adjective, adverb, preposition, conjunction, interjection, pronoun, determiner, particle, adverbial_phrase, idiom
@@ -29,13 +35,40 @@ voice_type: active, passive
 ## composite types (1)
 root_classification(radical1 radical_kind, radical2 radical_kind, radical3 radical_kind, is_geminate boolean)
 
-## functions (28)
+## functions (72)
+add_morph_pattern_resolution(p_code text, p_example_root text) -> integer [volatile]
+affix_form_for(form_number integer, radical_count integer) -> integer [immutable]
+assign_morph_pattern_code() -> trigger [volatile]
+assimilate_form_viii_infix(rules jsonb, c1 text) -> jsonb [immutable]
+available_morph_pattern_code(p_base text) -> text [stable]
 build_person_forms(p_affix_mood affix_mood, p_template_value jsonb, p_form_number integer, p_use_affix boolean, p_c1 text, p_c2 text, p_c3 text) -> jsonb [stable]
+build_person_forms_from_affixes(p_template_value jsonb, p_affixes jsonb, p_use_affix boolean, p_c1 text, p_c2 text, p_c3 text, p_c4 text) -> jsonb [stable]
+build_search_vector(p_entry_id integer, p_language lang_type, p_text text, p_normalized_text text, p_masdar text, p_active_participle text, p_passive_participle text) -> tsvector [stable]
+canonical_hamza_root(root_text text) -> text [immutable]
+classify_quadriliteral_radical4(root_text text) -> radical_kind [immutable]
 classify_root(root_text text) -> root_classification [immutable]
 classify_root_radical(radical text) -> radical_kind [immutable]
+describe_quadriliteral_root(root_text text) -> text[] [immutable]
 describe_root(root_text text) -> text[] [immutable]
+enforce_lexical_pattern_override_variant() -> trigger [volatile]
+entry_alternative_forms(p_entry_ids integer[]) -> TABLE(lexical_entry_id integer, voice voice_type, mood affix_mood, person person_type, ordinal smallint, form text) [stable]
+entry_alternative_nouns(p_entry_ids integer[]) -> TABLE(lexical_entry_id integer, noun alternative_noun_kind, ordinal smallint, form text) [stable]
+entry_slug(input text) -> text [immutable]
+fill_morph_pattern_resolution() -> trigger [volatile]
 generate_conjugation_rows(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_affix boolean) -> TABLE(mood affix_mood, person_forms jsonb) [stable]
+generate_conjugation_rows_from_affixes(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_affix boolean, p_affixes jsonb) -> TABLE(mood affix_mood, person_forms jsonb) [stable]
+generate_passive_rows(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_affix boolean) -> TABLE(mood affix_mood, person_forms jsonb) [stable]
+generate_passive_rows_from_affixes(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_affix boolean, p_affixes jsonb) -> TABLE(mood affix_mood, person_forms jsonb) [stable]
 generate_verbal_nouns(root_text text, rules jsonb, form_number integer, overrides jsonb, p_no_passive boolean) -> TABLE(masdar text, active_participle text, passive_participle text) [stable]
+has_passive_rules(rules jsonb) -> boolean [immutable]
+keep_morph_pattern_code() -> trigger [volatile]
+lexical_entry_slug(p_id integer, p_text text) -> text [immutable]
+maintain_entry_slug_redirect() -> trigger [volatile]
+morph_pattern_choice_allowed(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel, chosen_pattern_id integer, target_radical_count integer) -> boolean [stable]
+morph_pattern_code(p_form_number integer, p_perfect_vowel short_vowel, p_imperfect_vowel short_vowel, p_description text) -> text [stable]
+morph_pattern_id_for_code(p_code text) -> integer [stable]
+morph_pattern_variant_candidates(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel, target_radical_count integer) -> TABLE(morph_pattern_id integer, variant text, note text, is_default boolean) [stable]
+morph_pattern_variants(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel, target_radical_count integer) -> TABLE(morph_pattern_id integer, code text, description text, vocalic_template text, variant text, note text, is_default boolean, sample text) [stable]
 normalize_arabic_alef_maqsura(input text) -> text [immutable]
 normalize_arabic_gemination(input text) -> text [immutable]
 normalize_arabic_hamza_assimilation(input text) -> text [immutable]
@@ -47,19 +80,48 @@ normalize_arabic_initial_hamza(input text) -> text [immutable]
 normalize_arabic_long_vowels(input text) -> text [immutable]
 normalize_arabic_orthography(input text) -> text [immutable]
 normalize_arabic_remove_tatweel(input text) -> text [immutable]
+normalize_lexical_entry_root() -> trigger [volatile]
+normalize_lexical_pattern_override_root() -> trigger [volatile]
+normalize_morph_pattern_alternative_noun_root() -> trigger [volatile]
+normalize_morph_pattern_alternative_root() -> trigger [volatile]
+passive_rules_as_active(rules jsonb) -> jsonb [immutable]
+passive_vowelless_ya_after_damma(person_forms jsonb) -> jsonb [immutable]
+prepared_affix_rules(p_form_number integer, p_radical_count integer) -> jsonb [stable]
+prepared_passive_affix_rules() -> jsonb [stable]
 recalculate_search_vector(p_entry_id integer) -> void [volatile]
-refresh_derived_stems_for_pattern() -> trigger [volatile]
+refresh_derived_stems_for_patterns() -> trigger [volatile]
 regenerate_all_derived_stems() -> void [volatile]
+regenerate_derived_stems(p_entry_ids integer[], p_conjugations boolean) -> void [volatile]
 regenerate_derived_stems_for_entry(p_entry_id integer) -> void [volatile]
-replace_root_placeholders(template_text text, c1 text, c2 text, c3 text) -> text [immutable]
-resolve_morph_pattern_id(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel) -> integer [stable]
+regenerate_passive_conjugations(p_entry_ids integer[]) -> void [volatile]
+replace_root_placeholders(template_text text, c1 text, c2 text, c3 text, c4 text) -> text [immutable]
+require_radical_count(root_text text, radical_count integer) -> text [immutable]
+require_triliteral_root(root_text text) -> text [immutable]
+resolve_entry_slug_redirect(p_key text) -> text [stable]
+resolve_morph_pattern_id(root_text text, target_form_number integer, target_perfect_vowel short_vowel, target_imperfect_vowel short_vowel, target_radical_count integer) -> integer [stable]
 root_classification_labels(classification root_classification) -> text[] [immutable]
+rules_radical_count(rules jsonb) -> integer [immutable]
+seat_bare_hamzas(input text) -> text [immutable]
 set_lexical_entry_latin_root() -> trigger [volatile]
+set_lexical_entry_slug() -> trigger [volatile]
 strip_root_noise(root_text text) -> text [immutable]
+sync_morph_pattern_resolution() -> trigger [volatile]
 transliterate_arabic_root(root_text text) -> text [immutable]
 update_lexical_entry_derived_stems() -> trigger [volatile]
 
-## triggers (3)
-CREATE TRIGGER trg_refresh_derived_stems_after_pattern_update AFTER UPDATE OF rules, form_number, no_affix ON public.morph_pattern FOR EACH ROW EXECUTE FUNCTION refresh_derived_stems_for_pattern()
+## triggers (15)
+CREATE TRIGGER trg_assign_morph_pattern_code BEFORE INSERT ON public.morph_pattern FOR EACH ROW EXECUTE FUNCTION assign_morph_pattern_code()
+CREATE TRIGGER trg_enforce_lexical_pattern_override_variant BEFORE INSERT OR UPDATE OF variant, morph_pattern_id, form_number, perfect_vowel, imperfect_vowel ON public.lexical_pattern_override FOR EACH ROW WHEN ((new.variant IS NOT NULL)) EXECUTE FUNCTION enforce_lexical_pattern_override_variant()
+CREATE TRIGGER trg_fill_morph_pattern_resolution BEFORE INSERT OR UPDATE ON public.morph_pattern_resolution FOR EACH ROW EXECUTE FUNCTION fill_morph_pattern_resolution()
+CREATE TRIGGER trg_keep_morph_pattern_code BEFORE UPDATE ON public.morph_pattern FOR EACH ROW EXECUTE FUNCTION keep_morph_pattern_code()
+CREATE TRIGGER trg_maintain_entry_slug_redirect_after_insert AFTER INSERT ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION maintain_entry_slug_redirect()
+CREATE TRIGGER trg_maintain_entry_slug_redirect_after_update AFTER UPDATE ON public.lexical_entry FOR EACH ROW WHEN (((old.slug IS DISTINCT FROM new.slug) OR (old.normalized_text IS DISTINCT FROM new.normalized_text))) EXECUTE FUNCTION maintain_entry_slug_redirect()
+CREATE TRIGGER trg_normalize_lexical_entry_root BEFORE INSERT OR UPDATE OF root, morph_pattern_id ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION normalize_lexical_entry_root()
+CREATE TRIGGER trg_normalize_lexical_pattern_override_root BEFORE INSERT OR UPDATE OF root ON public.lexical_pattern_override FOR EACH ROW EXECUTE FUNCTION normalize_lexical_pattern_override_root()
+CREATE TRIGGER trg_normalize_morph_pattern_alternative_noun_root BEFORE INSERT OR UPDATE OF root ON public.morph_pattern_alternative_noun FOR EACH ROW WHEN ((new.root IS NOT NULL)) EXECUTE FUNCTION normalize_morph_pattern_alternative_noun_root()
+CREATE TRIGGER trg_normalize_morph_pattern_alternative_root BEFORE INSERT OR UPDATE OF root ON public.morph_pattern_alternative FOR EACH ROW WHEN ((new.root IS NOT NULL)) EXECUTE FUNCTION normalize_morph_pattern_alternative_root()
+CREATE TRIGGER trg_refresh_derived_stems_after_pattern_update AFTER UPDATE ON public.morph_pattern REFERENCING OLD TABLE AS old_patterns NEW TABLE AS new_patterns FOR EACH STATEMENT EXECUTE FUNCTION refresh_derived_stems_for_patterns()
 CREATE TRIGGER trg_set_lexical_entry_latin_root BEFORE INSERT OR UPDATE OF root ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION set_lexical_entry_latin_root()
+CREATE TRIGGER trg_set_lexical_entry_slug BEFORE INSERT OR UPDATE OF id, text, slug ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION set_lexical_entry_slug()
+CREATE TRIGGER trg_sync_morph_pattern_resolution AFTER INSERT OR UPDATE OF form_number, radical_count, perfect_vowel, imperfect_vowel, radical1_kind, radical2_kind, radical3_kind, radical4_kind, is_geminate, is_lexical ON public.morph_pattern FOR EACH ROW EXECUTE FUNCTION sync_morph_pattern_resolution()
 CREATE TRIGGER trg_update_lexical_entry_derived_stems AFTER INSERT OR UPDATE OF root, morph_pattern_id, morphology_overrides, text ON public.lexical_entry FOR EACH ROW EXECUTE FUNCTION update_lexical_entry_derived_stems()

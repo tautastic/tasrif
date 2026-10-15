@@ -7,8 +7,7 @@
     font-weight: 400 700;
     font-display: swap;
     size-adjust: 133%;
-    src: url(https://fonts.gstatic.com/s/notonaskharabic/v44/RrQKbpV-9Dd1b1OAGA6M9PkyDuVBeN2DHV20Lg.woff2)
-      format("woff2");
+    src: url("/fonts/noto-naskh-arabic-v44-arabic.woff2") format("woff2");
     unicode-range:
       U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891,
       U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41,
@@ -28,7 +27,8 @@
 
   body {
     @apply m-0 p-0 bg-[#f8f9fa] text-[#212529];
-    font-family: "DejaVu Sans", sans-serif;
+    font-family:
+      system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
   }
 
   [lang="ar"] {

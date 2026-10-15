@@ -7,13 +7,18 @@ import {
   IMPERFECT_MOOD_KEYS,
   type Mood,
   type MorphPatternRules,
+  PASSIVE_IMPERFECT_MOOD_KEYS,
+  PASSIVE_PERFECT_KEY,
+  PASSIVE_STEM_KEY,
+  type PassiveKey,
   PERSONS,
   type Person,
   STRING_KEYS,
 } from "~/lib/validation/morphPatternRules";
 import PersonFormsGrid from "./PersonFormsGrid";
-import { toDisplayTemplate, toRawTemplate } from "./radicalPlaceholders";
 import type { MorphPatternFormInput, MorphPatternFormValues } from "./schema";
+import TemplateInput from "./TemplateInput";
+import TemplateLegend from "./TemplateLegend";
 
 type RulesRecord = Record<string, string | Partial<Record<Person, string>> | undefined>;
 type MoodValue = string | Partial<Record<Person, string>> | undefined;
@@ -24,12 +29,17 @@ const STRING_KEY_LABELS: Record<(typeof STRING_KEYS)[number], string> = {
   passive_participle: "Passive participle",
 };
 
-const MOOD_LABELS: Record<Mood, string> = {
+const MOOD_LABELS: Record<Mood | PassiveKey, string> = {
   perfect: "Perfect",
   imperative: "Imperative",
   imperfect_indicative: "Imperfect — indicative",
   imperfect_subjunctive: "Imperfect — subjunctive",
   imperfect_jussive: "Imperfect — jussive",
+  passive_perfect: "Perfect passive",
+  passive_imperfect_stem: "Imperfect passive stem",
+  passive_imperfect_indicative: "Imperfect passive — indicative",
+  passive_imperfect_subjunctive: "Imperfect passive — subjunctive",
+  passive_imperfect_jussive: "Imperfect passive — jussive",
 };
 
 const MoodSection = ({
@@ -39,7 +49,7 @@ const MoodSection = ({
   forceGrid,
   onChange,
 }: {
-  moodKey: Mood;
+  moodKey: Mood | PassiveKey;
   value: MoodValue;
   persons: readonly Person[];
   forceGrid: boolean;
@@ -48,9 +58,12 @@ const MoodSection = ({
   const isGrid = forceGrid || typeof value === "object";
 
   return (
-    <div className="border border-gray-200 p-3">
+    <fieldset className="border border-gray-200 p-3">
+      <legend className="sr-only">{MOOD_LABELS[moodKey]}</legend>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium">{MOOD_LABELS[moodKey]}</span>
+        <span className="text-sm font-medium" aria-hidden="true">
+          {MOOD_LABELS[moodKey]}
+        </span>
         {!forceGrid && (
           <label className="flex items-center gap-2 text-xs text-gray-600">
             <input type="checkbox" checked={isGrid} onChange={(e) => onChange(e.target.checked ? {} : "")} />
@@ -66,16 +79,13 @@ const MoodSection = ({
           onChange={onChange}
         />
       ) : (
-        <input
-          type="text"
-          lang="ar"
-          dir="rtl"
-          className="field-control"
-          value={toDisplayTemplate(typeof value === "string" ? value : "")}
-          onChange={(e) => onChange(toRawTemplate(e.target.value))}
+        <TemplateInput
+          aria-label={`${MOOD_LABELS[moodKey]} template`}
+          value={typeof value === "string" ? value : ""}
+          onValueChange={onChange}
         />
       )}
-    </div>
+    </fieldset>
   );
 };
 
@@ -110,6 +120,7 @@ const RulesEditor = () => {
       render={({ field }) => {
         const rules = (field.value ?? {}) as MorphPatternRules;
         const usesStem = !noAffix && rules.imperfect_stem !== undefined;
+        const usesPassiveStem = !noAffix && rules.passive_imperfect_stem !== undefined;
 
         const setKey = (key: string, value: string | Partial<Record<Person, string>> | undefined) => {
           const next: RulesRecord = { ...(rules as RulesRecord) };
@@ -135,21 +146,32 @@ const RulesEditor = () => {
           field.onChange(next as MorphPatternRules);
         };
 
+        const switchToPassiveStem = () => {
+          const next: RulesRecord = { ...(rules as RulesRecord), [PASSIVE_STEM_KEY]: "" };
+          for (const key of PASSIVE_IMPERFECT_MOOD_KEYS) {
+            delete next[key];
+          }
+          field.onChange(next as MorphPatternRules);
+        };
+
+        const switchToExplicitPassiveMoods = () => {
+          const next: RulesRecord = { ...(rules as RulesRecord) };
+          delete next[PASSIVE_STEM_KEY];
+          field.onChange(next as MorphPatternRules);
+        };
+
         return (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Rules</h2>
+            <TemplateLegend />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {STRING_KEYS.map((key) => (
                 <Field key={key} id={`rules-${key}`} label={STRING_KEY_LABELS[key]}>
-                  <input
+                  <TemplateInput
                     id={`rules-${key}`}
-                    type="text"
-                    lang="ar"
-                    dir="rtl"
-                    className="field-control"
-                    value={toDisplayTemplate(rules[key] ?? "")}
-                    onChange={(e) => setKey(key, toRawTemplate(e.target.value))}
+                    value={rules[key] ?? ""}
+                    onValueChange={(raw) => setKey(key, raw)}
                   />
                 </Field>
               ))}
@@ -170,9 +192,12 @@ const RulesEditor = () => {
               onChange={(next) => setKey("imperative", next)}
             />
 
-            <div className="border border-gray-200 p-3">
+            <fieldset className="border border-gray-200 p-3">
+              <legend className="sr-only">Imperfect</legend>
               <div className="mb-2 flex flex-wrap items-center gap-4">
-                <span className="text-sm font-medium">Imperfect</span>
+                <span className="text-sm font-medium" aria-hidden="true">
+                  Imperfect
+                </span>
                 {!noAffix && (
                   <>
                     <label className="flex items-center gap-2 text-xs text-gray-600">
@@ -188,14 +213,11 @@ const RulesEditor = () => {
               </div>
 
               {usesStem ? (
-                <input
-                  type="text"
-                  lang="ar"
-                  dir="rtl"
-                  className="field-control"
+                <TemplateInput
+                  aria-label="Imperfect stem template"
                   placeholder="e.g. فْعُل"
-                  value={toDisplayTemplate(typeof rules.imperfect_stem === "string" ? rules.imperfect_stem : "")}
-                  onChange={(e) => setKey("imperfect_stem", toRawTemplate(e.target.value))}
+                  value={typeof rules.imperfect_stem === "string" ? rules.imperfect_stem : ""}
+                  onValueChange={(raw) => setKey("imperfect_stem", raw)}
                 />
               ) : (
                 <div className="space-y-3">
@@ -211,10 +233,81 @@ const RulesEditor = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </fieldset>
+
+            <fieldset className="border border-gray-200 p-3">
+              <legend className="sr-only">Passive voice</legend>
+              <p className="mb-2 text-sm font-medium" aria-hidden="true">
+                Passive voice
+              </p>
+              <p className="mb-3 text-xs text-gray-600">
+                Optional. There is no passive imperative. An entry drops the passive with its &quot;No passive
+                voice&quot; box.
+              </p>
+              <div className="space-y-3">
+                <MoodSection
+                  moodKey={PASSIVE_PERFECT_KEY}
+                  value={rules.passive_perfect}
+                  persons={PERSONS}
+                  forceGrid={noAffix}
+                  onChange={(next) => setKey(PASSIVE_PERFECT_KEY, next)}
+                />
+                <fieldset className="border border-gray-200 p-3">
+                  <legend className="sr-only">Imperfect passive</legend>
+                  <div className="mb-2 flex flex-wrap items-center gap-4">
+                    <span className="text-sm font-medium" aria-hidden="true">
+                      Imperfect passive
+                    </span>
+                    {!noAffix && (
+                      <>
+                        <label className="flex items-center gap-2 text-xs text-gray-600">
+                          <input
+                            type="radio"
+                            name="passive-imperfect-mode"
+                            checked={usesPassiveStem}
+                            onChange={switchToPassiveStem}
+                          />
+                          Regular affixation from a stem
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-gray-600">
+                          <input
+                            type="radio"
+                            name="passive-imperfect-mode"
+                            checked={!usesPassiveStem}
+                            onChange={switchToExplicitPassiveMoods}
+                          />
+                          Spell out each mood
+                        </label>
+                      </>
+                    )}
+                  </div>
+                  {usesPassiveStem ? (
+                    <TemplateInput
+                      aria-label="Imperfect passive stem template"
+                      placeholder="e.g. فْعَل"
+                      value={typeof rules.passive_imperfect_stem === "string" ? rules.passive_imperfect_stem : ""}
+                      onValueChange={(raw) => setKey(PASSIVE_STEM_KEY, raw)}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {PASSIVE_IMPERFECT_MOOD_KEYS.map((key) => (
+                        <MoodSection
+                          key={key}
+                          moodKey={key}
+                          value={rules[key]}
+                          persons={PERSONS}
+                          forceGrid={noAffix}
+                          onChange={(next) => setKey(key, next)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </fieldset>
+              </div>
+            </fieldset>
 
             {ruleErrors.length > 0 && (
-              <ul className="space-y-1 text-sm text-red-600">
+              <ul role="alert" className="space-y-1 text-sm text-red-700">
                 {ruleErrors.map((message) => (
                   <li key={message}>{message}</li>
                 ))}

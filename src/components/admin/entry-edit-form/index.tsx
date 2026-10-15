@@ -7,6 +7,9 @@ import { FormProvider, useForm } from "react-hook-form";
 import BasicFields from "~/components/admin/entry-edit-form/BasicFields";
 import SensesFields from "~/components/admin/entry-edit-form/SensesFields";
 import { type EntryFormInput, type EntryFormValues, entryFormSchema } from "~/components/admin/entry-edit-form/schema";
+import FormCancelButton from "~/components/ui/FormCancelButton";
+import FormError from "~/components/ui/FormError";
+import { entryPath } from "~/lib/formatting";
 import { createLexicalEntryAction, updateLexicalEntryAction } from "~/server/actions/lexical-entry";
 
 type EntryEditFormProps =
@@ -34,14 +37,20 @@ const EntryEditForm = (props: EntryEditFormProps) => {
   const { isSubmitting } = methods.formState;
 
   const onSubmit = async (values: EntryFormValues) => {
+    setServerError(null);
     try {
-      const saved =
+      const result =
         props.mode === "edit"
           ? await updateLexicalEntryAction({ ...values, id: props.entry.id })
           : await createLexicalEntryAction(values);
-      router.push(saved.isVerified ? `/entry/${saved.normalizedText}` : `/admin/entries/${saved.id}`);
-    } catch (error) {
-      setServerError(error instanceof Error ? error.message : "Failed to save entry.");
+      if (!result.ok) {
+        setServerError(result.error);
+        return;
+      }
+      const saved = result.data;
+      router.push(saved.isVerified ? entryPath(saved.slug) : `/admin/entries/${saved.id}`);
+    } catch {
+      setServerError("Failed to save entry. Please try again.");
     }
   };
 
@@ -51,15 +60,13 @@ const EntryEditForm = (props: EntryEditFormProps) => {
         <BasicFields />
         <SensesFields />
 
-        {serverError && <p className="text-red-600">{serverError}</p>}
+        <FormError message={serverError} />
 
         <div className="flex space-x-4">
           <button type="submit" disabled={isSubmitting} className="btn-primary">
             {isSubmitting ? "Saving..." : props.mode === "edit" ? "Save Changes" : "Create Entry"}
           </button>
-          <button type="button" onClick={() => router.back()} className="btn-secondary">
-            Cancel
-          </button>
+          <FormCancelButton fallbackHref="/admin/entries" />
         </div>
       </form>
     </FormProvider>

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { SenseSearchResponse } from "~/lib/api/sense-search";
 import { db } from "~/server/db";
+import { plainTsQuery, textSearchConfigFor } from "~/server/db/repository/text-search";
 import { type LanguageType, lexicalEntry, sense } from "~/server/db/schema";
 
 export const searchSenses = async ({
@@ -19,7 +20,7 @@ export const searchSenses = async ({
     return { items: [], hasMore: false };
   }
 
-  const tsQuery = sql`plainto_tsquery('simple', ${searchTerm})`;
+  const tsQuery = plainTsQuery(textSearchConfigFor(searchTerm, language), searchTerm);
   const matchesQuery = sql`${lexicalEntry.searchVector} @@ ${tsQuery}`;
 
   const rows = await db

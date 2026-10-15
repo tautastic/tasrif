@@ -15,6 +15,7 @@ export const ROOT_SAMPLES: RootSample[] = [
   { shape: "final-weak-waw", root: "دعو", latin: "dʕw" },
   { shape: "final-weak-ya", root: "رمي", latin: "rmy" },
   { shape: "geminate", root: "مدد", latin: "mdd" },
+  { shape: "hamzated-first", root: "أمل", latin: "ʔml" },
   { shape: "hamzated-first", root: "أكل", latin: "ʔkl" },
   { shape: "hamzated-second", root: "سأل", latin: "sʔl" },
   { shape: "hamzated-third", root: "قرأ", latin: "qrʔ" },
@@ -22,6 +23,11 @@ export const ROOT_SAMPLES: RootSample[] = [
   { shape: "hamzated-second-final-weak-ya", root: "رأي", latin: "rʔy" },
   { shape: "hollow-waw-final-weak-ya", root: "روي", latin: "rwy" },
   { shape: "assimilated-waw-final-weak-ya", root: "وقي", latin: "wqy" },
+  { shape: "hamzated-first-final-weak-ya", root: "أتي", latin: "ʔty" },
+  { shape: "hollow-ya-final-weak-ya", root: "حيي", latin: "ḥyy" },
+  { shape: "hollow-ya-hamzated-third", root: "جيء", latin: "jyʔ" },
+  { shape: "hollow-waw-hamzated-third", root: "سوء", latin: "swʔ" },
+  { shape: "hamzated-first-hollow-waw", root: "أود", latin: "ʔwd" },
 ];
 
 export const rootFor = (shape: string): string => {

@@ -1,24 +1,37 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { formatMorphPatternFormNumber } from "~/lib/formatting";
-import { getVerbFormsWithCounts } from "~/server/db/repository/morph-pattern";
+import { buildPageMetadata } from "~/app/site";
+import { formatCount, formatMorphPatternFormNumber } from "~/lib/formatting";
+import { getCachedVerbForms } from "~/server/cache/public-queries";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Arabic Verb Forms",
+  description: "The derived verb forms of Arabic, with the number of dictionary entries for each.",
+  path: "/arabic-verb-form",
+});
 
 export default async function ArabicVerbFormsPage() {
   await connection();
-  const forms = await getVerbFormsWithCounts();
+  const forms = await getCachedVerbForms();
 
   return (
     <>
       <h1 className="text-2xl font-bold mb-2">Arabic Verb Forms</h1>
-      <p className="text-sm text-gray-600 mb-4">The following {forms.length} forms are available:</p>
+      <p className="text-sm text-gray-600 mb-4">
+        The following {formatCount(forms.length, "form", "forms")} {forms.length === 1 ? "is" : "are"} available:
+      </p>
 
       <ul className="grid grid-cols-2 list-disc gap-x-4 gap-y-3 pl-6 text-sm md:text-base md:grid-cols-3">
         {forms.map((form) => (
-          <li key={form.formNumber}>
-            <Link href={`/arabic-verb-form/${form.formNumber}`} className="text-blue-600 hover:underline">
-              Form {formatMorphPatternFormNumber(form.formNumber)}
+          <li key={`${form.formNumber}${form.radicalCount === 4 ? "q" : ""}`}>
+            <Link
+              href={`/arabic-verb-form/${form.formNumber}${form.radicalCount === 4 ? "q" : ""}`}
+              className="text-blue-600 underline hover:text-blue-800"
+            >
+              Form {formatMorphPatternFormNumber(form.formNumber, form.radicalCount)}
             </Link>
-            <span className="text-gray-500 text-sm"> ({form.total} entries)</span>
+            <span className="text-gray-600 text-sm"> ({formatCount(form.total, "entry", "entries")})</span>
           </li>
         ))}
       </ul>

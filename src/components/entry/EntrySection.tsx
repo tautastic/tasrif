@@ -1,8 +1,16 @@
 import Link from "next/link";
-import type { LexicalEntrySelect } from "~/server/db/schema";
+import { entryPath } from "~/lib/formatting";
+import type { LanguageType } from "~/server/db/schema";
+
+interface EntrySectionEntry {
+  id: number;
+  text: string;
+  slug: string;
+  language: LanguageType;
+}
 
 interface EntryListProps {
-  entries: LexicalEntrySelect[];
+  entries: EntrySectionEntry[];
 }
 
 const EntryList = ({ entries }: EntryListProps) => (
@@ -11,7 +19,8 @@ const EntryList = ({ entries }: EntryListProps) => (
       <li key={entry.id} className="flex items-center justify-between border-b border-gray-100 pb-2 min-w-0">
         <div className="space-x-2 min-w-0">
           <Link
-            href={`/entry/${entry.normalizedText}`}
+            prefetch={false}
+            href={entryPath(entry.slug)}
             className="text-blue-600 hover:underline text-base sm:text-lg wrap-break-word"
           >
             <span lang={entry.language}>{entry.text}</span>
@@ -24,7 +33,7 @@ const EntryList = ({ entries }: EntryListProps) => (
 
 interface EntrySectionProps {
   title: string;
-  entries: LexicalEntrySelect[];
+  entries: EntrySectionEntry[];
   emptyMessage: string;
 }
 

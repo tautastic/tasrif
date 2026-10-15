@@ -249,6 +249,26 @@ const hamzaAssimilation: FunctionCases = {
       expected: ALEF_HAMZA_ABOVE + FATHA + ALEF_HAMZA_ABOVE + FATHA,
     },
     {
+      name: "merges a hamza-damma waw-hamza-sukun sequence into a hamza-damma and a long u",
+      input: ALEF_HAMZA_ABOVE + DAMMA + WAW_HAMZA + SUKUN + MEEM + KASRA + NOON + DAMMA,
+      expected: ALEF_HAMZA_ABOVE + DAMMA + WAW + MEEM + KASRA + NOON + DAMMA,
+    },
+    {
+      name: "merges a hamza-kasra yeh-hamza-sukun sequence into a hamza-kasra and a long i",
+      input: ALEF_HAMZA_BELOW + KASRA + YEH_HAMZA + SUKUN + MEEM + FATHA + ALEF + NOON,
+      expected: ALEF_HAMZA_BELOW + KASRA + YEH + MEEM + FATHA + ALEF + NOON,
+    },
+    {
+      name: "keeps the waw hamza of a prefix that is not a hamza",
+      input: YEH + DAMMA + WAW_HAMZA + SUKUN + MEEM + KASRA + NOON + DAMMA,
+      expected: YEH + DAMMA + WAW_HAMZA + SUKUN + MEEM + KASRA + NOON + DAMMA,
+    },
+    {
+      name: "keeps the yeh hamza of an alef wasl",
+      input: ALEF + KASRA + YEH_HAMZA + SUKUN + TEH + FATHA + MEEM + FATHA + NOON + FATHA,
+      expected: ALEF + KASRA + YEH_HAMZA + SUKUN + TEH + FATHA + MEEM + FATHA + NOON + FATHA,
+    },
+    {
       name: "leaves an existing alef madda untouched",
       input: ALEF_MADDA + KAF,
       expected: ALEF_MADDA + KAF,
@@ -347,14 +367,29 @@ const hamzaSeatingWawYeh: FunctionCases = {
   fn: "normalize_arabic_hamza_seating_waw_yeh",
   cases: [
     {
-      name: "reseats alef hamza on waw before a long u",
-      input: ALEF_HAMZA_ABOVE + DAMMA + WAW,
-      expected: WAW_HAMZA + DAMMA + WAW,
+      name: "reseats alef hamza on waw before a long u inside a word",
+      input: MEEM + FATHA + SEEN + SUKUN + ALEF_HAMZA_ABOVE + DAMMA + WAW + LAM,
+      expected: MEEM + FATHA + SEEN + SUKUN + WAW_HAMZA + DAMMA + WAW + LAM,
     },
     {
-      name: "reseats alef hamza on yeh before a long i",
+      name: "reseats alef hamza on yeh before a long i inside a word",
+      input: TEH + FATHA + BEH + SUKUN + REH + FATHA + ALEF_HAMZA_ABOVE + KASRA + YEH + NOON + FATHA,
+      expected: TEH + FATHA + BEH + SUKUN + REH + FATHA + YEH_HAMZA + KASRA + YEH + NOON + FATHA,
+    },
+    {
+      name: "leaves a word initial alef hamza before a long u on alef, as in the 1st singular أُوفِي",
+      input: ALEF_HAMZA_ABOVE + DAMMA + WAW + FEH + KASRA + YEH,
+      expected: ALEF_HAMZA_ABOVE + DAMMA + WAW + FEH + KASRA + YEH,
+    },
+    {
+      name: "leaves alef hamza before a long u on alef at the start of a later word",
+      input: `${KAF + FATHA} ${ALEF_HAMZA_ABOVE}${DAMMA}${WAW}${JEEM}${KASRA}${DAL}${DAMMA}`,
+      expected: `${KAF + FATHA} ${ALEF_HAMZA_ABOVE}${DAMMA}${WAW}${JEEM}${KASRA}${DAL}${DAMMA}`,
+    },
+    {
+      name: "leaves a word initial alef hamza before a long i alone",
       input: ALEF_HAMZA_ABOVE + KASRA + YEH,
-      expected: YEH_HAMZA + KASRA + YEH,
+      expected: ALEF_HAMZA_ABOVE + KASRA + YEH,
     },
     {
       name: "ignores alef hamza with damma followed by yeh",
@@ -502,15 +537,26 @@ export const PIPELINE_CASES: PipelineCase[] = [
     ordering: { earlier: "normalize_arabic_alef_maqsura", later: "normalize_arabic_gemination" },
   },
   {
-    name: "seats an initial hamza before reseating it on waw",
+    name: "keeps a word initial hamza before a long u on alef",
     input: HAMZA + DAMMA + WAW,
-    expected: WAW_HAMZA + DAMMA + WAW,
-    ordering: { earlier: "normalize_arabic_initial_hamza", later: "normalize_arabic_hamza_seating_waw_yeh" },
+    expected: ALEF_HAMZA_ABOVE + DAMMA + WAW,
   },
   {
     name: "seats a bare hamza before assimilating the pair into alef madda",
     input: ALEF_HAMZA_ABOVE + FATHA + HAMZA + SUKUN,
     expected: ALEF_MADDA,
+    ordering: { earlier: "normalize_arabic_hamza_seating_bare", later: "normalize_arabic_hamza_assimilation" },
+  },
+  {
+    name: "seats a bare hamza before merging it into the long u of a hamza-damma prefix",
+    input: ALEF_HAMZA_ABOVE + DAMMA + HAMZA + SUKUN + MEEM + KASRA + NOON + DAMMA,
+    expected: ALEF_HAMZA_ABOVE + DAMMA + WAW + MEEM + KASRA + NOON + DAMMA,
+    ordering: { earlier: "normalize_arabic_hamza_seating_bare", later: "normalize_arabic_hamza_assimilation" },
+  },
+  {
+    name: "seats a bare hamza before merging it into the long i of a hamza-kasra prefix",
+    input: ALEF_HAMZA_BELOW + KASRA + HAMZA + SUKUN + MEEM + FATHA + ALEF + NOON,
+    expected: ALEF_HAMZA_BELOW + KASRA + YEH + MEEM + FATHA + ALEF + NOON,
     ordering: { earlier: "normalize_arabic_hamza_seating_bare", later: "normalize_arabic_hamza_assimilation" },
   },
   {

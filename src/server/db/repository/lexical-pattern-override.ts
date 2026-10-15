@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { type LexicalPatternOverrideInsert, lexicalPatternOverride } from "~/server/db/schema";
 
@@ -9,7 +9,11 @@ export const listOverridesForPattern = (morphPatternId: number) =>
     .select()
     .from(lexicalPatternOverride)
     .where(eq(lexicalPatternOverride.morphPatternId, morphPatternId))
-    .orderBy(asc(lexicalPatternOverride.root), asc(lexicalPatternOverride.id));
+    .orderBy(
+      asc(lexicalPatternOverride.root),
+      sql`${lexicalPatternOverride.variant} asc nulls first`,
+      asc(lexicalPatternOverride.id),
+    );
 
 export const getOverrideById = async (id: number) => {
   const [override] = await db.select().from(lexicalPatternOverride).where(eq(lexicalPatternOverride.id, id));
@@ -25,16 +29,19 @@ export const createOverride = async (input: LexicalPatternOverridePersistable) =
 };
 
 export const updateOverride = async (input: LexicalPatternOverridePersistable & { id: number }) => {
-  const { id, ...values } = input;
+  const { id, morphPatternId, root, formNumber, perfectVowel, imperfectVowel, variant, note } = input;
   const [updated] = await db
     .update(lexicalPatternOverride)
-    .set(values)
-    .where(eq(lexicalPatternOverride.id, id))
+    .set({ root, formNumber, perfectVowel, imperfectVowel, variant: variant ?? null, note: note ?? null })
+    .where(and(eq(lexicalPatternOverride.id, id), eq(lexicalPatternOverride.morphPatternId, morphPatternId)))
     .returning({ id: lexicalPatternOverride.id });
   return updated ?? null;
 };
 
-export const deleteOverrideById = async (id: number) => {
-  const [deleted] = await db.delete(lexicalPatternOverride).where(eq(lexicalPatternOverride.id, id)).returning();
+export const deleteOverrideById = async (id: number, morphPatternId: number) => {
+  const [deleted] = await db
+    .delete(lexicalPatternOverride)
+    .where(and(eq(lexicalPatternOverride.id, id), eq(lexicalPatternOverride.morphPatternId, morphPatternId)))
+    .returning();
   return deleted ?? null;
 };
